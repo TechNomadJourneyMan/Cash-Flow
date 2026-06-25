@@ -72,9 +72,12 @@ label.fl{display:block;font-size:11.5px;color:var(--muted);margin:0 0 4px}.field
 .auth{max-width:440px;margin:30px auto}.role-pick{display:flex;gap:8px}.role-pick button{flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);font-weight:700}.role-pick button.on{background:linear-gradient(135deg,var(--acc),#3a6bff);color:#fff;border-color:transparent}
 .scroll{overflow:auto}table.tx{width:100%;border-collapse:collapse;font-size:12px}table.tx th,table.tx td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}table.tx th{color:var(--muted);font-size:11px;text-transform:uppercase}
 .center{text-align:center}.big{font-size:34px;letter-spacing:2px;font-weight:800}
+#fbBanner{position:sticky;top:0;z-index:60;padding:11px 14px;font-size:13px;font-weight:600;color:#fff;text-align:center;border-bottom:1px solid rgba(255,255,255,.15)}
+#fbBanner b{color:#fff}#fbBanner a{color:#fff;text-decoration:underline}
 </style>
 </head>
 <body>
+<div id="fbBanner" style="display:none"></div>
 <div class="wrap">
   <div class="topbar" id="topbar"></div>
   <div id="view"><div class="card center" style="margin-top:40px">⏳ Подключение к Firebase…</div></div>
@@ -201,7 +204,24 @@ function modal(title,body,buttons,cls){const root=document.getElementById("modal
 function confirmModal(t,txt,onYes,yesLabel,yesCls){modal(t,'<p>'+esc(txt)+'</p>',[{label:"Отмена",cls:"ghost"},{label:yesLabel||"Подтвердить",cls:yesCls||"red",onClick:c=>{c();onYes();}}]);}
 function copyText(t){if(navigator.clipboard)navigator.clipboard.writeText(t).catch(()=>{});}
 function val(id){const el=document.getElementById(id);return el?el.value:"";}
-function showError(e){toast("⚠️ Firebase: "+(e.message||e),"warn");}
+function showError(e){const m=(e&&(e.code||e.message))||String(e);if(/unavailable|offline/i.test(m))setFbStatus("offline");else if(/permission/i.test(m))setFbStatus("perm");toast("⚠️ "+m,"warn");}
+function setFbStatus(state,msg){
+  const el=document.getElementById("fbBanner");if(!el)return;
+  if(state==="ready"){el.style.display="none";el.innerHTML="";return;}
+  const map={
+    connecting:["#1e2a4a","⏳ Подключение к Firebase…"],
+    noconfig:["#7f2b2b","⚙️ Не вставлен Firebase-конфиг. Откройте firebase-portal.html → блок FIREBASE CONFIG."],
+    offline:["#7f2b2b","🔌 Нет связи с базой. В Firebase Console: <b>Build → Firestore Database → Create database</b>, затем во вкладке <b>Rules</b> опубликуйте правила из firestore.rules."],
+    perm:["#7f2b2b","🔒 Нет доступа к данным. Включите <b>Authentication → Sign-in method → Anonymous</b> и опубликуйте firestore.rules."],
+    autherror:["#7f2b2b","🔑 Анонимный вход выключен. Firebase Console → <b>Authentication → Sign-in method → Anonymous → Enable</b>."+(msg?'<br><span style="opacity:.75;font-weight:400">'+esc(String(msg))+'</span>':"")],
+    err:["#7f2b2b","⚠️ Firebase: "+esc(String(msg||""))]
+  };
+  const v=map[state]||map.err;el.style.display="block";el.style.background=v[0];el.innerHTML=v[1];
+}
+async function firebaseSelfTest(){
+  try{await getDoc(doc(db,"rooms","__health__"));setFbStatus("ready");}
+  catch(e){const m=(e&&(e.code||e.message))||"";if(/unavailable|offline/i.test(m))setFbStatus("offline");else if(/permission/i.test(m))setFbStatus("perm");else setFbStatus("err",m);}
+}
 
 /* ---------- FIRESTORE REFS ---------- */
 const rdoc=()=>doc(db,"rooms",CODE);
@@ -960,13 +980,16 @@ function mySheetView(u){if(!u)return '<div class="card">Профиль не на
 
 /* ---------- INIT ---------- */
 if(CONFIG_OK){
+  setFbStatus("connecting");
   try{
     app=initializeApp(firebaseConfig);auth=getAuth(app);db=getFirestore(app);
-    onAuthStateChanged(auth,u=>{if(u){uidAuth=u.uid;if(session.code)subscribeRoom(session.code);else render();}});
-    signInAnonymously(auth).catch(e=>{showError(e);render();});
-  }catch(e){showError(e);render();}
-} else { render(); }
+    onAuthStateChanged(auth,async u=>{if(u){uidAuth=u.uid;await firebaseSelfTest();if(session.code)subscribeRoom(session.code);else render();}});
+    signInAnonymously(auth).catch(e=>{setFbStatus("autherror",e&&(e.code||e.message));render();});
+  }catch(e){setFbStatus("err",e&&e.message);render();}
+} else { setFbStatus("noconfig"); render(); }
 render();
+// фоллбэк: если за 4с вход не завершился — проверить связь с базой и показать причину
+if(CONFIG_OK)setTimeout(()=>{const b=document.getElementById("fbBanner");if(b&&db&&/Подключение/.test(b.innerText))firebaseSelfTest();},4000);
 
 </script>
 </body>
