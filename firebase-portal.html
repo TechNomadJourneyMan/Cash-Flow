@@ -296,6 +296,20 @@ hr.sep{border-top-color:var(--line);margin:15px 0}
 *::-webkit-scrollbar{width:8px;height:8px}
 *::-webkit-scrollbar-thumb{background:#26262e;border-radius:8px}
 *::-webkit-scrollbar-track{background:transparent}
+/* line icons */
+.ic{display:inline-flex;align-items:center;justify-content:center;vertical-align:-.16em;line-height:0}
+.ic svg{width:1.06em;height:1.06em;display:block}
+.tab .ic{margin-right:5px} .badge .ic svg{width:.95em;height:.95em}
+.bn .ic{font-size:inherit;margin:0 0 2px} .bn .ic svg{width:21px;height:21px}
+.iconbtn .ic svg{width:18px;height:18px}
+.logo .ic svg{width:1em;height:1em}
+.toast .ic{margin-right:2px}
+.roster-role{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:600;margin:14px 0 8px}
+.roster-role .ic svg{width:15px;height:15px}
+.pres{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--faint);flex:0 0 auto}
+.pres.on{background:var(--green);box-shadow:0 0 7px var(--green)}
+.rolepill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:7px;letter-spacing:.02em}
+.rp-admin{background:var(--acc-soft);color:var(--acc)} .rp-banker{background:rgba(124,162,255,.14);color:var(--blue)} .rp-auditor{background:rgba(95,212,194,.14);color:var(--teal)} .rp-player{background:rgba(120,120,130,.16);color:var(--muted)}
 </style>
 </head>
 <body>
@@ -434,6 +448,68 @@ function saveSess(){localStorage.setItem("dcb_sess",JSON.stringify(session));}
 /* ---------- HELPERS ---------- */
 function fmt(n){n=Math.round(n||0);return(n<0?"-":"")+"$"+Math.abs(n).toLocaleString("ru-RU");}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+/* ---------- ICON SYSTEM (line icons вместо эмодзи) ---------- */
+const ICONS={
+  bank:'<path d="M3 21h18M5 21V10M9 21V10M15 21V10M19 21V10M4 10h16M12 3 4 7h16z"/>',
+  dashboard:'<path d="M4 14a8 8 0 0 1 16 0"/><path d="M12 14l3.5-3"/><path d="M3 20h18"/>',
+  calculator:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h2M11 11h2M14 11h2M8 15h2M11 15h2M14 15h2"/>',
+  receipt:'<path d="M5 3v18l2-1 2 1 2-1 2 1 2-1 2 1V3l-2 1-2-1-2 1-2-1-2 1z"/><path d="M9 8h6M9 12h6"/>',
+  teams:'<circle cx="8" cy="9" r="2.5"/><circle cx="16" cy="9" r="2.5"/><path d="M2.5 19a5.5 5.5 0 0 1 11 0M10.5 19a5.5 5.5 0 0 1 11 0"/>',
+  table:'<rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18M8 18v2M16 18v2"/>',
+  layers:'<path d="m12 2 9 5-9 5-9-5z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/>',
+  chart:'<path d="M4 20V11M9.5 20V4M15 20v-7M20.5 20V8M2 20h20"/>',
+  puzzle:'<path d="M9 4.5a1.5 1.5 0 0 1 3 0c0 1 .6 1.5 1.5 1.5H17v3.5c0 .9.5 1.5 1.5 1.5a1.5 1.5 0 0 1 0 3c-1 0-1.5.6-1.5 1.5V20h-3.5c-.9 0-1.5-.6-1.5-1.5a1.5 1.5 0 0 0-3 0c0 .9-.6 1.5-1.5 1.5H4v-3.5c0-.9-.6-1.5-1.5-1.5a1.5 1.5 0 0 1 0-3c.9 0 1.5-.6 1.5-1.5V6h3.5c.9 0 1.5-.5 1.5-1.5z"/>',
+  rocket:'<path d="M5 13c-1.5 1.5-2 5-2 5s3.5-.5 5-2"/><path d="M13 16 8 11c1-4.5 4-8 10-9 1 6-2.5 9-9 10z"/><circle cx="14.5" cy="9.5" r="1.3"/>',
+  card:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
+  scroll:'<path d="M6 4a2 2 0 0 1 2-2h10v15a3 3 0 0 0 3 3H9a3 3 0 0 1-3-3z"/><path d="M6 4a2 2 0 0 0-2 2v1h2"/><path d="M10 7h5M10 11h5"/>',
+  gear:'<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5 5l2.1 2.1M16.9 16.9 19 19M19 5l-2.1 2.1M7.1 16.9 5 19"/>',
+  book:'<path d="M5 4a2 2 0 0 1 2-2h12v18H7a2 2 0 0 0-2 2z"/><path d="M5 20a2 2 0 0 1 2-2h12"/>',
+  users:'<circle cx="9" cy="8" r="3.4"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.2a3.4 3.4 0 0 1 0 6.6M21 20a6 6 0 0 0-4.5-5.8"/>',
+  bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  check:'<circle cx="12" cy="12" r="9"/><path d="m8.2 12 2.6 2.6 5-5.2"/>',
+  banknote:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 12h.01M18 12h.01"/>',
+  briefcase:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>',
+  note:'<path d="M5 3h10l4 4v14H5z"/><path d="M15 3v4h4M9 13h6M9 17h4"/>',
+  newspaper:'<path d="M4 6h13v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M17 9h2a1 1 0 0 1 1 1v9a1.5 1.5 0 0 1-3 0M7 9h7M7 13h7M7 17h4"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  link:'<path d="M9.5 14.5 14.5 9.5"/><path d="M11 6.5 12.3 5.2a3.6 3.6 0 0 1 5.1 5.1L16 11.7M13 17.5l-1.3 1.3a3.6 3.6 0 0 1-5.1-5.1L8 12.3"/>',
+  refresh:'<path d="M3.5 9a8 8 0 0 1 13.5-3l3 3M20.5 15a8 8 0 0 1-13.5 3l-3-3"/><path d="M20 4.5V9h-4.5M4 19.5V15h4.5"/>',
+  trash:'<path d="M4 7h16M9.5 7V5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2M6.5 7l1 13h9l1-13"/>',
+  pencil:'<path d="M4 20h4L19.5 8.5a2 2 0 0 0-3-3L5 17z"/><path d="M14.5 6.5l3 3"/>',
+  tag:'<path d="M3 12.5V4a1 1 0 0 1 1-1h8.5l8 8-9.5 9.5z"/><circle cx="7.5" cy="7.5" r="1.4"/>',
+  target:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>',
+  gem:'<path d="M6 3h12l3 6-9 12.5L3 9z"/><path d="M3 9h18M8.5 3 6 9l6 12.5L18 9l-2.5-6"/>',
+  dice:'<rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="9" cy="9" r="1.1"/><circle cx="15" cy="15" r="1.1"/><circle cx="15" cy="9" r="1.1"/><circle cx="9" cy="15" r="1.1"/>',
+  up:'<path d="M3 17l6.5-6.5 4 4L21 7"/><path d="M16 7h5v5"/>',
+  down:'<path d="M3 7l6.5 6.5 4-4L21 17"/><path d="M16 17h5v-5"/>',
+  arrowr:'<path d="M4 12h15M13 6l6 6-6 6"/>',
+  megaphone:'<path d="M3 11v2a1 1 0 0 0 1 1h2l6 4.5V5.5L6 10H4a1 1 0 0 0-1 1z"/><path d="M16 9.2a3.5 3.5 0 0 1 0 5.6"/>',
+  shuffle:'<path d="M3 7h3.5l11 10H21M3 17h3.5l3-2.7M15 7h3M18 4l3 3-3 3M18 14l3 3-3 3"/>',
+  bulb:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 1 4 10.5c-.6.6-1 1.4-1 2.5H9c0-1.1-.4-1.9-1-2.5A6 6 0 0 1 12 3z"/>',
+  userplus:'<circle cx="9" cy="8" r="3.6"/><path d="M3 20a6 6 0 0 1 11.5-2M18 8v6M15 11h6"/>',
+  flame:'<path d="M12 3c1 3 4.5 4.2 4.5 8.5A4.5 4.5 0 0 1 7.5 12c0-2 1-3 1.5-4 .8 1 2 1.2 3-5z"/>',
+  leaf:'<path d="M4 20C4 11.2 11.2 4 20 4c0 8.8-7.2 16-16 16z"/><path d="M9 15c2.2-2.4 5.2-4.2 9-5"/>',
+  xcircle:'<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/>',
+  lock:'<rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  key:'<circle cx="8" cy="14" r="4"/><path d="M11 11 20.5 1.5M17 5l2.5 2.5M14 8l2.5 2.5"/>',
+  plug:'<path d="M9 2v6M15 2v6M6 8h12v2a6 6 0 0 1-12 0z"/><path d="M12 16v6"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/>',
+  save:'<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7M8 14h8v7H8z"/>',
+  coins:'<ellipse cx="9" cy="7" rx="6" ry="2.8"/><path d="M3 7v5c0 1.5 2.7 2.8 6 2.8"/><path d="M15 9.6c2.4.4 4 1.4 4 2.4 0 1.5-2.7 2.8-6 2.8s-6-1.3-6-2.8"/><path d="M9 12v5c0 1.5 2.7 2.8 6 2.8s6-1.3 6-2.8v-5"/>',
+  trophy:'<path d="M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3M9.5 14h5l1 6h-7z"/>',
+  film:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M7 4v16M17 4v16M3 14.5h18"/>',
+  tornado:'<path d="M3 7h13a3 3 0 1 0-3-3M4 12h14a3 3 0 1 1-3 3M6 17h8a2.5 2.5 0 1 1-2.5 2.5"/>',
+  waves:'<path d="M2 8c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 14c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/>',
+  droplet:'<path d="M12 3c3.2 4.2 6 7.2 6 11a6 6 0 0 1-12 0c0-3.8 2.8-6.8 6-11z"/>',
+  scale:'<path d="M12 3v18M7 21h10M12 5 5 8M12 5l7 3M5 8 2.5 13a3 3 0 0 0 5 0zM19 8l-2.5 5a3 3 0 0 0 5 0z"/>',
+  warning:'<path d="M12 3 2.5 20h19z"/><path d="M12 10v5M12 18h.01"/>',
+  crown:'<path d="M3 7l4 4 5-6 5 6 4-4-2 13H5z"/>',
+  dot:'<circle cx="12" cy="12" r="4"/>'
+};
+const EMO={'🏛':'bank','🏦':'bank','🎛':'dashboard','🧮':'calculator','🧾':'receipt','🤝':'teams','🪑':'table','🎴':'layers','📊':'chart','🧩':'puzzle','🚀':'rocket','💳':'card','📜':'scroll','⚙':'gear','📖':'book','👥':'users','⚡':'bolt','✅':'check','💵':'banknote','💼':'briefcase','📝':'note','📰':'newspaper','👤':'user','🔗':'link','💱':'refresh','🔄':'refresh','🗑':'trash','✏':'pencil','🏷':'tag','🎯':'target','💎':'gem','🎲':'dice','📈':'up','📉':'down','➡':'arrowr','📢':'megaphone','🔀':'shuffle','🧠':'bulb','🙋':'userplus','🔥':'flame','🌿':'leaf','❌':'xcircle','🔒':'lock','🔑':'key','🔌':'plug','⏳':'clock','💾':'save','💰':'coins','🏆':'trophy','🎬':'film','🌪':'tornado','🌊':'waves','🌉':'link','🛢':'droplet','⚖':'scale','⚠':'warning','👑':'crown'};
+const EMO_RE=new RegExp('('+Object.keys(EMO).map(e=>e.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\uFE0F?','g');
+function ic(name){return '<span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[name]||ICONS.dot)+'</svg></span>';}
+function iconize(s){return String(s==null?"":s).replace(EMO_RE,(m,e)=>ic(EMO[e]));}
 function pick(a){return a[Math.floor(Math.random()*a.length)];}
 function clamp(n,a,b){return Math.max(a,Math.min(b,n));}
 function uid(id){return M.users.find(u=>u.id===id);}
@@ -456,8 +532,8 @@ function totalCapital(){return players().reduce((s,u)=>s+(u.balance||0),0);}
 function portfolioValue(u){let v=0;const pf=u.portfolio||{};for(const s in pf){const a=asset(s);if(a)v+=a.price*pf[s].qty;}return v;}
 function loansOf(id){return M.loans.filter(l=>l.userId===id&&l.status==="active");}
 
-function toast(msg,kind){const w=document.getElementById("toasts");const el=document.createElement("div");el.className="toast"+(kind==="warn"?" warn":kind==="ach"?" ach":"");el.innerHTML=msg;w.appendChild(el);setTimeout(()=>{el.style.transition="opacity .4s";el.style.opacity="0";setTimeout(()=>el.remove(),400);},2800);}
-function modal(title,body,buttons,cls){const root=document.getElementById("modalRoot");const ov=document.createElement("div");ov.className="overlay";ov.innerHTML='<div class="modal '+(cls||"")+'"><h2>'+esc(title)+'</h2><div>'+body+'</div><div class="row" style="margin-top:14px;justify-content:flex-end"></div></div>';const close=()=>ov.remove();ov.addEventListener("click",e=>{if(e.target===ov)close();});const brow=ov.querySelector(".row");(buttons||[{label:"Закрыть",cls:"btn"}]).forEach(b=>{const bb=document.createElement("button");bb.className="btn "+(b.cls||"");bb.textContent=b.label;bb.onclick=()=>{if(b.onClick)b.onClick(close,ov);else close();};brow.appendChild(bb);});root.appendChild(ov);return ov;}
+function toast(msg,kind){const w=document.getElementById("toasts");const el=document.createElement("div");el.className="toast"+(kind==="warn"?" warn":kind==="ach"?" ach":"");el.innerHTML=iconize(msg);w.appendChild(el);setTimeout(()=>{el.style.transition="opacity .4s";el.style.opacity="0";setTimeout(()=>el.remove(),400);},2800);}
+function modal(title,body,buttons,cls){const root=document.getElementById("modalRoot");const ov=document.createElement("div");ov.className="overlay";ov.innerHTML='<div class="modal '+(cls||"")+'"><h2>'+iconize(esc(title))+'</h2><div>'+iconize(body)+'</div><div class="row" style="margin-top:14px;justify-content:flex-end"></div></div>';const close=()=>ov.remove();ov.addEventListener("click",e=>{if(e.target===ov)close();});const brow=ov.querySelector(".row");(buttons||[{label:"Закрыть",cls:"btn"}]).forEach(b=>{const bb=document.createElement("button");bb.className="btn "+(b.cls||"");bb.textContent=b.label;bb.onclick=()=>{if(b.onClick)b.onClick(close,ov);else close();};brow.appendChild(bb);});root.appendChild(ov);return ov;}
 function confirmModal(t,txt,onYes,yesLabel,yesCls){modal(t,'<p>'+esc(txt)+'</p>',[{label:"Отмена",cls:"ghost"},{label:yesLabel||"Подтвердить",cls:yesCls||"red",onClick:c=>{c();onYes();}}]);}
 function copyText(t){if(navigator.clipboard)navigator.clipboard.writeText(t).catch(()=>{});}
 function inviteLink(){return location.origin+location.pathname+"?room="+encodeURIComponent(CODE||"");}
@@ -748,34 +824,35 @@ async function resetRoom(){
 async function saveSettings(f){const s=Object.assign({},settings(),f.settings);await updateRoom({settings:s,centralBankRate:f.cbr});toast("✅ Настройки сохранены");}
 /* ---------- RENDER ---------- */
 let shownEvent=null;
-const ADMIN_TABS=[["dash","🎛️ Dashboard"],["players","🧮 Игроки"],["sheets","🧾 Бланки"],["teams","🤝 Команды"],["tables","🪑 Столы"],["events","🎴 События"],["exchange","📊 Биржа"],["loans","🏦 Кредиты"],["pools","🧩 Пулы"],["venture","🚀 Венчур"],["tx","💳 Транзакции"],["history","📜 История"],["settings","⚙️ Настройки"],["rules","📖 Правила"]];
-const BANKER_TABS=[["players","👥 Игроки стола"],["ops","⚡ Операции"],["sheets","🧾 Бланки"],["approvals","✅ Подтверждения"],["pools","🧩 Пулы"],["payday","💵 День получки"],["history","📜 История"]];
-const AUDITOR_TABS=[["sheets","🧾 Бланки на проверку"],["players","👥 Игроки"],["mysheet","📝 Мой бланк"],["mywallet","💼 Мой кошелёк"],["history","📜 История"]];
-const PLAYER_NAV=[["wallet","💼","Кошелёк"],["sheet","📝","Бланк"],["exchange","📊","Биржа"],["pools","🧩","Пулы"],["venture","🚀","Венчур"],["news","📰","Новости"]];
+const ADMIN_TABS=[["dash","🎛️ Dashboard"],["players","🧮 Игроки"],["roster","👥 Участники"],["sheets","🧾 Бланки"],["teams","🤝 Команды"],["tables","🪑 Столы"],["events","🎴 События"],["exchange","📊 Биржа"],["loans","🏦 Кредиты"],["pools","🧩 Пулы"],["venture","🚀 Венчур"],["tx","💳 Транзакции"],["history","📜 История"],["settings","⚙️ Настройки"],["rules","📖 Правила"]];
+const BANKER_TABS=[["players","👥 Игроки стола"],["ops","⚡ Операции"],["roster","👥 Участники"],["sheets","🧾 Бланки"],["approvals","✅ Подтверждения"],["pools","🧩 Пулы"],["payday","💵 День получки"],["history","📜 История"]];
+const AUDITOR_TABS=[["sheets","🧾 Бланки на проверку"],["roster","👥 Участники"],["players","👥 Игроки"],["mysheet","📝 Мой бланк"],["mywallet","💼 Мой кошелёк"],["history","📜 История"]];
+const PLAYER_NAV=[["wallet","💼","Кошелёк"],["sheet","📝","Бланк"],["exchange","📊","Биржа"],["pools","🧩","Пулы"],["venture","🚀","Венчур"],["roster","👥","Состав"],["news","📰","Лента"]];
 function setTab(t){session.tab[session.role]=t;saveSess();render();window.scrollTo(0,0);}
 function leaveRoom(){unsubAll();session=mkSess();saveSess();CODE=null;M={room:null,users:[],transactions:[],loans:[],pools:[],startups:[],offers:[],approvals:[],news:[],history:[]};render();}
 
 function render(){
   const view=document.getElementById("view"),top=document.getElementById("topbar"),nav=document.getElementById("bottomNav");
-  if(!CONFIG_OK){top.innerHTML="";nav.innerHTML="";view.innerHTML=configError();return;}
-  if(!session.code){top.innerHTML="";nav.innerHTML="";view.innerHTML=authView();bindView();return;}
-  if(!M.room){top.innerHTML="";nav.innerHTML="";view.innerHTML='<div class="card center" style="margin-top:40px">⏳ Загрузка комнаты «'+esc(session.code)+'»…<br><button class="btn ghost" style="margin-top:12px" data-act="leave">Выйти</button></div>';bindView();return;}
+  const SV=h=>view.innerHTML=iconize(h);
+  if(!CONFIG_OK){top.innerHTML="";nav.innerHTML="";SV(configError());return;}
+  if(!session.code){top.innerHTML="";nav.innerHTML="";SV(authView());bindView();return;}
+  if(!M.room){top.innerHTML="";nav.innerHTML="";SV('<div class="card center" style="margin-top:40px">⏳ Загрузка комнаты «'+esc(session.code)+'»…<br><button class="btn ghost" style="margin-top:12px" data-act="leave">Выйти</button></div>');bindView();return;}
   // живая роль: участник получает роль из своего документа (админ может повысить до банкира/аудитора онлайн)
   if(session.uid){const u=uid(session.uid);if(u)session.role=u.role||"player";}
-  if(session.uid&&!uid(session.uid)){renderTopbar();nav.innerHTML="";view.innerHTML='<div class="card center" style="margin-top:30px">Профиль не найден.<br><button class="btn ghost" style="margin-top:10px" data-act="leave">Выйти</button></div>';bindView();return;}
-  if(session.role==="player"&&session.uid&&!(uid(session.uid).tableId)){renderTopbar();nav.innerHTML="";view.innerHTML=joinPlayerView();bindView();return;}
+  if(session.uid&&!uid(session.uid)){renderTopbar();nav.innerHTML="";SV('<div class="card center" style="margin-top:30px">Профиль не найден.<br><button class="btn ghost" style="margin-top:10px" data-act="leave">Выйти</button></div>');bindView();return;}
+  if(session.role==="player"&&session.uid&&!(uid(session.uid).tableId)){renderTopbar();nav.innerHTML="";SV(joinPlayerView());bindView();return;}
   renderTopbar();
-  if(session.role==="admin"){renderTabsBar(ADMIN_TABS);view.innerHTML=adminView();nav.innerHTML="";}
-  else if(session.role==="banker"){renderTabsBar(BANKER_TABS);view.innerHTML=bankerView();nav.innerHTML="";}
-  else if(session.role==="auditor"){renderTabsBar(AUDITOR_TABS);view.innerHTML=auditorView();nav.innerHTML="";}
-  else{view.innerHTML=playerView();renderNav();}
+  if(session.role==="admin"){renderTabsBar(ADMIN_TABS);SV(adminView());nav.innerHTML="";}
+  else if(session.role==="banker"){renderTabsBar(BANKER_TABS);SV(bankerView());nav.innerHTML="";}
+  else if(session.role==="auditor"){renderTabsBar(AUDITOR_TABS);SV(auditorView());nav.innerHTML="";}
+  else{SV(playerView());renderNav();}
   bindView();
 }
 function configError(){return '<div class="card" style="max-width:560px;margin:30px auto"><h2>⚙️ Нужен Firebase-конфиг</h2><p>Откройте <b>firebase-portal.html</b>, найдите блок <code>FIREBASE CONFIG</code> и вставьте конфиг вашего проекта (замените значения <code>PASTE_…</code>).</p><p class="small muted">Пошаговая инструкция — в файле <b>FIREBASE-SETUP.md</b>.</p></div>';}
 function renderTopbar(){
   const e=room().economy||{};
   let tabs=(session.role==="player")?"":'<div class="tabs" id="tabs"></div>';
-  document.getElementById("topbar").innerHTML=
+  document.getElementById("topbar").innerHTML=iconize(
     '<div class="tb-main"><div class="logo">🏛️</div><div><div class="tb-title">'+esc(room().name||"Комната")+'</div><div class="tb-sub">'+esc(CODE)+' · '+({admin:"Гейм-мастер",banker:"Банкир",player:"Игрок"}[session.role])+'</div></div>'+
     '<span class="rt live" id="rtBadge">realtime</span>'+
     (session.role==="admin"||session.role==="banker"?'<button class="iconbtn" data-act="shareRoom" title="Пригласить">🔗</button>':'')+
@@ -786,10 +863,10 @@ function renderTopbar(){
       '<span class="chip">Ставка ЦБ <b>'+(room().centralBankRate||0)+'%</b></span>'+
       '<span class="chip">Тренд <b>'+trendObj().name+'</b></span>'+
       (session.role!=="player"?'<span class="chip">Капитал <b>'+fmt(totalCapital())+'</b></span>':'')+
-    '</div>'+tabs;
+    '</div>'+tabs);
 }
-function renderTabsBar(t){const el=document.getElementById("tabs");if(el)el.innerHTML=t.map(x=>'<button class="tab'+(session.tab[session.role]===x[0]?' on':'')+'" data-tab="'+x[0]+'">'+x[1]+'</button>').join("");}
-function renderNav(){const n=document.getElementById("bottomNav");n.className="bottomnav";n.innerHTML=PLAYER_NAV.map(x=>'<div class="bn'+(session.tab.player===x[0]?' on':'')+'" data-tab="'+x[0]+'"><span class="ic">'+x[1]+'</span>'+x[2]+'</div>').join("");}
+function renderTabsBar(t){const el=document.getElementById("tabs");if(el)el.innerHTML=iconize(t.map(x=>'<button class="tab'+(session.tab[session.role]===x[0]?' on':'')+'" data-tab="'+x[0]+'">'+x[1]+'</button>').join(""));}
+function renderNav(){const n=document.getElementById("bottomNav");n.className="bottomnav";n.innerHTML=iconize(PLAYER_NAV.map(x=>'<div class="bn'+(session.tab.player===x[0]?' on':'')+'" data-tab="'+x[0]+'">'+x[1]+'<span style="display:block">'+x[2]+'</span></div>').join(""));}
 
 /* ----- AUTH ----- */
 function authView(){
@@ -853,7 +930,7 @@ function eventCardHTML(ev){
 
 /* ----- ADMIN ----- */
 function adminView(){const t=session.tab.admin;
-  if(t==="dash")return aDash();if(t==="players")return calcView(false,null);if(t==="sheets")return sheetsReview(null);if(t==="teams")return teamsView();if(t==="tables")return tablesView();
+  if(t==="dash")return aDash();if(t==="players")return calcView(false,null);if(t==="roster")return rosterView();if(t==="sheets")return sheetsReview(null);if(t==="teams")return teamsView();if(t==="tables")return tablesView();
   if(t==="events")return eventsView();if(t==="exchange")return exchangeAdmin();if(t==="loans")return loansView();if(t==="pools")return poolsView(false);
   if(t==="venture")return ventureView(false);if(t==="tx")return txView();if(t==="history")return historyView();if(t==="ach")return achView();if(t==="settings")return settingsView();if(t==="rules")return rulesView();return "";}
 function aDash(){
@@ -946,6 +1023,24 @@ function txView(){
   return '<div class="card"><div class="row spread"><h2>Транзакции</h2><span class="small muted">'+M.transactions.length+'</span></div><div class="row" style="margin-bottom:8px"><select id="txFilter" style="max-width:220px">'+opts+'</select><button class="btn sm" data-act="copyTx">📋</button></div><div class="scroll"><table class="tx"><thead><tr><th>Игрок</th><th>Тип</th><th>Сумма</th><th>Причина</th><th>Раунд</th></tr></thead><tbody>'+(list.slice(0,200).map(t=>'<tr><td>'+esc(t.targetName||"—")+'</td><td>'+esc(t.type)+'</td><td style="color:'+(t.amount>=0?'var(--green)':'var(--red)')+'">'+(t.amount>=0?'+':'')+fmt(t.amount)+'</td><td>'+esc(t.reason||"")+'</td><td>'+(t.round||"")+'</td></tr>').join("")||'<tr><td colspan="5" class="muted">Нет операций</td></tr>')+'</tbody></table></div></div>';
 }
 function historyView(){return '<div class="card"><h2>История партии</h2>'+(M.history.length?M.history.slice(0,150).map(h=>'<div class="hitem"><div class="ht">'+gameIcon(h.type)+' '+esc(h.title)+'</div>'+(h.desc?'<div class="small">'+esc(h.desc)+'</div>':'')+'<div class="hm">раунд '+(h.round||1)+'</div></div>').join(""):'<p class="muted">Пусто.</p>')+'</div>';}
+function rosterView(){
+  const all=M.users.slice().sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+  const staff=session.role!=="player";
+  const online=all.filter(u=>u.online).length;
+  let h='<div class="card"><div class="row spread"><h2>👥 Участники комнаты</h2><span class="small muted">'+all.length+' чел. · '+online+' онлайн</span></div>'+
+    '<p class="small muted">Все, кто присоединился к комнате '+esc(CODE)+', с их ролями. Роли назначает администратор.</p></div>';
+  h+='<div class="card"><div class="roster-role">👤 Ведущий</div><div class="item"><div class="row spread"><div><b>Гейм-мастер</b> <span class="rolepill rp-admin">Админ</span><div class="small muted">управляет экономикой партии с панели администратора</div></div>'+ic("crown")+'</div></div>';
+  const groups=[["auditor","Аудиторы","🧾","Аудитор"],["banker","Банкиры","🏦","Банкир"],["player","Игроки","💼","Игрок"]];
+  let any=false;
+  groups.forEach(([role,label,icon,one])=>{
+    const list=all.filter(u=>u.role===role);if(!list.length)return;any=true;
+    h+='<div class="roster-role">'+icon+' '+label+' · '+list.length+'</div>';
+    h+=list.map(u=>'<div class="item"><div class="row spread"><div class="row" style="gap:9px;flex-wrap:nowrap"><span class="pres '+(u.online?'on':'')+'"></span><div><b>'+esc(u.name)+'</b> <span class="rolepill rp-'+role+'">'+one+'</span><div class="small muted">'+esc(tableName(u.tableId))+(u.teamId?' · '+esc(teamName(u.teamId)):'')+(u.status==="fasttrack"?' · скоростная дорожка':u.status==="venture"?' · венчур':'')+(u.auditorId&&staff?' · аудитор: '+esc((uid(u.auditorId)||{}).name||'—'):'')+'</div></div></div>'+(staff?'<div class="pbal">'+fmt(u.balance)+'</div>':'')+'</div>'+(staff?'<div class="row" style="margin-top:8px"><button class="btn sm" data-act="openSheet" data-id="'+u.id+'">🧾 Бланк</button>'+(session.role==="admin"?'<button class="btn sm" data-act="roleModal" data-id="'+u.id+'">👤 Роль</button>':'')+'</div>':'')+'</div>').join("");
+  });
+  if(!any)h+='<p class="muted" style="margin-top:10px">Пока никто не присоединился. Поделитесь кодом комнаты или QR.</p>';
+  h+='</div>';
+  return h;
+}
 function achView(){const open=room().achievements||[];return '<div class="card"><h2>Достижения ('+open.length+'/'+ACHIEVEMENTS.length+')</h2><div class="grid g2">'+ACHIEVEMENTS.map(a=>{const o=open.includes(a.id);return '<div class="item" style="opacity:'+(o?1:.5)+';'+(o?'border-color:var(--gold)':'')+'"><div class="row"><div style="font-size:22px">'+a.icon+'</div><div><b>'+esc(a.title)+'</b></div></div></div>';}).join("")+'</div></div>';}
 function settingsView(){const s=settings();return '<div class="card"><h2>Настройки комнаты</h2><div class="grid g2"><div class="field"><label class="fl">Стартовый баланс</label><input id="seStart" type="number" value="'+(s.startBalance||0)+'"></div><div class="field"><label class="fl">Лимит перевода</label><input id="seTr" type="number" value="'+(s.transferLimit||0)+'"></div><div class="field"><label class="fl">Лимит кредита</label><input id="seLoan" type="number" value="'+(s.loanLimit||0)+'"></div><div class="field"><label class="fl">Ставка кредита %</label><input id="seRate" type="number" value="'+(s.loanRate||0)+'"></div><div class="field"><label class="fl">Ставка ЦБ %</label><input id="seCBR" type="number" value="'+(room().centralBankRate||0)+'"></div></div><button class="btn green" data-act="saveSettings">Сохранить</button></div>'+
   '<div class="card"><h2>Данные комнаты</h2><div class="info-box small">Код комнаты: <b>'+esc(CODE)+'</b>. Покажите его игрокам.</div><div class="row" style="margin-top:8px"><button class="btn red" data-act="resetRoom">🗑️ Сбросить комнату</button></div></div>';}
@@ -956,6 +1051,7 @@ function bankerView(){const t=session.tab.banker,tid=session.tableId||(tables()[
   const sel='<div class="card"><label class="fl">Ваш стол</label><select id="bkTable">'+tables().map(x=>'<option value="'+x.id+'"'+(tid===x.id?' selected':'')+'>'+esc(x.name)+'</option>').join("")+'</select></div>';
   if(t==="players")return sel+calcView(true,tid);
   if(t==="ops")return sel+'<div class="card"><h2>Операции · '+esc(tableName(tid))+'</h2>'+(tableMembers(tid).length?tableMembers(tid).map(playerCard).join(""):'<p class="muted">Нет игроков.</p>')+'</div>';
+  if(t==="roster")return sel+rosterView();
   if(t==="sheets")return sel+sheetsReview(tid);
   if(t==="approvals"){const list=M.approvals.filter(a=>a.status==="pending");return sel+'<div class="card"><h2>Подтверждения ('+list.length+')</h2>'+(list.length?list.map(a=>'<div class="item"><div class="row spread"><b>'+esc(a.type==="transfer"?"Перевод":a.type==="pool"?"Пул":a.type)+'</b><span class="badge b-yellow">'+fmt(a.amount)+'</span></div><div class="small muted">от '+esc(a.requestedBy)+' · '+esc(a.reason)+'</div><div class="row" style="margin-top:8px"><button class="btn sm green" data-act="approveOk" data-id="'+a.id+'">Подтвердить</button><button class="btn sm red" data-act="approveNo" data-id="'+a.id+'">Отклонить</button></div></div>').join(""):'<p class="muted">Нет ожиданий.</p>')+'</div>';}
   if(t==="pools")return sel+poolsView(false);
@@ -966,7 +1062,7 @@ function bankerView(){const t=session.tab.banker,tid=session.tableId||(tables()[
 
 /* ----- PLAYER ----- */
 function playerView(){const u=uid(session.uid);if(!u)return joinPlayerView();const t=session.tab.player;
-  if(t==="wallet")return walletView(u);if(t==="sheet")return mySheetView(u);if(t==="exchange")return exchangePlayer(u);if(t==="pools")return poolsView(true);if(t==="venture")return ventureView(true);if(t==="news")return newsView();if(t==="profile")return profileView(u);return "";}
+  if(t==="wallet")return walletView(u);if(t==="sheet")return mySheetView(u);if(t==="exchange")return exchangePlayer(u);if(t==="pools")return poolsView(true);if(t==="venture")return ventureView(true);if(t==="roster")return rosterView();if(t==="news")return newsView();if(t==="profile")return profileView(u);return "";}
 function walletView(u){
   const neg=u.balance<0,pv=paydayPreview(u.id),loans=loansOf(u.id),myTx=M.transactions.filter(t=>t.playerId===u.id).slice(0,8);
   const pOpts=players().filter(p=>p.id!==u.id).map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join("");
@@ -1237,6 +1333,7 @@ function sheetsReview(scopeTableId){
     (list.length?list.map(u=>{const c=computeSheet(u.sheet||defaultSheet());const isMyWard=u.auditorId&&u.auditorId===me;return '<div class="item"><div class="row spread"><div><b>'+esc(u.name)+'</b> '+sheetStatus(u)+(isMyWard?' <span class="badge b-blue">мой подопечный</span>':'')+'<div class="small muted">'+esc(tableName(u.tableId))+' · поток '+fmt(c.cashflow)+' · пассивный '+fmt(c.passive)+(u.auditorId?' · аудитор: '+esc((uid(u.auditorId)||{}).name||"—"):'')+'</div></div><button class="btn sm primary" data-act="openSheet" data-id="'+u.id+'">Открыть</button></div></div>';}).join(""):'<p class="muted">Нет игроков.</p>')+'</div>';
 }
 function auditorView(){const t=session.tab.auditor||"sheets";session.tab.auditor=t;
+  if(t==="roster")return rosterView();
   if(t==="sheets")return sheetsReview(null);
   if(t==="players")return '<div class="card"><h2>Игроки</h2>'+players().map(u=>'<div class="item"><div class="row spread"><div><b>'+esc(u.name)+'</b> '+sheetStatus(u)+'<div class="small muted">'+esc(tableName(u.tableId))+' · баланс '+fmt(u.balance)+'</div></div><button class="btn sm" data-act="openSheet" data-id="'+u.id+'">Бланк</button></div></div>').join("")+'</div>';
   if(t==="mysheet")return mySheetView(uid(session.uid));
