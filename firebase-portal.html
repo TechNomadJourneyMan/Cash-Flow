@@ -176,7 +176,7 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opa
 
 /* ---- Inputs ---- */
 input,select,textarea{background:var(--bg2);border:1px solid var(--line);border-radius:12px;color:var(--txt);
-  font-size:15px;padding:12px 13px;min-height:46px;transition:.16s;font-family:var(--font)}
+  font-size:16px;padding:12px 13px;min-height:46px;transition:.16s;font-family:var(--font)} /* 16px = без авто-зума на iOS */
 input:focus,select:focus,textarea:focus{border-color:var(--acc-line);box-shadow:0 0 0 3px var(--acc-soft)}
 input[type=number]{font-family:var(--mono)}
 label.fl{font-size:11px;letter-spacing:.02em;color:var(--muted);font-weight:500;margin-bottom:5px}
@@ -261,6 +261,20 @@ hr.sep{border-top-color:var(--line);margin:15px 0}
 .auth{max-width:430px}
 .role-pick button{border-radius:13px;font-weight:600;min-height:48px;background:var(--panel2)}
 .role-pick button.on{background:var(--acc-soft);color:var(--acc);border-color:var(--acc-line)}
+.auth .card.center .logo{font-size:36px}
+.auth .card.center h2{font-family:var(--serif);font-weight:400;font-size:27px;letter-spacing:.3px}
+/* мобильные уточнения */
+@media(max-width:600px){
+  .wrap{padding:6px 12px calc(108px + var(--sa-b))}
+  .card{padding:16px;border-radius:16px}
+  .hero{padding:18px}
+  .hero .hbal{font-size:32px}
+  .roomcode{font-size:24px}
+  .qrbox img,.qrbox canvas,.qrbox svg{width:144px!important;height:144px!important}
+  .tb-title{font-size:20px}
+  .stat .v{font-size:16px}
+  .grid{gap:9px}
+}
 
 /* ---- New: hero balance (player wallet) ---- */
 .hero{position:relative;overflow:hidden;border-radius:var(--radius);padding:22px;border:1px solid var(--acc-line);
