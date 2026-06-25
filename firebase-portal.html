@@ -219,7 +219,7 @@ function setFbStatus(state,msg){
   const v=map[state]||map.err;el.style.display="block";el.style.background=v[0];el.innerHTML=v[1];
 }
 async function firebaseSelfTest(){
-  try{await getDoc(doc(db,"rooms","__health__"));setFbStatus("ready");}
+  try{await getDoc(doc(db,"rooms","_health"));setFbStatus("ready");}
   catch(e){const m=(e&&(e.code||e.message))||"";if(/unavailable|offline/i.test(m))setFbStatus("offline");else if(/permission/i.test(m))setFbStatus("perm");else setFbStatus("err",m);}
 }
 
