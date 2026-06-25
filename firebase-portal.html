@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>Digital Central Bank — Firebase Portal</title>
+<style>
+:root{--bg:#070b16;--bg2:#0c1426;--panel:#101a30;--panel2:#16223e;--line:#243153;--txt:#e9eefc;--muted:#8b9bc4;--acc:#4f8cff;--green:#22c55e;--red:#ef4444;--orange:#f59e0b;--purple:#a855f7;--blue:#3b82f6;--gold:#fbbf24;--gray:#64748b;--teal:#14b8a6;--yellow:#eab308;--radius:14px;--shadow:0 12px 34px rgba(0,0,0,.45)}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:radial-gradient(1000px 700px at 85% -10%,#13203f 0%,var(--bg) 55%) fixed;color:var(--txt);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+.wrap{max-width:1180px;margin:0 auto;padding:10px 12px 110px}
+h1,h2,h3{margin:0 0 8px}button{font-family:inherit;cursor:pointer}
+.muted{color:var(--muted)}.small{font-size:12.5px}.hidden{display:none!important}
+.topbar{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,var(--bg) 75%,transparent);padding:10px 0 6px;backdrop-filter:blur(6px)}
+.tb-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.logo{font-size:24px}
+.tb-title{font-weight:800;font-size:16px}.tb-sub{font-size:11px;color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.chip{font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;border:1px solid var(--line);background:var(--panel)}.chip b{color:var(--acc)}
+.rt{margin-left:auto;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
+.rt.live{color:#86efac;border-color:rgba(34,197,94,.4)}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:8px 0}
+.tab{flex:0 0 auto;padding:8px 13px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-weight:600;font-size:12.5px;white-space:nowrap}
+.tab.on{background:linear-gradient(135deg,var(--acc),#3a6bff);color:#fff;border-color:transparent}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:15px;margin-bottom:13px;box-shadow:var(--shadow)}.card h2{font-size:16px}
+.grid{display:grid;gap:11px}.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:820px){.g4{grid-template-columns:repeat(3,1fr)}.g3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.g2,.g3,.g4{grid-template-columns:1fr}.g2.keep,.g4.keep,.g3.keep{grid-template-columns:repeat(2,1fr)}}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.spread{justify-content:space-between}
+.section-title{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:4px 0 8px}
+hr.sep{border:none;border-top:1px solid var(--line);margin:13px 0}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px}.stat .k{font-size:11px;color:var(--muted);text-transform:uppercase}.stat .v{font-size:19px;font-weight:800;margin-top:3px}
+.btn{border:1px solid var(--line);background:var(--panel2);color:var(--txt);padding:10px 13px;border-radius:11px;font-weight:600;font-size:13.5px;transition:.12s}
+.btn:hover{transform:translateY(-1px);border-color:var(--acc)}
+.btn.primary{background:linear-gradient(135deg,var(--acc),#3a6bff);border-color:transparent;color:#fff}
+.btn.green{background:linear-gradient(135deg,#16a34a,#22c55e);border-color:transparent;color:#fff}
+.btn.red{background:linear-gradient(135deg,#dc2626,#ef4444);border-color:transparent;color:#fff}
+.btn.purple{background:linear-gradient(135deg,#9333ea,#a855f7);border-color:transparent;color:#fff}
+.btn.gold{background:linear-gradient(135deg,#d97706,#fbbf24);border-color:transparent;color:#1a1300}
+.btn.blue{background:linear-gradient(135deg,#2563eb,#3b82f6);border-color:transparent;color:#fff}
+.btn.teal{background:linear-gradient(135deg,#0d9488,#14b8a6);border-color:transparent;color:#fff}
+.btn.ghost{background:transparent}.btn.sm{padding:6px 10px;font-size:12px;border-radius:9px}.btn.block{width:100%;justify-content:center;text-align:center;display:block}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-money{padding:8px 0;border-radius:9px;font-weight:700;font-size:12.5px;border:1px solid var(--line);background:var(--panel2);color:var(--txt)}
+.btn-money.plus{color:#bbf7d0;border-color:#1f6f43}.btn-money.minus{color:#fecaca;border-color:#7f2b2b}
+input,select,textarea{font-family:inherit;font-size:14px;color:var(--txt);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}textarea{resize:vertical;min-height:54px}
+label.fl{display:block;font-size:11.5px;color:var(--muted);margin:0 0 4px}.field{margin-bottom:9px}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;border:1px solid transparent}
+.b-green{background:rgba(34,197,94,.15);color:#86efac}.b-red{background:rgba(239,68,68,.15);color:#fca5a5}.b-orange{background:rgba(245,158,11,.15);color:#fcd34d}.b-purple{background:rgba(168,85,247,.15);color:#d8b4fe}.b-blue{background:rgba(59,130,246,.15);color:#93c5fd}.b-gold{background:rgba(251,191,36,.15);color:#fde68a}.b-gray{background:rgba(100,116,139,.18);color:#cbd5e1}.b-teal{background:rgba(20,184,166,.15);color:#5eead4}.b-yellow{background:rgba(234,179,8,.15);color:#fde047}
+.item{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:9px}.item.neg{border-color:var(--red)}
+.pname{font-weight:800;font-size:15px}.pbal{font-weight:800;font-size:17px}
+.team-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px}
+.tag-chip{font-size:10px;padding:2px 7px;border-radius:999px;background:var(--bg2);border:1px solid var(--line);color:var(--muted);cursor:pointer;display:inline-block;margin:2px 1px}
+.tag-chip.on{background:rgba(79,140,255,.2);border-color:var(--acc);color:#cdd9ff}
+.asset{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px}.spark{width:100%;height:38px;display:block}.price{font-size:20px;font-weight:800}.chg-up{color:var(--green)}.chg-down{color:var(--red)}
+.econ-row{margin-bottom:8px}.econ-row .lbl{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}.bar{height:7px;border-radius:6px;background:var(--bg2);overflow:hidden}.bar>span{display:block;height:100%;border-radius:6px;transition:width .5s}
+.risk-meter{height:13px;border-radius:8px;background:linear-gradient(90deg,#22c55e,#f59e0b,#ef4444);position:relative;overflow:hidden}.risk-meter .knob{position:absolute;top:-3px;width:4px;height:19px;background:#fff;border-radius:3px;transition:left .6s}
+.event-card{border-radius:14px;padding:15px;border:1px solid var(--line);background:var(--panel2)}.edge{height:5px;border-radius:5px;width:54px;margin-bottom:4px}.etitle{font-size:17px;font-weight:800;margin:8px 0}
+.choice{background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:10px;margin-top:7px}
+.hitem{border-left:3px solid var(--line);padding:7px 10px;margin-bottom:6px;background:var(--bg2);border-radius:0 9px 9px 0}.hitem .ht{font-weight:700;font-size:13px}.hitem .hm{font-size:11px;color:var(--muted)}
+.prog{height:8px;border-radius:6px;background:var(--bg2);overflow:hidden;margin:6px 0}.prog>span{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--green))}
+.overlay{position:fixed;inset:0;background:rgba(3,6,16,.74);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;max-width:540px;width:100%;max-height:88vh;overflow:auto;box-shadow:var(--shadow)}.fs-event{border:2px solid var(--purple)}
+.toast-wrap{position:fixed;left:0;right:0;bottom:78px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:200;pointer-events:none}
+.toast{background:var(--panel);border:1px solid var(--acc);color:var(--txt);padding:10px 15px;border-radius:11px;font-weight:600;font-size:13px;box-shadow:var(--shadow);max-width:92vw}.toast.warn{border-color:var(--red)}.toast.ach{border-color:var(--gold)}
+.bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--panel);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 4px}
+.bn{flex:1;text-align:center;color:var(--muted);font-size:10.5px;font-weight:600;padding:4px 2px;border-radius:9px}.bn .ic{font-size:18px;display:block}.bn.on{color:var(--acc)}
+.warn-box{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:#fecaca;padding:9px;border-radius:9px;font-size:12.5px}
+.ok-box{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);color:#bbf7d0;padding:9px;border-radius:9px;font-size:12.5px}
+.info-box{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.35);color:#bfdbfe;padding:9px;border-radius:9px;font-size:12.5px}
+.pickbox{max-height:170px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg2)}.pick{display:flex;align-items:center;gap:8px;padding:4px 0}
+.auth{max-width:440px;margin:30px auto}.role-pick{display:flex;gap:8px}.role-pick button{flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);font-weight:700}.role-pick button.on{background:linear-gradient(135deg,var(--acc),#3a6bff);color:#fff;border-color:transparent}
+.scroll{overflow:auto}table.tx{width:100%;border-collapse:collapse;font-size:12px}table.tx th,table.tx td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}table.tx th{color:var(--muted);font-size:11px;text-transform:uppercase}
+.center{text-align:center}.big{font-size:34px;letter-spacing:2px;font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar" id="topbar"></div>
+  <div id="view"><div class="card center" style="margin-top:40px">⏳ Подключение к Firebase…</div></div>
+</div>
+<div id="bottomNav"></div>
+<div id="modalRoot"></div>
+<div class="toast-wrap" id="toasts"></div>
+
+<script type="module">
+/* =====================================================================
+   Digital Central Bank & Global Exchange — Firebase realtime portal
+   Роли: admin / banker / player. Firestore + Anonymous Auth.
+   ===================================================================== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, addDoc, onSnapshot, query, orderBy, limit, runTransaction, serverTimestamp, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* === FIREBASE CONFIG ===  ← вставьте сюда свой конфиг из консоли Firebase */
+const firebaseConfig = {
+  apiKey: "AIzaSyCKV61Qt7XQHMeWVw2T5Uzajq4R8-vLnSc",
+  authDomain: "cash-flow-2ac83.firebaseapp.com",
+  projectId: "cash-flow-2ac83",
+  storageBucket: "cash-flow-2ac83.firebasestorage.app",
+  messagingSenderId: "204170223199",
+  appId: "1:204170223199:web:18878bfdb9a9ef90ab45ea",
+  measurementId: "G-LBS4DBGS9D"
+};
+const CONFIG_OK = !firebaseConfig.apiKey.startsWith("PASTE_");
+
+/* ---------- STATIC GAME DATA ---------- */
+const PLAYER_TAGS=["есть недвижимость","есть бизнес","есть акции","есть кредиты","есть дети","отрицательный cashflow","высокий пассивный доход","много наличных","рискованный инвестор","консервативный инвестор","лидер","новичок","предприниматель","инвестор","должник","скоростная дорожка","венчурный инвестор","активный трейдер","участник пула","владелец бизнеса"];
+const CATEGORIES=["Глобальная экономика","Недвижимость","Акции и инвестиции","Бизнес и предпринимательство","Личные события","Банки, кредиты и долги","Налоги и государство","Технологии и инновации","Потребительский рынок","Чёрные лебеди и кризисы","Возможности","Социальные тренды","Командные события","Денежные события","Переговоры и сделки","Биржевые события","Инвестиционные пулы","Венчурный рынок","Межстоловые события","Регуляторные события ЦБ"];
+const TYPE_META={positive:{badge:"b-green",edge:"var(--green)",label:"Позитивное"},negative:{badge:"b-red",edge:"var(--red)",label:"Негативное"},mixed:{badge:"b-orange",edge:"var(--orange)",label:"Смешанное"},crisis:{badge:"b-purple",edge:"var(--purple)",label:"Кризис"},opportunity:{badge:"b-blue",edge:"var(--blue)",label:"Возможность"},decision:{badge:"b-teal",edge:"var(--teal)",label:"Решение"},marketShock:{badge:"b-gold",edge:"var(--gold)",label:"Биржевой шок"},regulation:{badge:"b-yellow",edge:"var(--yellow)",label:"Регуляция ЦБ"},team:{badge:"b-teal",edge:"var(--teal)",label:"Командное"},pool:{badge:"b-blue",edge:"var(--blue)",label:"Пулы"},venture:{badge:"b-gold",edge:"var(--gold)",label:"Венчур"}};
+const RARITY_META={common:{w:45,label:"Обычное",badge:"b-gray"},uncommon:{w:25,label:"Необычное",badge:"b-green"},rare:{w:15,label:"Редкое",badge:"b-blue"},epic:{w:10,label:"Эпическое",badge:"b-purple"},legendary:{w:5,label:"Легендарное",badge:"b-gold"}};
+const ASSET_TEMPLATES=[{symbol:"$TECH",name:"Технологический сектор",sector:"Технологии",price:100,vol:8},{symbol:"$ENERGY",name:"Энергетика",sector:"Энергетика",price:80,vol:7},{symbol:"$REALTY",name:"Недвижимость",sector:"Недвижимость",price:120,vol:5},{symbol:"$HEALTH",name:"Медицина",sector:"Здравоохранение",price:90,vol:6},{symbol:"$BANK",name:"Банковский сектор",sector:"Финансы",price:70,vol:6}];
+const DICE=[{name:"Бум",emoji:"📈",desc:"Активы дорожают, оптимизм.",impact:{business:8,stocks:8,sentiment:9,risk:-6},stock:{all:8},rate:0},{name:"Стабильность",emoji:"⚖️",desc:"Спокойный рынок.",impact:{sentiment:3,risk:-3},stock:{all:1},rate:0},{name:"Инфляция",emoji:"🔥",desc:"Цены растут.",impact:{inflation:9,risk:5,sentiment:-4},stock:{},rate:1},{name:"Рецессия",emoji:"📉",desc:"Спад активности.",impact:{business:-9,stocks:-7,risk:7},stock:{all:-8},rate:0},{name:"Рыночная паника",emoji:"⚡",desc:"Обвал и страх.",impact:{stocks:-12,risk:12,sentiment:-11},stock:{all:-15},rate:0},{name:"Неожиданная возможность",emoji:"💎",desc:"Выгодные сделки.",impact:{business:6,sentiment:6,risk:-4},stock:{"$TECH":10},rate:0},{name:"Кредитное сжатие",emoji:"🏦",desc:"Кредиты дорожают.",impact:{risk:10,business:-5},stock:{"$REALTY":-12,"$BANK":8},rate:3},{name:"Венчурный всплеск",emoji:"🚀",desc:"Стартапы в моде.",impact:{business:7,sentiment:7},stock:{"$TECH":14},rate:0},{name:"Налоговое давление",emoji:"🧾",desc:"Сборы растут.",impact:{business:-5,risk:5},stock:{all:-3},rate:0},{name:"Энергетический шок",emoji:"🛢️",desc:"Энергия дорожает.",impact:{inflation:10,risk:9},stock:{"$ENERGY":18,"$TECH":-6},rate:1}];
+const TRENDS=[{id:"growth",name:"Рост экономики",favor:["Глобальная экономика","Бизнес и предпринимательство","Возможности"],boost:.6},{id:"inflation",name:"Инфляционный период",favor:["Налоги и государство","Денежные события","Регуляторные события ЦБ"],boost:.6},{id:"creditcrunch",name:"Кредитное сжатие",favor:["Банки, кредиты и долги","Регуляторные события ЦБ"],boost:.6},{id:"realestate",name:"Бум недвижимости",favor:["Недвижимость"],boost:.8},{id:"tech",name:"Технологическая революция",favor:["Технологии и инновации","Биржевые события","Возможности"],boost:.7},{id:"recession",name:"Рецессия",favor:["Чёрные лебеди и кризисы","Потребительский рынок"],boost:.7},{id:"venture",name:"Венчурный бум",favor:["Венчурный рынок","Инвестиционные пулы","Межстоловые события"],boost:.8},{id:"marketpanic",name:"Рыночная паника",favor:["Биржевые события","Чёрные лебеди и кризисы"],boost:.7},{id:"entrepreneur",name:"Предпринимательский подъём",favor:["Бизнес и предпринимательство","Переговоры и сделки"],boost:.7},{id:"taxpressure",name:"Налоговое давление",favor:["Налоги и государство","Денежные события"],boost:.6}];
+const MODES=[{id:"basic",name:"Базовый"},{id:"realistic",name:"Реалистичная экономика"},{id:"crisis",name:"Кризисный"},{id:"opportunity",name:"Возможности"},{id:"chaos",name:"Хаос"},{id:"team",name:"Командный"},{id:"money",name:"Денежный"},{id:"market",name:"Биржевой"},{id:"venture",name:"Венчурный"},{id:"cross",name:"Межстоловой"}];
+const PHASES=[{id:"start",name:"Старт",desc:"Кредиты ограничены."},{id:"warmup",name:"Разогрев",desc:"Экономика набирает обороты."},{id:"active",name:"Активная игра",desc:"Полный набор событий."},{id:"crisis",name:"Кризис",desc:"Больше негатива."},{id:"recovery",name:"Восстановление",desc:"Рынки восстанавливаются."},{id:"freetrade",name:"Свободная торговля",desc:"Акцент на бирже и пулах."},{id:"final",name:"Финал",desc:"Крупные сделки и венчур."},{id:"pause",name:"Пауза",desc:"Игра на паузе."}];
+const ACHIEVEMENTS=[{id:"first_player",icon:"🙋",title:"Первый игрок"},{id:"first_team",icon:"🤝",title:"Командная игра"},{id:"first_crisis",icon:"🌪️",title:"Первый кризис"},{id:"hot_economy",icon:"🔥",title:"Бурная экономика"},{id:"calm",icon:"🌿",title:"Спокойный рынок"},{id:"opp_hunter",icon:"🎯",title:"Охотник за возможностями"},{id:"econ_storm",icon:"🌊",title:"Экономический шторм"},{id:"banker",icon:"🏦",title:"Банкир партии"},{id:"big_capital",icon:"💰",title:"Большой капитал"},{id:"exchange_day",icon:"📊",title:"Биржевой день"},{id:"syndicate",icon:"🧩",title:"Синдикат"},{id:"venture_bridge",icon:"🌉",title:"Венчурный мост"}];
+
+// Челленджи и возможности (компактно)
+const CHALLENGES=[["Финансовая дисциплина","Круг без новых кредитов.",300],["Охота за активами","Следующий купивший актив — бонус.",500],["Антикризисный менеджер","Игрок с минусовым cashflow пересматривает расходы.",400],["Инвестор на просадке","При падении рынка — актив со скидкой.",600],["Командная цель","Команда совместно растит капитал.",800],["Долговая разгрузка","Должник рефинансирует долг.",500],["Пассивный доход","Бонус за рост пассивного дохода.",700],["Биржевой спринт","Доходность портфеля за 10 минут.",900],["Синдикат раунда","Закрыть один совместный пул.",600],["Венчурный мост","Венчур финансирует раннего игрока.",1000],["Диверсификатор","3+ типа активов.",900],["Без долгов","Закрыть круг без обязательств.",500],["Маркет-мейкер","5 сделок на бирже за круг.",700],["Сделка года","Крупнейшая сделка круга.",1200],["Финансовая подушка","Резерв на 1 раунд расходов.",500],["Контрциклический ход","Купить на падении.",700],["Терпеливый держатель","Не продавать актив до конца круга.",600],["Налоговый стратег","Снизить налоговый эффект.",400],["Командный спринт","Команда — 3 сделки за круг.",1000],["Хладнокровие","Не реагировать на панику.",400]];
+const OPPS=[["Инвесторская конференция","Возьми 2 карты сделки, выбери 1.",0],["Контакт с брокером","Продай актив без комиссии один раз.",0],["Налоговый консультант","-50% к одному налогу.",250],["Переговоры с банком","Уменьши штраф по кредиту.",300],["Партнёрство","Совместная сделка с игроком.",0],["Финансовый наставник","Отмени одно личное негативное событие.",0],["Командный капитал","+700$ команде при условии.",700],["Быстрый листинг","Листинг на биржу стартапов без подтверждения.",0],["Маркет-мейкер","Купи акции с пониженной комиссией.",150],["Грант-акселератор","+1 000$ предпринимателю.",1000],["Дешёвая ликвидность","+500$ беспроцентно на ход.",500],["Бизнес-ангел","+1 500$ в проект.",1500],["Антикризисный грант","+900$ в рецессию.",900],["Капитал лидера","+1 200$ лидеру.",1200],["Менторская сессия","+400$ новичку.",400],["Окно рефинансирования","+600$ должнику.",600],["Венчурный билет","x1.5 к следующей прибыли.",0],["Страховой полис","Защити актив от потери.",0],["Диверсификационный бонус","+800$ за 3+ типа активов.",800],["Кэшбэк-программа","Верни 10% от траты.",200]];
+
+// События (MVP-набор, расширяемо). E(...) — фабрика.
+function E(o){return Object.assign({title:"",category:"Глобальная экономика",type:"negative",rarity:"common",impactLevel:"medium",description:"",appliesTo:"Все игроки",effect:"",targetRule:"all",moneyEffectType:"none",moneyAmount:0,moneyPercent:0,stockEffects:{},riskIndexDelta:0,centralBankRateDelta:0,autoApplicable:false,requiresApproval:false,playerMessage:"",bankerInstructions:"",discussionQuestion:"",economyImpact:{},choices:null},o);}
+function C(t,o){return Object.assign({text:t,risk:"",moneyEffectType:"none",moneyAmount:0,moneyPercent:0,targetRule:"player",stockEffects:{},economyImpact:{},outcomes:null},o||{});}
+const EVENTS=[
+E({title:"Глобальный экономический рост",category:"Глобальная экономика",type:"positive",description:"Доходы растут.",effect:"Все +3% наличных.",moneyEffectType:"percentAdd",moneyPercent:3,autoApplicable:true,economyImpact:{business:6,sentiment:8},riskIndexDelta:-5,stockEffects:{all:5}}),
+E({title:"Скачок инфляции",category:"Денежные события",type:"negative",description:"Цены растут.",effect:"Все -5% наличных.",moneyEffectType:"percentSubtract",moneyPercent:5,autoApplicable:true,requiresApproval:true,economyImpact:{inflation:8,sentiment:-5},riskIndexDelta:6}),
+E({title:"Прямая дотация всем",category:"Денежные события",type:"positive",description:"Фиксированная выплата каждому.",effect:"Все +800$.",moneyEffectType:"add",moneyAmount:800,autoApplicable:true,economyImpact:{sentiment:5}}),
+E({title:"Налоговая волна",category:"Налоги и государство",type:"negative",rarity:"uncommon",description:"Временные налоги.",effect:"Все -5% баланса.",moneyEffectType:"percentSubtract",moneyPercent:5,autoApplicable:true,requiresApproval:true,economyImpact:{business:-4,sentiment:-5},riskIndexDelta:10,bankerInstructions:"Проверьте владельцев бизнеса для доп. сбора."}),
+E({title:"Налоговый вычет",category:"Налоги и государство",type:"positive",rarity:"uncommon",description:"Возврат налогов.",effect:"Все +500$.",moneyEffectType:"add",moneyAmount:500,autoApplicable:true,riskIndexDelta:-3}),
+E({title:"Технологический бум",category:"Биржевые события",type:"marketShock",rarity:"rare",impactLevel:"high",description:"Техсектор растёт.",effect:"$TECH +40%.",targetRule:"none",stockEffects:{"$TECH":40},autoApplicable:true,economyImpact:{stocks:8,sentiment:7},riskIndexDelta:4,playerMessage:"$TECH взлетает — проверьте портфель!"}),
+E({title:"Энергетический шок",category:"Биржевые события",type:"marketShock",rarity:"rare",impactLevel:"high",description:"Скачок цен на энергию.",effect:"$ENERGY +25%, $TECH -8%.",targetRule:"none",stockEffects:{"$ENERGY":25,"$TECH":-8},autoApplicable:true,economyImpact:{inflation:8},riskIndexDelta:8}),
+E({title:"Обвал фондового рынка",category:"Биржевые события",type:"crisis",rarity:"epic",impactLevel:"critical",description:"Паника на бирже.",effect:"Все активы -25%.",targetRule:"none",stockEffects:{all:-25},autoApplicable:true,requiresApproval:true,economyImpact:{stocks:-15,sentiment:-13},riskIndexDelta:22}),
+E({title:"Бум недвижимости",category:"Недвижимость",type:"positive",rarity:"uncommon",description:"Жильё дорожает.",effect:"$REALTY +18%, владельцы недвижимости +800$.",appliesTo:"есть недвижимость",targetRule:"tag:есть недвижимость",moneyEffectType:"add",moneyAmount:800,stockEffects:{"$REALTY":18},autoApplicable:true,economyImpact:{realEstate:9},riskIndexDelta:3}),
+E({title:"Кредитное сжатие",category:"Регуляторные события ЦБ",type:"regulation",rarity:"rare",impactLevel:"high",description:"ЦБ повышает ставку.",effect:"Ставка ЦБ +5%, $REALTY -20%, $BANK +10%.",targetRule:"none",stockEffects:{"$REALTY":-20,"$BANK":10},centralBankRateDelta:5,autoApplicable:true,economyImpact:{business:-5},riskIndexDelta:15,bankerInstructions:"Проценты по кредитам выше на «Дне получки»."}),
+E({title:"Смягчение политики ЦБ",category:"Регуляторные события ЦБ",type:"regulation",rarity:"uncommon",description:"ЦБ снижает ставку.",effect:"Ставка ЦБ -3%, $REALTY +10%.",targetRule:"none",stockEffects:{"$REALTY":10},centralBankRateDelta:-3,autoApplicable:true,economyImpact:{business:5},riskIndexDelta:-6}),
+E({title:"Банковский штраф",category:"Банки, кредиты и долги",type:"negative",description:"Просрочка.",effect:"Игроки с кредитами -500$.",appliesTo:"есть кредиты",targetRule:"tag:есть кредиты",moneyEffectType:"subtract",moneyAmount:500,autoApplicable:true,riskIndexDelta:4}),
+E({title:"Рефинансирование долга",category:"Банки, кредиты и долги",type:"positive",rarity:"uncommon",description:"Снижена ставка.",effect:"Должники +600$.",appliesTo:"должник",targetRule:"tag:должник",moneyEffectType:"add",moneyAmount:600,autoApplicable:true,riskIndexDelta:-4}),
+E({title:"Банковская паника",category:"Чёрные лебеди и кризисы",type:"crisis",rarity:"epic",impactLevel:"critical",description:"Набег вкладчиков.",effect:"Все -7% наличных, $BANK -18%.",moneyEffectType:"percentSubtract",moneyPercent:7,stockEffects:{"$BANK":-18},autoApplicable:true,requiresApproval:true,economyImpact:{sentiment:-12},riskIndexDelta:18}),
+E({title:"Грант для предпринимателей",category:"Бизнес и предпринимательство",type:"positive",rarity:"uncommon",description:"Поддержка малого бизнеса.",effect:"Предприниматели +2 000$.",appliesTo:"предприниматель",targetRule:"tag:предприниматель",moneyEffectType:"add",moneyAmount:2000,autoApplicable:true,economyImpact:{business:6},riskIndexDelta:-4}),
+E({title:"Локдаун",category:"Чёрные лебеди и кризисы",type:"crisis",rarity:"epic",impactLevel:"critical",description:"Офлайн-бизнес теряет выручку, цифра растёт.",effect:"Владельцы бизнеса -10%, $TECH +40%, $REALTY -15%.",appliesTo:"владелец бизнеса",targetRule:"tag:владелец бизнеса",moneyEffectType:"percentSubtract",moneyPercent:10,stockEffects:{"$TECH":40,"$REALTY":-15},autoApplicable:true,requiresApproval:true,economyImpact:{business:-12},riskIndexDelta:25,bankerInstructions:"Проверьте тег «владелец бизнеса»."}),
+E({title:"Крупный контракт",category:"Бизнес и предпринимательство",type:"positive",description:"Выгодный заказ.",effect:"Игроки с бизнесом +1 200$.",appliesTo:"есть бизнес",targetRule:"tag:есть бизнес",moneyEffectType:"add",moneyAmount:1200,autoApplicable:true,economyImpact:{business:7}}),
+E({title:"Уход ключевого клиента",category:"Бизнес и предпринимательство",type:"negative",description:"Разрыв договора.",effect:"Игроки с бизнесом -8% наличных.",appliesTo:"есть бизнес",targetRule:"tag:есть бизнес",moneyEffectType:"percentSubtract",moneyPercent:8,autoApplicable:true,economyImpact:{business:-7},riskIndexDelta:5}),
+E({title:"Слияния и поглощения",category:"Венчурный рынок",type:"venture",rarity:"rare",description:"Корпорации скупают стартапы.",effect:"$TECH +20%, венчурные +1 500$.",appliesTo:"венчурный инвестор",targetRule:"tag:венчурный инвестор",moneyEffectType:"add",moneyAmount:1500,stockEffects:{"$TECH":20},autoApplicable:true,riskIndexDelta:-5}),
+E({title:"Инвесторская конференция",category:"Инвестиционные пулы",type:"opportunity",rarity:"uncommon",description:"Новые контакты и сделки.",effect:"Венчурные +800$, пулы без комиссии.",appliesTo:"венчурный инвестор",targetRule:"tag:венчурный инвестор",moneyEffectType:"add",moneyAmount:800,autoApplicable:true,riskIndexDelta:-5}),
+E({title:"Межстоловой синдикат",category:"Межстоловые события",type:"pool",rarity:"rare",description:"Игроки разных столов объединяют капитал.",effect:"Участники пулов +700$.",appliesTo:"участник пула",targetRule:"tag:участник пула",moneyEffectType:"add",moneyAmount:700,autoApplicable:true}),
+E({title:"Командная премия",category:"Командные события",type:"team",rarity:"uncommon",description:"Команда выполнила цель.",effect:"Выбранная команда +1 000$ каждому.",appliesTo:"Одна команда",targetRule:"team",moneyEffectType:"add",moneyAmount:1000,autoApplicable:true}),
+E({title:"Командный убыток",category:"Командные события",type:"team",rarity:"uncommon",description:"Инвестиция команды провалилась.",effect:"Команда -6% наличных.",appliesTo:"Одна команда",targetRule:"team",moneyEffectType:"percentSubtract",moneyPercent:6,autoApplicable:true,riskIndexDelta:5}),
+E({title:"Неожиданное наследство",category:"Личные события",type:"positive",rarity:"rare",description:"Наследство.",effect:"Выбранный игрок +3 000$.",appliesTo:"Один игрок",targetRule:"player",moneyEffectType:"add",moneyAmount:3000,autoApplicable:true}),
+E({title:"Медицинские расходы",category:"Личные события",type:"negative",description:"Лечение.",effect:"Выбранный игрок -800$.",appliesTo:"Один игрок",targetRule:"player",moneyEffectType:"subtract",moneyAmount:800,autoApplicable:true}),
+E({title:"Мировой финансовый кризис",category:"Чёрные лебеди и кризисы",type:"crisis",rarity:"legendary",impactLevel:"critical",description:"Системный обвал.",effect:"Все -12% наличных, все активы -20%.",moneyEffectType:"percentSubtract",moneyPercent:12,stockEffects:{all:-20},autoApplicable:true,requiresApproval:true,economyImpact:{sentiment:-15},riskIndexDelta:25,discussionQuestion:"Кто теряет меньше — и почему?"}),
+E({title:"Потребительский бум",category:"Потребительский рынок",type:"positive",description:"Люди тратят.",effect:"Игроки с бизнесом +800$.",appliesTo:"есть бизнес",targetRule:"tag:есть бизнес",moneyEffectType:"add",moneyAmount:800,autoApplicable:true,economyImpact:{business:6}}),
+E({title:"Социальная нестабильность",category:"Социальные тренды",type:"negative",rarity:"rare",description:"Протесты пугают рынки.",effect:"Все -4% наличных, активы -6%.",moneyEffectType:"percentSubtract",moneyPercent:4,stockEffects:{all:-6},autoApplicable:true,economyImpact:{sentiment:-8},riskIndexDelta:9}),
+E({title:"Окно для входа в актив",category:"Возможности",type:"opportunity",rarity:"uncommon",description:"Недооценённый актив.",effect:"Инвесторы +800$.",appliesTo:"инвестор",targetRule:"tag:инвестор",moneyEffectType:"add",moneyAmount:800,autoApplicable:true,riskIndexDelta:-3}),
+E({title:"Джекпот для лидера",category:"Денежные события",type:"opportunity",rarity:"rare",description:"Бонус лидеру.",effect:"Лидеры +2 500$.",appliesTo:"лидер",targetRule:"tag:лидер",moneyEffectType:"add",moneyAmount:2500,autoApplicable:true}),
+// интерактивные
+E({title:"Рынок на панике",category:"Биржевые события",type:"decision",rarity:"rare",impactLevel:"high",description:"Рынок падает, активы дешевеют.",appliesTo:"Один игрок",discussionQuestion:"Покупать на страхе?",choices:[C("Продать часть активов",{risk:"Кэш сейчас, без дохода потом",moneyEffectType:"add",moneyAmount:1000}),C("Купить на просадке",{risk:"Платишь сейчас, бонус потом",moneyEffectType:"subtract",moneyAmount:800}),C("Ничего не делать",{risk:"Без риска и без шанса",moneyEffectType:"none"})]}),
+E({title:"Рискованная инвестиция",category:"Акции и инвестиции",type:"decision",rarity:"rare",impactLevel:"high",description:"Высокий доход и риск.",appliesTo:"Один игрок",choices:[C("Безопасный вклад",{risk:"Скромный доход",moneyEffectType:"add",moneyAmount:300}),C("Умеренный риск",{risk:"Доход или малый убыток",outcomes:[{label:"Успех (+1 500$)",chance:50,moneyEffectType:"add",moneyAmount:1500},{label:"Нейтрально",chance:30,moneyEffectType:"none"},{label:"Убыток (-500$)",chance:20,moneyEffectType:"subtract",moneyAmount:500}]}),C("Высокий риск",{risk:"Куш или убыток",outcomes:[{label:"Успех (+3 000$)",chance:40,moneyEffectType:"add",moneyAmount:3000},{label:"Нейтрально",chance:30,moneyEffectType:"none"},{label:"Убыток (-1 500$)",chance:30,moneyEffectType:"subtract",moneyAmount:1500}]})]}),
+E({title:"Венчурный мост",category:"Венчурный рынок",type:"decision",rarity:"rare",description:"Финансировать раннего игрока?",appliesTo:"Венчурный игрок",choices:[C("Профинансировать",{risk:"Помощь за долю",moneyEffectType:"subtract",moneyAmount:1500,economyImpact:{sentiment:4}}),C("Дать заём",{risk:"Вернётся с процентом",outcomes:[{label:"Возврат с прибылью (+500$)",chance:60,moneyEffectType:"add",moneyAmount:500},{label:"Возврат ровно",chance:30,moneyEffectType:"none"},{label:"Невозврат (-1 000$)",chance:10,moneyEffectType:"subtract",moneyAmount:1000}]}),C("Отказать",{risk:"Без риска",moneyEffectType:"none"})]})
+];
+/* ---------- INIT FIREBASE ---------- */
+let app,auth,db,uidAuth=null;
+let CODE=null;
+let M={room:null,users:[],transactions:[],loans:[],pools:[],startups:[],offers:[],approvals:[],news:[],history:[]};
+let session=loadSess();
+let unsubs=[];
+let lastEvent=null, categoryFilter="all", txFilter="all";
+
+function loadSess(){try{return JSON.parse(localStorage.getItem("dcb_sess"))||mkSess();}catch(e){return mkSess();}}
+function mkSess(){return{code:null,role:null,uid:null,tableId:null,tab:{admin:"dash",banker:"players",player:"wallet"}};}
+function saveSess(){localStorage.setItem("dcb_sess",JSON.stringify(session));}
+
+/* ---------- HELPERS ---------- */
+function fmt(n){n=Math.round(n||0);return(n<0?"-":"")+"$"+Math.abs(n).toLocaleString("ru-RU");}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function clamp(n,a,b){return Math.max(a,Math.min(b,n));}
+function uid(id){return M.users.find(u=>u.id===id);}
+function players(){return M.users.filter(u=>u.role==="player");}
+function room(){return M.room||{};}
+function settings(){return room().settings||{};}
+function tables(){return room().tables||[];}
+function teams(){return room().teams||[];}
+function assets(){return room().assets||[];}
+function asset(sym){return assets().find(a=>a.symbol===sym);}
+function tableName(id){const t=tables().find(x=>x.id===id);return t?t.name:"—";}
+function teamName(id){const t=teams().find(x=>x.id===id);return t?t.name:"Без команды";}
+function teamColor(id){const t=teams().find(x=>x.id===id);return t?t.color:"#64748b";}
+function tableMembers(id){return players().filter(u=>u.tableId===id);}
+function teamMembers(id){return players().filter(u=>u.teamId===id);}
+function trendObj(){return TRENDS.find(t=>t.id===room().trendId)||TRENDS[0];}
+function modeObj(){return MODES.find(m=>m.id===room().mode)||MODES[0];}
+function phaseObj(){return PHASES.find(p=>p.id===room().phase)||PHASES[0];}
+function totalCapital(){return players().reduce((s,u)=>s+(u.balance||0),0);}
+function portfolioValue(u){let v=0;const pf=u.portfolio||{};for(const s in pf){const a=asset(s);if(a)v+=a.price*pf[s].qty;}return v;}
+function loansOf(id){return M.loans.filter(l=>l.userId===id&&l.status==="active");}
+
+function toast(msg,kind){const w=document.getElementById("toasts");const el=document.createElement("div");el.className="toast"+(kind==="warn"?" warn":kind==="ach"?" ach":"");el.innerHTML=msg;w.appendChild(el);setTimeout(()=>{el.style.transition="opacity .4s";el.style.opacity="0";setTimeout(()=>el.remove(),400);},2800);}
+function modal(title,body,buttons,cls){const root=document.getElementById("modalRoot");const ov=document.createElement("div");ov.className="overlay";ov.innerHTML='<div class="modal '+(cls||"")+'"><h2>'+esc(title)+'</h2><div>'+body+'</div><div class="row" style="margin-top:14px;justify-content:flex-end"></div></div>';const close=()=>ov.remove();ov.addEventListener("click",e=>{if(e.target===ov)close();});const brow=ov.querySelector(".row");(buttons||[{label:"Закрыть",cls:"btn"}]).forEach(b=>{const bb=document.createElement("button");bb.className="btn "+(b.cls||"");bb.textContent=b.label;bb.onclick=()=>{if(b.onClick)b.onClick(close,ov);else close();};brow.appendChild(bb);});root.appendChild(ov);return ov;}
+function confirmModal(t,txt,onYes,yesLabel,yesCls){modal(t,'<p>'+esc(txt)+'</p>',[{label:"Отмена",cls:"ghost"},{label:yesLabel||"Подтвердить",cls:yesCls||"red",onClick:c=>{c();onYes();}}]);}
+function copyText(t){if(navigator.clipboard)navigator.clipboard.writeText(t).catch(()=>{});}
+function val(id){const el=document.getElementById(id);return el?el.value:"";}
+function showError(e){toast("⚠️ Firebase: "+(e.message||e),"warn");}
+
+/* ---------- FIRESTORE REFS ---------- */
+const rdoc=()=>doc(db,"rooms",CODE);
+const sub=(n)=>collection(db,"rooms",CODE,n);
+function updateRoom(obj){return updateDoc(rdoc(),obj);}
+function addHistory(type,title,desc){return addDoc(sub("history"),{type,title,desc:desc||"",round:room().round||1,createdAt:serverTimestamp()});}
+function addNews(title,body,type,priority){return addDoc(sub("news"),{title,body:body||"",type:type||"info",priority:priority||"normal",createdAt:serverTimestamp()});}
+async function bumpCounter(k){const c=Object.assign({},room().counters||{});c[k]=(c[k]||0)+1;await updateRoom({counters:c});}
+
+/* ---------- SUBSCRIPTIONS ---------- */
+function unsubAll(){unsubs.forEach(u=>{try{u();}catch(e){}});unsubs=[];}
+function subscribeRoom(code){
+  unsubAll();CODE=code;
+  unsubs.push(onSnapshot(rdoc(),s=>{M.room=s.exists()?{id:s.id,...s.data()}:null;render();},err=>showError(err)));
+  [["users","users",false],["transactions","transactions",true],["loans","loans",false],["pools","pools",false],["startups","startups",false],["offers","offers",false],["approvals","approvals",false],["news","news",true],["history","history",true]].forEach(([key,name,ordered])=>{
+    let q2=collection(db,"rooms",code,name);
+    if(ordered)q2=query(q2,orderBy("createdAt","desc"),limit(150));
+    unsubs.push(onSnapshot(q2,s=>{M[key]=s.docs.map(d=>({id:d.id,...d.data()}));render();},err=>{}));
+  });
+}
+
+/* ---------- ROOM / PLAYERS / TEAMS ---------- */
+async function createRoom(o){
+  const code=(o.code||"CASH-2026").toUpperCase().trim();
+  const exists=await getDoc(doc(db,"rooms",code));
+  if(exists.exists()){toast("⚠️ Комната с таким кодом уже есть — войдите в неё или смените код.","warn");return;}
+  const tbls=[];const n=Math.max(1,Math.min(4,o.tables||2));
+  for(let i=1;i<=n;i++)tbls.push({id:"TBL"+i,name:"Стол "+i,number:i});
+  if(o.venture)tbls.push({id:"TBL"+(n+1),name:"Венчурный стол",number:n+1});
+  const ass=ASSET_TEMPLATES.slice(0,o.assets||3).map(t=>({symbol:t.symbol,name:t.name,sector:t.sector,price:t.price,previousPrice:t.price,vol:t.vol,isHalted:false,history:[t.price]}));
+  await setDoc(doc(db,"rooms",code),{
+    name:o.name||"Большая игра",phase:"start",round:1,mode:"basic",trendId:"growth",riskIndex:35,centralBankRate:10,
+    economy:{inflation:35,rate:30,realEstate:55,stocks:55,unemployment:40,business:55,sentiment:55,liquidity:55,creditAccess:55},
+    settings:{startBalance:o.startBalance||5000,transferLimit:o.transferLimit||5000,loanLimit:20000,loanRate:10,adminPin:o.adminPin||"0000",bankerPin:o.bankerPin||"1111",negativeAllowed:true},
+    tables:tbls,teams:[],assets:ass,counters:{events:0,crises:0,opportunities:0,decisions:0,moneyOps:0,trades:0,dice:0,poolsClosed:0},achievements:[],lastEventIds:[],
+    createdAt:serverTimestamp()
+  });
+  session={code,role:"admin",uid:null,tableId:tbls[0].id,tab:session.tab};saveSess();
+  subscribeRoom(code);toast("✅ Комната "+code+" создана");
+}
+async function joinAsPlayer(name,tableId,teamId){
+  name=(name||"").trim();if(!name){toast("⚠️ Введите имя","warn");return;}
+  const sb=settings().startBalance||0;
+  const ref=await addDoc(sub("users"),{name,role:"player",tableId:tableId||null,teamId:teamId||null,status:"ratrace",balance:sb,tags:[],portfolio:{},notes:"",online:true,authUid:uidAuth,createdAt:serverTimestamp()});
+  if(sb!==0)await addDoc(sub("transactions"),{type:"income",targetName:name,playerId:ref.id,amount:sb,reason:"Стартовый баланс",balanceBefore:0,balanceAfter:sb,round:room().round,tableId:tableId||null,createdBy:"player",createdAt:serverTimestamp()});
+  session.uid=ref.id;saveSess();addHistory("player","Игрок вошёл: "+name,"Стол: "+tableName(tableId));checkAch();render();toast("✅ Добро пожаловать, "+esc(name));
+}
+async function addPlayer(name,balance,tableId,teamId){
+  name=(name||"").trim();if(!name){toast("⚠️ Введите имя","warn");return;}
+  balance=isFinite(balance)?balance:(settings().startBalance||0);
+  const ref=await addDoc(sub("users"),{name,role:"player",pin:"0000",tableId:tableId||null,teamId:teamId||null,status:"ratrace",balance,tags:[],portfolio:{},notes:"",sheet:defaultSheet(),auditorId:null,online:false,createdAt:serverTimestamp()});
+  if(balance!==0)await addDoc(sub("transactions"),{type:"income",targetName:name,playerId:ref.id,amount:balance,reason:"Стартовый баланс",balanceBefore:0,balanceAfter:balance,round:room().round,tableId:tableId||null,createdBy:session.role,createdAt:serverTimestamp()});
+  addHistory("player","Добавлен игрок: "+name,"Баланс "+fmt(balance));checkAch();
+}
+async function deletePlayer(id){const u=uid(id);await deleteDoc(doc(db,"rooms",CODE,"users",id));addHistory("player","Удалён игрок: "+(u?u.name:""),"Баланс "+fmt(u?u.balance:0));}
+async function updatePlayer(id,f){
+  const u=uid(id);if(!u)return;const patch={};const ch=[];
+  if(f.name&&f.name!==u.name){patch.name=f.name.trim();ch.push("имя");}
+  if(f.tableId!==undefined&&f.tableId!==u.tableId){patch.tableId=f.tableId||null;ch.push("стол");}
+  if(f.teamId!==undefined&&f.teamId!==u.teamId){patch.teamId=f.teamId||null;ch.push("команда");}
+  if(f.status&&f.status!==u.status){patch.status=f.status;ch.push("статус");let tg=(u.tags||[]).slice();if(f.status==="fasttrack"&&!tg.includes("скоростная дорожка"))tg.push("скоростная дорожка");if(f.status==="venture"&&!tg.includes("венчурный инвестор"))tg.push("венчурный инвестор");patch.tags=tg;}
+  if(f.tags!=null)patch.tags=f.tags;if(f.notes!=null)patch.notes=f.notes;patch.updatedAt=serverTimestamp();
+  if(f.balance!=null&&isFinite(f.balance)&&f.balance!==u.balance){await changeBalance(id,f.balance-u.balance,"setBalance","Ручная корректировка");ch.push("баланс");}
+  await updateDoc(doc(db,"rooms",CODE,"users",id),patch);
+  if(ch.length)addHistory("player","Изменён игрок: "+(f.name||u.name),ch.join(", "));
+}
+async function toggleTag(id,tag){const u=uid(id);if(!u)return;let tg=(u.tags||[]).slice();if(tg.includes(tag))tg=tg.filter(t=>t!==tag);else tg.push(tag);await updateDoc(doc(db,"rooms",CODE,"users",id),{tags:tg});}
+async function saveTeams(arr){return updateRoom({teams:arr});}
+async function addTeam(name,color){name=(name||"").trim();if(!name){toast("⚠️ Введите название","warn");return;}const arr=teams().slice();arr.push({id:"TM"+Date.now().toString(36),name,color:color||"#14b8a6"});await saveTeams(arr);addHistory("team","Создана команда: "+name);checkAch();}
+async function deleteTeam(id){const t=teams().find(x=>x.id===id);for(const u of teamMembers(id))await updateDoc(doc(db,"rooms",CODE,"users",u.id),{teamId:null});await saveTeams(teams().filter(x=>x.id!==id));addHistory("team","Удалена команда: "+(t?t.name:""));}
+async function updateTeam(id,f){const arr=teams().map(t=>t.id===id?Object.assign({},t,f.name?{name:f.name.trim()}:{},f.color?{color:f.color}:{}):t);await saveTeams(arr);}
+async function assignTeam(teamId,memberIds){for(const u of players()){const inTeam=memberIds.includes(u.id);if(inTeam&&u.teamId!==teamId)await updateDoc(doc(db,"rooms",CODE,"users",u.id),{teamId});else if(!inTeam&&u.teamId===teamId)await updateDoc(doc(db,"rooms",CODE,"users",u.id),{teamId:null});}}
+
+/* ---------- MONEY (atomic) ---------- */
+async function changeBalance(id,delta,type,reason,extra){
+  const uref=doc(db,"rooms",CODE,"users",id);const txRef=doc(collection(db,"rooms",CODE,"transactions"));
+  await runTransaction(db,async t=>{
+    const s=await t.get(uref);if(!s.exists())throw new Error("no user");
+    const d=s.data();const before=d.balance||0;const after=Math.round(before+delta);
+    t.update(uref,{balance:after,updatedAt:serverTimestamp()});
+    t.set(txRef,Object.assign({type,targetName:d.name,playerId:id,amount:Math.round(delta),reason:reason||"",balanceBefore:before,balanceAfter:after,round:room().round||1,tableId:d.tableId||null,teamId:d.teamId||null,createdBy:session.role,createdAt:serverTimestamp()},extra||{}));
+  });
+  const u=uid(id);if(u&&(u.balance+delta)<0)toast("⚠️ У «"+esc(u.name)+"» отрицательный баланс","warn");
+  bumpCounter("moneyOps");
+}
+async function changeMoney(id,amount,reason,isIncome){await changeBalance(id,isIncome?Math.abs(amount):-Math.abs(amount),isIncome?"income":"expense",reason||(isIncome?"Начисление":"Списание"));checkAch();}
+async function transfer(fromId,toId,amount,comment){
+  if(fromId===toId){toast("⚠️ Нельзя перевести самому себе","warn");return;}
+  const a=uid(fromId),b=uid(toId);if(!a||!b){toast("⚠️ Выберите игроков","warn");return;}
+  amount=Math.abs(amount);if(!amount){toast("⚠️ Укажите сумму","warn");return;}
+  if(amount>(settings().transferLimit||5000)){
+    await addDoc(sub("approvals"),{type:"transfer",requestedBy:a.name,fromId,toId,amount,reason:comment||"P2P-перевод",tableId:a.tableId||null,status:"pending",createdAt:serverTimestamp()});
+    addHistory("approval","Перевод на подтверждение",a.name+" → "+b.name+" "+fmt(amount));toast("⏳ Крупный перевод отправлен на подтверждение");return;
+  }
+  await doTransfer(fromId,toId,amount,comment||"P2P-перевод");
+}
+async function doTransfer(fromId,toId,amount,reason){const a=uid(fromId),b=uid(toId);await changeBalance(fromId,-amount,"transfer",reason,{fromPlayer:a.name,toPlayer:b.name});await changeBalance(toId,+amount,"transfer",reason,{fromPlayer:a.name,toPlayer:b.name});addHistory("money","Перевод: "+a.name+" → "+b.name,fmt(amount)+" — "+reason);toast("✅ Перевод выполнен");}
+function effDelta(bal,eff){switch(eff.moneyEffectType){case"add":return eff.moneyAmount;case"subtract":return -eff.moneyAmount;case"percentAdd":return Math.round(bal*eff.moneyPercent/100);case"percentSubtract":return -Math.round(bal*eff.moneyPercent/100);case"set":return eff.moneyAmount-bal;case"multiply":return Math.round(bal*eff.factor)-bal;}return 0;}
+async function applyEffectToList(list,eff,reason,type,relId){for(const u of list){const delta=effDelta(u.balance||0,eff);if(delta!==0)await changeBalance(u.id,delta,type||"eventEffect",reason,relId?{relatedEventId:relId}:null);}checkAch();}
+function resolveTargets(rule,opts){opts=opts||{};if(rule==="all")return players();if(rule==="player")return opts.playerId?[uid(opts.playerId)].filter(Boolean):[];if(rule==="team")return opts.teamId?teamMembers(opts.teamId):[];if(rule==="table")return opts.tableId?tableMembers(opts.tableId):[];if(rule&&rule.indexOf("tag:")===0)return players().filter(u=>(u.tags||[]).includes(rule.slice(4)));if(rule==="selected")return(opts.ids||[]).map(uid).filter(Boolean);return[];}
+async function massOperation(list,op){
+  if(!list.length){toast("⚠️ Нет игроков","warn");return;}
+  let eff;if(op.kind==="add")eff={moneyEffectType:"add",moneyAmount:op.v};else if(op.kind==="subtract")eff={moneyEffectType:"subtract",moneyAmount:op.v};else if(op.kind==="set")eff={moneyEffectType:"set",moneyAmount:op.v};else if(op.kind==="multiply")eff={moneyEffectType:"multiply",factor:op.v};else if(op.kind==="percentAdd")eff={moneyEffectType:"percentAdd",moneyPercent:op.v};else eff={moneyEffectType:"percentSubtract",moneyPercent:op.v};
+  await applyEffectToList(list,eff,op.reason||"Массовая операция",op.kind==="add"?"income":op.kind==="subtract"?"expense":"percentChange");
+  addHistory("money","Массовая операция",op.reason+" — игроков: "+list.length);
+}
+
+/* ---------- LOANS ---------- */
+async function takeLoan(id,principal){
+  const u=uid(id);principal=Math.abs(principal);
+  const out=loansOf(id).reduce((s,l)=>s+l.outstanding,0);
+  if(out+principal>(settings().loanLimit||20000)){toast("⚠️ Превышен лимит кредита","warn");return;}
+  if(room().phase==="start"&&principal>5000){toast("⚠️ В фазе «Старт» лимит займа 5 000$","warn");return;}
+  const rate=settings().loanRate||10;
+  await addDoc(sub("loans"),{userId:id,principal,outstanding:principal,rate,status:"active",createdAt:serverTimestamp()});
+  let tg=(u.tags||[]).slice();["есть кредиты","должник"].forEach(t=>{if(!tg.includes(t))tg.push(t);});
+  await updateDoc(doc(db,"rooms",CODE,"users",id),{tags:tg});
+  await changeBalance(id,+principal,"loan","Заём в Центробанке (ставка "+rate+"%)");
+  addHistory("loan","Кредит: "+u.name,fmt(principal)+" под "+rate+"%");toast("✅ Заём выдан");
+}
+async function repayLoan(loanId,amount){
+  const l=M.loans.find(x=>x.id===loanId);if(!l)return;const u=uid(l.userId);
+  amount=Math.min(Math.abs(amount),l.outstanding,Math.max(0,u.balance));
+  if(amount<=0){toast("⚠️ Недостаточно средств или долг закрыт","warn");return;}
+  await changeBalance(l.userId,-amount,"loanRepay","Погашение кредита");
+  const left=l.outstanding-amount;await updateDoc(doc(db,"rooms",CODE,"loans",loanId),{outstanding:left,status:left<=0?"closed":"active"});
+  addHistory("loan","Погашение: "+u.name,fmt(amount));toast("✅ Погашено");
+}
+function paydayPreview(id){const interest=loansOf(id).reduce((s,l)=>s+Math.round(l.outstanding*l.rate/100),0);let pool=0;M.pools.filter(p=>p.status==="active").forEach(p=>{const pt=(p.participants||[]).find(x=>x.userId===id);if(pt)pool+=Math.round(p.expectedMonthlyIncome*pt.contribution/p.collectedAmount);});return{interest,pool,net:pool-interest};}
+async function doPayday(id){const u=uid(id),pv=paydayPreview(id);if(pv.interest>0)await changeBalance(id,-pv.interest,"loanInterest","Проценты по кредитам (День получки)");if(pv.pool>0)await changeBalance(id,+pv.pool,"poolPayout","Доход от пулов (День получки)");addHistory("payday","День получки: "+u.name,"Проценты -"+fmt(pv.interest)+", пулы +"+fmt(pv.pool));toast("💵 День получки: итог "+(pv.net>=0?"+":"")+fmt(pv.net));}
+
+/* ---------- EXCHANGE ---------- */
+async function priceTick(){let r=[-8,8];if(room().phase==="crisis"||room().mode==="crisis")r=[-25,10];else if(room().riskIndex>70)r=[-18,8];else if(room().riskIndex<30)r=[-5,15];const ass=assets().map(a=>{if(a.isHalted)return a;const pct=r[0]+Math.random()*(r[1]-r[0]);const np=Math.max(1,Math.round(a.price*(1+pct/100)));return Object.assign({},a,{previousPrice:a.price,price:np,history:(a.history||[]).concat(np).slice(-40)});});await updateRoom({assets:ass});addHistory("exchange","Котировки обновлены","Движение рынка");}
+function applyStock(ass,eff){if(!eff)return ass;return ass.map(a=>{let p=null;if(eff.all!=null)p=eff.all;if(eff[a.symbol]!=null)p=eff[a.symbol];if(p==null)return a;const np=Math.max(1,Math.round(a.price*(1+p/100)));return Object.assign({},a,{previousPrice:a.price,price:np,history:(a.history||[]).concat(np).slice(-40)});});}
+async function shock(sym,pct){await updateRoom({assets:applyStock(assets(),sym==="all"?{all:pct}:{[sym]:pct})});addNews("Биржевой шок",sym+" "+(pct>0?"+":"")+pct+"%","market","high");addHistory("marketShock","Биржевой шок: "+sym,(pct>0?"+":"")+pct+"%");}
+async function setPrice(sym,price){const v=Math.max(1,Math.round(price));await updateRoom({assets:assets().map(a=>a.symbol===sym?Object.assign({},a,{previousPrice:a.price,price:v,history:(a.history||[]).concat(v).slice(-40)}):a)});}
+async function toggleHalt(sym){await updateRoom({assets:assets().map(a=>a.symbol===sym?Object.assign({},a,{isHalted:!a.isHalted}):a)});}
+async function trade(id,sym,qty,isBuy){
+  const u=uid(id),a=asset(sym);if(!u||!a)return;if(a.isHalted){toast("⚠️ Торговля остановлена","warn");return;}
+  qty=Math.floor(Math.abs(qty));if(!qty){toast("⚠️ Укажите количество","warn");return;}
+  const fee=Math.round(a.price*qty*0.01);const uref=doc(db,"rooms",CODE,"users",id);const txRef=doc(collection(db,"rooms",CODE,"transactions"));
+  try{
+    await runTransaction(db,async t=>{
+      const s=await t.get(uref);const d=s.data();const pf=Object.assign({},d.portfolio||{});const before=d.balance||0;
+      if(isBuy){const cost=a.price*qty+fee;if(before<cost)throw new Error("Недостаточно средств");const cur=Object.assign({qty:0,avg:0},pf[sym]);cur.avg=Math.round((cur.avg*cur.qty+a.price*qty)/(cur.qty+qty));cur.qty+=qty;pf[sym]=cur;const after=before-cost;let tg=(d.tags||[]).slice();["есть акции","активный трейдер"].forEach(x=>{if(!tg.includes(x))tg.push(x);});t.update(uref,{balance:after,portfolio:pf,tags:tg});t.set(txRef,{type:"trade",targetName:d.name,playerId:id,amount:-cost,reason:"Покупка "+qty+" "+sym,balanceBefore:before,balanceAfter:after,round:room().round,createdBy:session.role,createdAt:serverTimestamp()});}
+      else{const cur=pf[sym];if(!cur||cur.qty<qty)throw new Error("Недостаточно акций");const proceeds=a.price*qty-fee;cur.qty-=qty;if(cur.qty<=0)delete pf[sym];const after=before+proceeds;t.update(uref,{balance:after,portfolio:pf});t.set(txRef,{type:"trade",targetName:d.name,playerId:id,amount:proceeds,reason:"Продажа "+qty+" "+sym,balanceBefore:before,balanceAfter:after,round:room().round,createdBy:session.role,createdAt:serverTimestamp()});}
+    });
+    bumpCounter("trades");addHistory("trade",(isBuy?"Покупка":"Продажа")+" "+sym,u.name+": "+qty+" @ "+fmt(a.price));toast("✅ Сделка выполнена");checkAch();
+  }catch(e){toast("⚠️ "+(e.message||"Ошибка сделки"),"warn");}
+}
+/* ---------- ECONOMY / ACHIEVEMENTS ---------- */
+async function applyEconomy(delta){if(!delta)return;const e=Object.assign({},room().economy||{});let risk=room().riskIndex;for(const k in delta){if(k==="risk"){risk=clamp(risk+delta.risk,0,100);continue;}if(e[k]!=null)e[k]=clamp(e[k]+delta[k],0,100);}await updateRoom({economy:e,riskIndex:risk});}
+async function unlock(id){const a=ACHIEVEMENTS.find(x=>x.id===id);if(!a)return;const cur=room().achievements||[];if(cur.includes(id))return;await updateRoom({achievements:cur.concat(id)});addHistory("achievement","Достижение: "+a.title);toast(a.icon+" Достижение: <b>"+esc(a.title)+"</b>","ach");}
+function checkAch(){const c=room().counters||{};if(players().length>=1)unlock("first_player");if(teams().length>=1)unlock("first_team");if(c.crises>=1)unlock("first_crisis");if(room().riskIndex>=80)unlock("hot_economy");if(room().riskIndex<20)unlock("calm");if(c.opportunities>=5)unlock("opp_hunter");if(c.events>=20)unlock("econ_storm");if(c.moneyOps>=20)unlock("banker");if(totalCapital()>=100000)unlock("big_capital");if(c.trades>=20)unlock("exchange_day");if(c.poolsClosed>=1)unlock("syndicate");}
+async function rollDice(){const d=pick(DICE);await applyEconomy(d.impact);let patch={};if(d.rate)patch.centralBankRate=clamp((room().centralBankRate||0)+d.rate,0,60);if(Object.keys(patch).length)await updateRoom(patch);if(d.stock&&Object.keys(d.stock).length)await updateRoom({assets:applyStock(assets(),d.stock)});await bumpCounter("dice");addHistory("dice","Экономический кубик: "+d.name,d.desc);addNews("Экономический кубик: "+d.name,d.desc,"event","normal");modal(d.emoji+" "+d.name,'<p>'+esc(d.desc)+'</p><p class="small muted">Риск: <b>'+room().riskIndex+'</b> · Ставка ЦБ: <b>'+room().centralBankRate+'%</b></p>',[{label:"Ок",cls:"primary"}]);}
+async function setPhase(id){const p=PHASES.find(x=>x.id===id);await updateRoom({phase:id});addHistory("phase","Фаза: "+p.name,p.desc);addNews("Смена фазы: "+p.name,p.desc,"info","high");if(id==="crisis")await updateRoom({riskIndex:clamp(room().riskIndex+10,0,100)});if(id==="recovery")await updateRoom({riskIndex:clamp(room().riskIndex-10,0,100)});toast("Фаза: "+p.name);}
+async function nextRound(){await updateRoom({round:(room().round||1)+1});addHistory("round","Раунд "+((room().round||1)+1),"Новый раунд");toast("➡️ Раунд "+((room().round||1)+1));}
+
+/* ---------- EVENTS ENGINE ---------- */
+function eventWeight(ev){let w=RARITY_META[ev.rarity].w;const md=room().mode,tr=trendObj(),risk=room().riskIndex;if(md==="crisis"&&(ev.type==="crisis"||ev.type==="negative"))w*=2.4;if(md==="opportunity"&&(ev.type==="opportunity"||ev.type==="positive"||ev.type==="decision"))w*=2.2;if(md==="chaos")w*=(.5+Math.random()*1.8);if(md==="team"&&(ev.type==="team"))w*=3.2;if(md==="money"&&ev.autoApplicable&&ev.moneyEffectType!=="none")w*=2.2;if(md==="market"&&(ev.type==="marketShock"||Object.keys(ev.stockEffects).length))w*=2.6;if(md==="venture"&&(ev.type==="venture"))w*=2.8;if(md==="cross"&&ev.category==="Межстоловые события")w*=3.2;if(ev.type==="crisis")w*=1+Math.max(0,(risk-50))/50;if((ev.type==="opportunity"||ev.type==="positive"))w*=1+Math.max(0,(50-risk))/80;if(room().phase==="start"&&ev.type==="crisis")w*=.3;if(tr.favor.includes(ev.category))w*=(1+tr.boost);return Math.max(.1,w);}
+async function drawEvent(forcedType){
+  let pool=EVENTS.filter(e=>categoryFilter==="all"||e.category===categoryFilter);
+  if(forcedType)pool=EVENTS.filter(e=>e.type===forcedType);
+  const recent=room().lastEventIds||[];
+  if(lastEvent&&pool.length>1)pool=pool.filter(e=>e.title!==lastEvent.title);
+  if(pool.length>3)pool=pool.filter(e=>recent.slice(0,2).indexOf(e.title)<0);
+  if(!pool.length)pool=EVENTS.slice();
+  const ws=pool.map(eventWeight),sum=ws.reduce((a,b)=>a+b,0);let r=Math.random()*sum,idx=0;for(let i=0;i<pool.length;i++){r-=ws[i];if(r<=0){idx=i;break;}}
+  return launchEvent(pool[idx]);
+}
+async function launchEvent(ev){
+  lastEvent=ev;const recent=[ev.title].concat(room().lastEventIds||[]).slice(0,10);
+  const c=Object.assign({},room().counters||{});c.events=(c.events||0)+1;if(ev.type==="crisis")c.crises=(c.crises||0)+1;if(ev.type==="opportunity")c.opportunities=(c.opportunities||0)+1;
+  let patch={lastEventIds:recent,counters:c};
+  if(ev.riskIndexDelta)patch.riskIndex=clamp(room().riskIndex+ev.riskIndexDelta,0,100);
+  if(ev.centralBankRateDelta)patch.centralBankRate=clamp((room().centralBankRate||0)+ev.centralBankRateDelta,0,60);
+  if(ev.stockEffects&&Object.keys(ev.stockEffects).length)patch.assets=applyStock(assets(),ev.stockEffects);
+  await updateRoom(patch);
+  if(ev.economyImpact&&Object.keys(ev.economyImpact).length)await applyEconomy(ev.economyImpact);
+  await addHistory("event",ev.title,ev.category+" • "+TYPE_META[ev.type].label);
+  await addNews(ev.title,ev.playerMessage||ev.effect,ev.type==="crisis"?"crisis":"event",ev.impactLevel==="critical"?"high":"normal");
+  checkAch();return ev;
+}
+function suitablePlayers(ev){if(ev.targetRule&&ev.targetRule.indexOf("tag:")===0)return players().filter(u=>(u.tags||[]).includes(ev.targetRule.slice(4)));if(ev.targetRule==="all")return players();return[];}
+function previewEffect(list,ev){return list.map(u=>({u,before:u.balance,after:Math.round((u.balance||0)+effDelta(u.balance||0,ev))}));}
+async function applyEventTo(ev,list){
+  if(!list.length){toast("⚠️ Нет подходящих игроков","warn");return;}
+  if(ev.moneyEffectType==="none"){toast("ℹ️ У события нет денежного эффекта (биржевой/информационный)","warn");return;}
+  const prev=previewEffect(list,ev);const rows=prev.map(x=>'<div class="row spread" style="border-bottom:1px solid var(--line);padding:5px 0"><span>'+esc(x.u.name)+'</span><span class="muted">'+fmt(x.before)+'</span> → <b style="color:'+(x.after>=x.before?'var(--green)':'var(--red)')+'">'+fmt(x.after)+'</b></div>').join("");
+  const total=prev.reduce((s,x)=>s+(x.after-x.before),0);
+  modal("Предпросмотр: "+ev.title,'<p class="small muted">'+esc(ev.effect)+'</p>'+rows+'<div class="row spread" style="margin-top:8px"><b>Итого</b><b style="color:'+(total>=0?'var(--green)':'var(--red)')+'">'+fmt(total)+'</b></div>',[{label:"Отмена",cls:"ghost"},{label:"Применить",cls:"primary",onClick:async c=>{c();await applyEffectToList(list,ev,"Событие: "+ev.title,"eventEffect",ev.title);addHistory("event","Применён эффект: "+ev.title,"Игроков: "+list.length);toast("✅ Эффект применён");}}]);
+}
+async function applyChoice(ev,choice,opts){
+  const c=Object.assign({},room().counters||{});c.decisions=(c.decisions||0)+1;await updateRoom({counters:c});
+  if(choice.economyImpact)await applyEconomy(choice.economyImpact);if(choice.stockEffects&&Object.keys(choice.stockEffects).length)await updateRoom({assets:applyStock(assets(),choice.stockEffects)});
+  let effect=choice,label=null;
+  if(choice.outcomes){const rr=Math.random()*100;let acc=0,out=choice.outcomes[choice.outcomes.length-1];for(const o of choice.outcomes){acc+=o.chance;if(rr<=acc){out=o;break;}}effect=out;label=out.label;if(out.stockEffects)await updateRoom({assets:applyStock(assets(),out.stockEffects)});}
+  const rule=effect.targetRule||choice.targetRule||"player";const list=resolveTargets(rule,opts);
+  if(effect.moneyEffectType&&effect.moneyEffectType!=="none"&&list.length)await applyEffectToList(list,effect,"Решение: "+ev.title,"eventEffect",ev.title);
+  addHistory("decision",ev.title,"Выбор: "+choice.text+(label?" → "+label:""));toast("🧠 "+esc(label||choice.text));
+}
+
+/* ---------- POOLS ---------- */
+async function createPool(creatorId,o){
+  const u=uid(creatorId);
+  const status=o.requiresApproval?"draft":"open";
+  const ref=await addDoc(sub("pools"),{title:o.title||"Сделка",dealType:o.dealType||"недвижимость",creatorId,creatorName:u?u.name:"—",creatorTableId:u?u.tableId:null,requiredAmount:o.requiredAmount||10000,collectedAmount:0,minContribution:o.minContribution||1000,expectedMonthlyIncome:o.expectedMonthlyIncome||2000,status,participants:[],description:o.description||"",createdAt:serverTimestamp()});
+  if(u){let tg=(u.tags||[]).slice();if(!tg.includes("участник пула"))tg.push("участник пула");await updateDoc(doc(db,"rooms",CODE,"users",creatorId),{tags:tg});}
+  if(status==="draft")await addDoc(sub("approvals"),{type:"pool",requestedBy:u?u.name:"—",poolId:ref.id,amount:o.requiredAmount||10000,reason:"Создание пула: "+(o.title||"Сделка"),tableId:u?u.tableId:null,status:"pending",createdAt:serverTimestamp()});
+  addHistory("pool","Создан пул: "+(o.title||"Сделка"),"Цель "+fmt(o.requiredAmount||10000));addNews("Новый инвестиционный пул",(o.title||"Сделка")+" — нужно "+fmt(o.requiredAmount||10000),"pool","normal");
+  toast(status==="draft"?"⏳ Пул на подтверждении":"✅ Пул создан");
+}
+async function joinPool(poolId,userId,amount){
+  const p=M.pools.find(x=>x.id===poolId),u=uid(userId);if(!p||!u)return;
+  if(p.status!=="open"&&p.status!=="funding"){toast("⚠️ Пул не принимает взносы","warn");return;}
+  amount=Math.abs(amount);if(amount<p.minContribution){toast("⚠️ Минимум "+fmt(p.minContribution),"warn");return;}
+  if(u.balance<amount){toast("⚠️ Недостаточно средств","warn");return;}
+  const remaining=p.requiredAmount-p.collectedAmount;if(amount>remaining)amount=remaining;
+  await changeBalance(userId,-amount,"poolContribution","Вклад в пул: "+p.title);
+  const parts=(p.participants||[]).slice();const ex=parts.find(x=>x.userId===userId);if(ex)ex.contribution+=amount;else parts.push({userId,contribution:amount});
+  const collected=p.collectedAmount+amount;parts.forEach(pt=>pt.share=Math.round(pt.contribution/collected*1000)/10);
+  const status=collected>=p.requiredAmount?"active":"funding";
+  await updateDoc(doc(db,"rooms",CODE,"pools",poolId),{participants:parts,collectedAmount:collected,status});
+  let tg=(u.tags||[]).slice();if(!tg.includes("участник пула"))tg.push("участник пула");await updateDoc(doc(db,"rooms",CODE,"users",userId),{tags:tg});
+  if(status==="active"){await bumpCounter("poolsClosed");addHistory("pool","Пул собран: "+p.title,fmt(collected));addNews("Пул закрыт","'"+p.title+"' активен","pool","normal");unlock("syndicate");}
+  addHistory("pool","Взнос в пул: "+p.title,u.name+" "+fmt(amount));toast("✅ Вы в пуле");
+}
+async function poolPayout(poolId){const p=M.pools.find(x=>x.id===poolId);if(!p||p.status!=="active"){toast("⚠️ Пул не активен","warn");return;}for(const pt of(p.participants||[])){const pay=Math.round(p.expectedMonthlyIncome*pt.contribution/p.collectedAmount);await changeBalance(pt.userId,+pay,"poolPayout","Выплата по пулу: "+p.title);}addHistory("pool","Выплата по пулу: "+p.title,"Доход "+fmt(p.expectedMonthlyIncome));toast("✅ Выплаты начислены");}
+async function closePool(poolId){await updateDoc(doc(db,"rooms",CODE,"pools",poolId),{status:"closed",closedAt:serverTimestamp()});addHistory("pool","Пул закрыт");}
+
+/* ---------- VENTURE ---------- */
+async function createStartup(creatorId,o){const u=uid(creatorId);await addDoc(sub("startups"),{creatorId,creatorName:u?u.name:"—",tableId:u?u.tableId:null,type:o.type||"Ищу инвестора",title:o.title||"Сделка",requestedAmount:o.requestedAmount||5000,offeredShare:o.offeredShare||20,expectedIncome:o.expectedIncome||1000,description:o.description||"",status:"open",createdAt:serverTimestamp()});addHistory("venture","Заявка стартапа: "+(o.title||"Сделка"),(u?u.name:"—")+" ищет "+fmt(o.requestedAmount||5000));addNews("Новая венчурная заявка",(u?u.name:"—")+": "+(o.title||"Сделка"),"venture","normal");toast("✅ Заявка размещена");}
+async function makeOffer(reqId,investorId,amount,offerType,terms){const s=M.startups.find(x=>x.id===reqId),inv=uid(investorId);if(!s||!inv)return;await addDoc(sub("offers"),{requestId:reqId,investorId,investorName:inv.name,amount:Math.abs(amount),offerType:offerType||"доля",terms:terms||"",status:"open",createdAt:serverTimestamp()});if(s.status==="open")await updateDoc(doc(db,"rooms",CODE,"startups",reqId),{status:"negotiating"});addHistory("venture","Предложение по заявке",inv.name+" предлагает "+fmt(amount));toast("✅ Предложение отправлено");}
+async function acceptOffer(offerId){const of=M.offers.find(x=>x.id===offerId);if(!of)return;const s=M.startups.find(x=>x.id===of.requestId);const inv=uid(of.investorId),creator=uid(s.creatorId);if(!inv||!creator)return;if(inv.balance<of.amount){toast("⚠️ У инвестора недостаточно средств","warn");return;}await changeBalance(of.investorId,-of.amount,"startupInvestment","Венчур: "+s.title+" (инвестор)",{toPlayer:creator.name});await changeBalance(s.creatorId,+of.amount,"startupInvestment","Венчур: "+s.title+" (получатель)",{fromPlayer:inv.name});await updateDoc(doc(db,"rooms",CODE,"offers",offerId),{status:"accepted"});await updateDoc(doc(db,"rooms",CODE,"startups",of.requestId),{status:"funded"});if((inv.tags||[]).includes("венчурный инвестор")||(inv.tags||[]).includes("скоростная дорожка"))unlock("venture_bridge");addHistory("venture","Венчурная сделка",inv.name+" → "+creator.name+" "+fmt(of.amount));addNews("Венчурный мост",inv.name+" профинансировал "+creator.name,"venture","high");toast("✅ Сделка закрыта");}
+
+/* ---------- APPROVALS ---------- */
+async function resolveApproval(id,ok){
+  const ap=M.approvals.find(x=>x.id===id);if(!ap)return;
+  await updateDoc(doc(db,"rooms",CODE,"approvals",id),{status:ok?"approved":"rejected",approvedBy:session.role,resolvedAt:serverTimestamp()});
+  if(ok){if(ap.type==="transfer")await doTransfer(ap.fromId,ap.toId,ap.amount,ap.reason);if(ap.type==="pool")await updateDoc(doc(db,"rooms",CODE,"pools",ap.poolId),{status:"open"});}
+  else addHistory("approval","Отклонено: "+ap.type,ap.reason);
+  toast(ok?"✅ Подтверждено":"❌ Отклонено");
+}
+
+/* ---------- CHALLENGES / OPPS / ANNOUNCE / RESET ---------- */
+function drawChallenge(){const c=pick(CHALLENGES);addHistory("challenge","Челлендж: "+c[0],c[1]);modal("🎯 "+c[0],'<p>'+esc(c[1])+'</p>'+(c[2]?'<p class="small ok-box">Награда: +'+c[2]+'$</p>':''),[{label:"Закрыть",cls:"ghost"},{label:"Ещё",cls:"btn",onClick:cl=>{cl();drawChallenge();}}].concat(c[2]?[{label:"Выдать игроку",cls:"green",onClick:cl=>{cl();pickPlayerThen(u=>changeMoney(u.id,c[2],"Награда челленджа: "+c[0],true));}}]:[]));}
+async function drawOpportunity(){const o=pick(OPPS);await bumpCounter("opportunities");checkAch();addHistory("opportunity","Возможность: "+o[0],o[1]);modal("💎 "+o[0],'<p>'+esc(o[1])+'</p>',[{label:"Закрыть",cls:"ghost"},{label:"Ещё",cls:"btn",onClick:cl=>{cl();drawOpportunity();}}].concat(o[2]?[{label:"Начислить игроку",cls:"blue",onClick:cl=>{cl();pickPlayerThen(u=>changeMoney(u.id,o[2],"Возможность: "+o[0],true));}}]:[]));}
+function announceModal(){modal("📢 Объявление всем",'<div class="field"><label class="fl">Заголовок</label><input id="anT"></div><div class="field"><label class="fl">Текст</label><textarea id="anB"></textarea></div>',[{label:"Отмена",cls:"ghost"},{label:"Отправить",cls:"primary",onClick:(c,ov)=>{addNews(ov.querySelector("#anT").value||"Объявление",ov.querySelector("#anB").value,"info","high");c();toast("📢 Отправлено");}}]);}
+async function resetRoom(){
+  confirmModal("Сбросить комнату?","Все данные комнаты "+CODE+" будут удалены из Firestore.",async()=>{
+    for(const n of["users","transactions","loans","pools","startups","offers","approvals","news","history"]){const snap=await getDocs(collection(db,"rooms",CODE,n));const b=writeBatch(db);snap.docs.forEach(d=>b.delete(d.ref));await b.commit();}
+    await deleteDoc(rdoc());unsubAll();session=mkSess();saveSess();CODE=null;M={room:null,users:[],transactions:[],loans:[],pools:[],startups:[],offers:[],approvals:[],news:[],history:[]};render();toast("🔄 Комната сброшена");
+  },"Сбросить","red");
+}
+async function saveSettings(f){const s=Object.assign({},settings(),f.settings);await updateRoom({settings:s,centralBankRate:f.cbr});toast("✅ Настройки сохранены");}
+/* ---------- RENDER ---------- */
+let shownEvent=null;
+const ADMIN_TABS=[["dash","🎛️ Dashboard"],["players","🧮 Игроки"],["sheets","🧾 Бланки"],["teams","🤝 Команды"],["tables","🪑 Столы"],["events","🎴 События"],["exchange","📊 Биржа"],["loans","🏦 Кредиты"],["pools","🧩 Пулы"],["venture","🚀 Венчур"],["tx","💳 Транзакции"],["history","📜 История"],["settings","⚙️ Настройки"],["rules","📖 Правила"]];
+const BANKER_TABS=[["players","👥 Игроки стола"],["ops","⚡ Операции"],["sheets","🧾 Бланки"],["approvals","✅ Подтверждения"],["pools","🧩 Пулы"],["payday","💵 День получки"],["history","📜 История"]];
+const AUDITOR_TABS=[["sheets","🧾 Бланки на проверку"],["players","👥 Игроки"],["mysheet","📝 Мой бланк"],["mywallet","💼 Мой кошелёк"],["history","📜 История"]];
+const PLAYER_NAV=[["wallet","💼","Кошелёк"],["sheet","📝","Бланк"],["exchange","📊","Биржа"],["pools","🧩","Пулы"],["venture","🚀","Венчур"],["news","📰","Новости"]];
+function setTab(t){session.tab[session.role]=t;saveSess();render();window.scrollTo(0,0);}
+function leaveRoom(){unsubAll();session=mkSess();saveSess();CODE=null;M={room:null,users:[],transactions:[],loans:[],pools:[],startups:[],offers:[],approvals:[],news:[],history:[]};render();}
+
+function render(){
+  const view=document.getElementById("view"),top=document.getElementById("topbar"),nav=document.getElementById("bottomNav");
+  if(!CONFIG_OK){top.innerHTML="";nav.innerHTML="";view.innerHTML=configError();return;}
+  if(!session.code){top.innerHTML="";nav.innerHTML="";view.innerHTML=authView();bindView();return;}
+  if(!M.room){top.innerHTML="";nav.innerHTML="";view.innerHTML='<div class="card center" style="margin-top:40px">⏳ Загрузка комнаты «'+esc(session.code)+'»…<br><button class="btn ghost" style="margin-top:12px" data-act="leave">Выйти</button></div>';bindView();return;}
+  // живая роль: участник получает роль из своего документа (админ может повысить до банкира/аудитора онлайн)
+  if(session.uid){const u=uid(session.uid);if(u)session.role=u.role||"player";}
+  if(session.uid&&!uid(session.uid)){renderTopbar();nav.innerHTML="";view.innerHTML='<div class="card center" style="margin-top:30px">Профиль не найден.<br><button class="btn ghost" style="margin-top:10px" data-act="leave">Выйти</button></div>';bindView();return;}
+  if(session.role==="player"&&session.uid&&!(uid(session.uid).tableId)){renderTopbar();nav.innerHTML="";view.innerHTML=joinPlayerView();bindView();return;}
+  renderTopbar();
+  if(session.role==="admin"){renderTabsBar(ADMIN_TABS);view.innerHTML=adminView();nav.innerHTML="";}
+  else if(session.role==="banker"){renderTabsBar(BANKER_TABS);view.innerHTML=bankerView();nav.innerHTML="";}
+  else if(session.role==="auditor"){renderTabsBar(AUDITOR_TABS);view.innerHTML=auditorView();nav.innerHTML="";}
+  else{view.innerHTML=playerView();renderNav();}
+  bindView();
+}
+function configError(){return '<div class="card" style="max-width:560px;margin:30px auto"><h2>⚙️ Нужен Firebase-конфиг</h2><p>Откройте <b>firebase-portal.html</b>, найдите блок <code>FIREBASE CONFIG</code> и вставьте конфиг вашего проекта (замените значения <code>PASTE_…</code>).</p><p class="small muted">Пошаговая инструкция — в файле <b>FIREBASE-SETUP.md</b>.</p></div>';}
+function renderTopbar(){
+  const e=room().economy||{};
+  let tabs=(session.role==="player")?"":'<div class="tabs" id="tabs"></div>';
+  document.getElementById("topbar").innerHTML=
+    '<div class="tb-main"><div class="logo">🏛️</div><div><div class="tb-title">'+esc(room().name||"Комната")+'</div><div class="tb-sub">'+esc(CODE)+' · '+({admin:"Гейм-мастер",banker:"Банкир",player:"Игрок"}[session.role])+'</div></div>'+
+    '<span class="rt live" id="rtBadge">● realtime</span>'+
+    '<button class="btn sm ghost" data-act="leave">Выйти</button></div>'+
+    '<div class="chips">'+
+      '<span class="chip">Фаза <b>'+phaseObj().name+'</b></span><span class="chip">Раунд <b>'+(room().round||1)+'</b></span>'+
+      '<span class="chip">Риск <b style="color:'+riskColor(room().riskIndex)+'">'+room().riskIndex+'</b></span>'+
+      '<span class="chip">Ставка ЦБ <b>'+(room().centralBankRate||0)+'%</b></span>'+
+      '<span class="chip">Тренд <b>'+trendObj().name+'</b></span>'+
+      (session.role!=="player"?'<span class="chip">Капитал <b>'+fmt(totalCapital())+'</b></span>':'')+
+    '</div>'+tabs;
+}
+function renderTabsBar(t){const el=document.getElementById("tabs");if(el)el.innerHTML=t.map(x=>'<button class="tab'+(session.tab[session.role]===x[0]?' on':'')+'" data-tab="'+x[0]+'">'+x[1]+'</button>').join("");}
+function renderNav(){const n=document.getElementById("bottomNav");n.className="bottomnav";n.innerHTML=PLAYER_NAV.map(x=>'<div class="bn'+(session.tab.player===x[0]?' on':'')+'" data-tab="'+x[0]+'"><span class="ic">'+x[1]+'</span>'+x[2]+'</div>').join("");}
+
+/* ----- AUTH ----- */
+function authView(){
+  return '<div class="auth"><div class="card center"><div class="logo" style="font-size:40px">🏛️</div><h2>Digital Central Bank</h2><p class="small muted">Цифровой Центробанк, Биржа и бланки игроков · realtime-портал</p></div>'+
+  '<div class="card"><h2>Вход / Регистрация участника</h2>'+
+    '<div class="field"><label class="fl">Код комнаты</label><input id="jCode" placeholder="CASH-2026" value="'+esc(session.code||"")+'"></div>'+
+    '<div class="grid g2"><div class="field"><label class="fl">Ваше имя</label><input id="jName" placeholder="Имя"></div><div class="field"><label class="fl">Личный PIN</label><input id="jPin" type="password" inputmode="numeric" placeholder="4 цифры"></div></div>'+
+    '<button class="btn primary block" data-act="enterParticipant">Войти / Зарегистрироваться</button>'+
+    '<p class="small muted" style="margin-top:8px">Новый участник — регистрируется автоматически по имени и PIN. Банкир и аудитор входят так же: их роль назначает администратор.</p>'+
+  '</div>'+
+  '<div class="card"><h2>Вход администратора</h2>'+
+    '<div class="grid g2"><div class="field"><label class="fl">Код комнаты</label><input id="aCode" placeholder="CASH-2026"></div><div class="field"><label class="fl">PIN админа</label><input id="aPin" type="password" placeholder="••••"></div></div>'+
+    '<button class="btn block" data-act="enterAdmin">Войти как админ</button>'+
+  '</div>'+
+  '<div class="card"><h2>Создать комнату (админ)</h2>'+
+    '<div class="grid g2"><div class="field"><label class="fl">Название</label><input id="cName" value="Большая игра"></div><div class="field"><label class="fl">Код</label><input id="cCode" value="CASH-2026"></div></div>'+
+    '<div class="grid g2"><div class="field"><label class="fl">Стартовый баланс</label><input id="cBal" type="number" value="5000"></div><div class="field"><label class="fl">Столов</label><select id="cTables"><option>1</option><option selected>2</option><option>3</option></select></div></div>'+
+    '<div class="grid g2"><div class="field"><label class="fl">Активов</label><select id="cAssets"><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option></select></div><div class="field"><label class="fl">Венчурный стол</label><select id="cVenture"><option value="yes" selected>Да</option><option value="no">Нет</option></select></div></div>'+
+    '<div class="grid g2"><div class="field"><label class="fl">PIN админа</label><input id="cAdmin" value="0000"></div><div class="field"><label class="fl">PIN банкира</label><input id="cBanker" value="1111"></div></div>'+
+    '<button class="btn green block" data-act="createRoom">Создать комнату</button>'+
+  '</div></div>';
+}
+function joinPlayerView(){
+  const tableOpts=tables().map(t=>'<option value="'+t.id+'">'+esc(t.name)+'</option>').join("");
+  const teamOpts='<option value="">Без команды</option>'+teams().map(t=>'<option value="'+t.id+'">'+esc(t.name)+'</option>').join("");
+  const meName=(uid(session.uid)||{}).name||"";
+  return '<div class="auth"><div class="card"><h2>Выберите стол</h2><p class="small muted">Имя: <b>'+esc(meName)+'</b></p>'+
+    '<div class="field"><label class="fl">Стол</label><select id="jpTable">'+tableOpts+'</select></div>'+
+    '<div class="field"><label class="fl">Команда</label><select id="jpTeam">'+teamOpts+'</select></div>'+
+    '<button class="btn primary block" data-act="confirmJoin">Войти в игру</button>'+
+    '<button class="btn ghost block" style="margin-top:8px" data-act="leave">Назад</button></div></div>';
+}
+
+/* ----- shared widgets ----- */
+function stat(k,v,sub){return '<div class="stat"><div class="k">'+k+'</div><div class="v">'+v+'</div>'+(sub?'<div class="small muted">'+sub+'</div>':'')+'</div>';}
+function riskColor(r){return r>=70?"var(--red)":r>=40?"var(--orange)":"var(--green)";}
+function riskMeter(r){return '<div class="risk-meter"><div class="knob" style="left:'+r+'%"></div></div>';}
+function riskHint(){if(room().riskIndex>70)return '<div class="warn-box small">⚠️ Экономика перегрета. Кризисы вероятнее.</div>';if(room().riskIndex<30)return '<div class="ok-box small">🌿 Экономика стабильна. Возможности чаще.</div>';return '';}
+function econBar(l,v,gh){const c=gh?(v>=60?"var(--green)":v>=35?"var(--orange)":"var(--red)"):(v>=65?"var(--red)":v>=40?"var(--orange)":"var(--green)");return '<div class="econ-row"><div class="lbl"><span>'+l+'</span><span class="muted">'+v+'</span></div><div class="bar"><span style="width:'+v+'%;background:'+c+'"></span></div></div>';}
+function sparkline(h,up){if(!h||h.length<2)return '';const w=120,ht=38,mn=Math.min(...h),mx=Math.max(...h),rng=(mx-mn)||1;const pts=h.map((v,i)=>(i/(h.length-1)*w).toFixed(1)+","+(ht-((v-mn)/rng)*(ht-4)-2).toFixed(1)).join(" ");return '<svg class="spark" viewBox="0 0 '+w+' '+ht+'" preserveAspectRatio="none"><polyline fill="none" stroke="'+(up?'var(--green)':'var(--red)')+'" stroke-width="2" points="'+pts+'"/></svg>';}
+function tagsLine(u){return(u.tags||[]).length?(u.tags||[]).map(t=>'<span class="tag-chip on">'+esc(t)+'</span>').join(""):'<span class="muted small">нет тегов</span>';}
+function gameIcon(t){return{event:"🎴",dice:"🎲",challenge:"🎯",opportunity:"💎",round:"➡️",player:"🙋",team:"🤝",money:"💵",decision:"🧠",achievement:"🏆",loan:"🏦",trade:"📊",exchange:"📈",marketShock:"⚡",pool:"🧩",venture:"🚀",payday:"💵",phase:"🎬",room:"🏛️",approval:"✅"}[t]||"•";}
+function fsEvent(ev){const tm=TYPE_META[ev.type];modal((ev.type==="crisis"?"⚡ ":"📢 ")+ev.title,'<div class="edge" style="background:'+tm.edge+';margin:0 auto 8px"></div><p>'+esc(ev.description)+'</p><p class="small ok-box">'+esc(ev.playerMessage||ev.effect)+'</p>',[{label:"Понятно",cls:"primary"}],"fs-event");if(navigator.vibrate)try{navigator.vibrate([80,40,80]);}catch(e){}}
+function eventCardHTML(ev){
+  const tm=TYPE_META[ev.type],rm=RARITY_META[ev.rarity],suit=suitablePlayers(ev);
+  const badges=['<span class="badge '+tm.badge+'">'+tm.label+'</span>','<span class="badge '+rm.badge+'">'+rm.label+'</span>','<span class="badge b-gray">'+esc(ev.category)+'</span>'];
+  if(ev.autoApplicable&&ev.moneyEffectType!=="none")badges.push('<span class="badge b-teal">Денежный эффект</span>');
+  if(Object.keys(ev.stockEffects).length)badges.push('<span class="badge b-gold">Биржевой эффект</span>');
+  if(ev.requiresApproval)badges.push('<span class="badge b-yellow">Подтверждение</span>');
+  const suitHTML=suit.length?'<div class="small ok-box" style="margin-top:8px">Подходит: <b>'+suit.map(u=>esc(u.name)).join(", ")+'</b></div>':(ev.targetRule.indexOf("tag:")===0?'<div class="small muted" style="margin-top:8px">Нет игроков с тегом «'+esc(ev.targetRule.slice(4))+'»</div>':'');
+  const stockHTML=Object.keys(ev.stockEffects).length?'<div class="small" style="margin-top:6px">📊 '+Object.entries(ev.stockEffects).map(([k,v])=>(k==="all"?"все активы":k)+" "+(v>0?"+":"")+v+"%").join(", ")+'</div>':"";
+  let choicesHTML="";
+  if(ev.choices)choicesHTML='<div style="margin-top:10px"><div class="section-title">Варианты решения</div>'+ev.choices.map((c,i)=>'<div class="choice"><div class="row spread"><b>'+esc(c.text)+'</b><button class="btn sm primary" data-choice="'+i+'">Выбрать</button></div>'+(c.risk?'<div class="small muted">Риск: '+esc(c.risk)+'</div>':'')+(c.outcomes?'<div class="small muted">'+c.outcomes.map(o=>esc(o.label)+' — '+o.chance+'%').join(" • ")+'</div>':'')+'</div>').join("")+'</div>';
+  let applyBtns="";
+  if(ev.moneyEffectType!=="none"&&!ev.choices)applyBtns='<div class="row" style="margin-top:10px"><button class="btn sm green" data-apply="player">К игроку</button><button class="btn sm" data-apply="team">К команде</button><button class="btn sm" data-apply="table">К столу</button><button class="btn sm" data-apply="all">Ко всем</button>'+(ev.targetRule.indexOf("tag:")===0?'<button class="btn sm blue" data-apply="suit">К подходящим</button>':'')+'</div>';
+  return '<div class="event-card"><div class="edge" style="background:'+tm.edge+'"></div><div class="row" style="gap:5px">'+badges.join(" ")+'</div><div class="etitle">'+esc(ev.title)+'</div><p>'+esc(ev.description)+'</p>'+
+    '<div class="small" style="margin-top:6px"><b>Кого касается:</b> '+esc(ev.appliesTo)+'</div>'+(ev.effect?'<div class="small" style="margin-top:4px"><b>Эффект:</b> '+esc(ev.effect)+'</div>':'')+stockHTML+
+    (ev.bankerInstructions?'<div class="small info-box" style="margin-top:6px">🏦 '+esc(ev.bankerInstructions)+'</div>':'')+suitHTML+choicesHTML+applyBtns+
+    '<div class="row" style="margin-top:10px"><button class="btn sm" data-act="newEvent">🔄 Новое</button><button class="btn sm ghost" data-act="closeEvent">Скрыть</button></div></div>';
+}
+
+/* ----- ADMIN ----- */
+function adminView(){const t=session.tab.admin;
+  if(t==="dash")return aDash();if(t==="players")return calcView(false,null);if(t==="sheets")return sheetsReview(null);if(t==="teams")return teamsView();if(t==="tables")return tablesView();
+  if(t==="events")return eventsView();if(t==="exchange")return exchangeAdmin();if(t==="loans")return loansView();if(t==="pools")return poolsView(false);
+  if(t==="venture")return ventureView(false);if(t==="tx")return txView();if(t==="history")return historyView();if(t==="ach")return achView();if(t==="settings")return settingsView();if(t==="rules")return rulesView();return "";}
+function aDash(){
+  const negs=players().filter(u=>u.balance<0),pend=M.approvals.filter(a=>a.status==="pending").length;
+  const loansSum=M.loans.filter(l=>l.status==="active").reduce((s,l)=>s+l.outstanding,0);
+  return '<div class="card"><h2>Dashboard партии</h2><div class="grid g4 keep">'+stat("Игроков",players().length)+stat("Команд",teams().length)+stat("Столов",tables().length)+stat("Капитал",fmt(totalCapital()))+'</div>'+
+    '<div class="grid g4 keep" style="margin-top:10px">'+stat("Кредиты",fmt(loansSum))+stat("Пулы",M.pools.filter(p=>["open","funding","active"].includes(p.status)).length)+stat("Венчур",M.startups.filter(s=>s.status!=="funded").length)+stat("Подтверждений",pend)+'</div>'+
+    '<div style="margin-top:12px"><div class="row spread"><span class="section-title">Индекс риска</span><b style="color:'+riskColor(room().riskIndex)+'">'+room().riskIndex+'/100</b></div>'+riskMeter(room().riskIndex)+'<div style="margin-top:8px">'+riskHint()+'</div></div>'+
+    (negs.length?'<div class="warn-box small" style="margin-top:10px">⚠️ Минус: '+negs.map(u=>esc(u.name)).join(", ")+'</div>':'')+'</div>'+
+  '<div class="card"><h2>Действия гейм-мастера</h2><div class="grid g3 keep">'+
+    '<button class="btn primary block" data-act="event">🎴 Событие</button><button class="btn purple block" data-act="crisis">⚡ Кризис</button><button class="btn green block" data-act="uptrend">📈 Аптренд</button>'+
+    '<button class="btn gold block" data-act="dice">🎲 Кубик</button><button class="btn blue block" data-act="challenge">🎯 Челлендж</button><button class="btn teal block" data-act="opp">💎 Возможность</button></div>'+
+    '<div class="row" style="margin-top:10px"><button class="btn block" data-act="next">➡️ Раунд</button><button class="btn block" data-act="announce">📢 Объявление</button></div>'+
+    (shownEvent?'<div style="margin-top:14px">'+eventCardHTML(shownEvent)+'</div>':'')+'</div>'+
+  '<div class="card"><h2>Фаза игры</h2><div class="row">'+PHASES.map(p=>'<button class="btn sm'+(room().phase===p.id?' primary':'')+'" data-phase="'+p.id+'">'+p.name+'</button>').join("")+'</div><div class="small muted" style="margin-top:6px">'+phaseObj().desc+'</div></div>'+
+  '<div class="card"><h2>Столы</h2><div class="grid g3">'+tables().map(t=>{const m=tableMembers(t.id);return '<div class="stat"><div class="k">'+esc(t.name)+'</div><div class="v">'+fmt(m.reduce((s,u)=>s+u.balance,0))+'</div><div class="small muted">'+m.length+' игроков</div></div>';}).join("")+'</div></div>';
+}
+function calcView(bankerScope,tableId){
+  const teamOpts='<option value="">Без команды</option>'+teams().map(t=>'<option value="'+t.id+'">'+esc(t.name)+'</option>').join("");
+  const tableOpts='<option value="">Без стола</option>'+tables().map(t=>'<option value="'+t.id+'"'+(tableId===t.id?' selected':'')+'>'+esc(t.name)+'</option>').join("");
+  let list=players();if(bankerScope)list=list.filter(u=>u.tableId===tableId);
+  let html='<div class="card"><h2>Добавить игрока</h2><div class="grid g4"><div><label class="fl">Имя</label><input id="npName"></div><div><label class="fl">Баланс</label><input id="npBal" type="number" value="'+(settings().startBalance||0)+'"></div><div><label class="fl">Стол</label><select id="npTable">'+tableOpts+'</select></div><div><label class="fl">Команда</label><select id="npTeam">'+teamOpts+'</select></div></div><button class="btn green block" style="margin-top:10px" data-act="addPlayer">＋ Добавить</button></div>';
+  if(players().length>=2){const o=players().map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join("");html+='<div class="card"><h2>Перевод</h2><div class="grid g2"><div><label class="fl">Откуда</label><select id="trFrom">'+o+'</select></div><div><label class="fl">Куда</label><select id="trTo">'+o+'</select></div></div><div class="grid g2" style="margin-top:8px"><div><label class="fl">Сумма</label><input id="trAmt" type="number"></div><div><label class="fl">Комментарий</label><input id="trCom"></div></div><button class="btn blue block" style="margin-top:10px" data-act="transfer">↔️ Перевести</button></div>';}
+  if(!bankerScope&&players().length)html+=massView();
+  html+='<div class="card"><div class="row spread"><h2>Игроки ('+list.length+')</h2><span class="small muted">'+fmt(list.reduce((s,u)=>s+u.balance,0))+'</span></div>'+(list.length?list.map(playerCard).join(""):'<p class="muted">Нет игроков.</p>')+'</div>';
+  return html;
+}
+function playerCard(u){
+  const neg=u.balance<0,pv=portfolioValue(u),loans=loansOf(u.id).reduce((s,l)=>s+l.outstanding,0);
+  const qb=(a,c)=>'<button class="btn-money '+c+'" data-money="'+u.id+'" data-amt="'+a+'">'+(a>0?'+':'')+a.toLocaleString("ru-RU")+'</button>';
+  const recent=M.transactions.filter(t=>t.playerId===u.id).slice(0,3).map(t=>'<div class="small muted">'+(t.amount>=0?'＋':'')+fmt(t.amount)+' — '+esc(t.reason)+'</div>').join("")||'<div class="small muted">операций нет</div>';
+  return '<div class="item'+(neg?' neg':'')+'"><div class="row spread"><div><div class="pname">'+esc(u.name)+'</div><div class="small"><span class="team-dot" style="background:'+teamColor(u.teamId)+'"></span>'+esc(teamName(u.teamId))+' · '+esc(tableName(u.tableId))+(u.status==="fasttrack"?' · <span class="badge b-gold">скоростная</span>':u.status==="venture"?' · <span class="badge b-gold">венчур</span>':'')+'</div></div><div style="text-align:right"><div class="pbal" style="color:'+(neg?'var(--red)':'var(--txt)')+'">'+fmt(u.balance)+'</div>'+(pv?'<div class="small muted">портфель '+fmt(pv)+'</div>':'')+(loans?'<div class="small" style="color:var(--orange)">долг '+fmt(loans)+'</div>':'')+'</div></div>'+
+    '<div class="grid g4 keep" style="margin-top:10px;gap:6px">'+qb(100,'plus')+qb(500,'plus')+qb(1000,'plus')+qb(5000,'plus')+qb(-100,'minus')+qb(-500,'minus')+qb(-1000,'minus')+qb(-5000,'minus')+'</div>'+
+    '<div class="row" style="margin-top:8px;gap:6px"><input type="number" placeholder="Сумма" data-cust="'+u.id+'" style="max-width:100px"><select data-custop="'+u.id+'" style="max-width:110px"><option value="income">Начислить</option><option value="expense">Списать</option></select><input placeholder="Комментарий" data-custr="'+u.id+'" style="flex:1;min-width:110px"><button class="btn sm primary" data-act="custom" data-id="'+u.id+'">ОК</button></div>'+
+    '<div style="margin-top:8px">'+tagsLine(u)+'</div><div style="margin-top:6px">'+recent+'</div>'+
+    '<div class="row" style="margin-top:8px"><button class="btn sm" data-act="openSheet" data-id="'+u.id+'">🧾 Бланк '+sheetStatus(u)+'</button><button class="btn sm" data-act="creditCashflow" data-id="'+u.id+'">💱 Поток</button><button class="btn sm" data-act="editPlayer" data-id="'+u.id+'">✏️</button><button class="btn sm" data-act="tagsPlayer" data-id="'+u.id+'">🏷️</button><button class="btn sm" data-act="paydayP" data-id="'+u.id+'">💵</button>'+(session.role==="admin"?'<button class="btn sm" data-act="roleModal" data-id="'+u.id+'">👤 Роль</button><button class="btn sm red" data-act="delPlayer" data-id="'+u.id+'">🗑️</button>':'')+'</div></div>';
+}
+function massView(){
+  const teamOpts=teams().map(t=>'<option value="'+t.id+'">'+esc(t.name)+'</option>').join(""),tableOpts=tables().map(t=>'<option value="'+t.id+'">'+esc(t.name)+'</option>').join(""),tagOpts=PLAYER_TAGS.map(t=>'<option value="'+esc(t)+'">'+esc(t)+'</option>').join("");
+  return '<div class="card"><h2>Массовая операция</h2><div class="grid g2"><div><label class="fl">Кому</label><select id="msScope"><option value="all">Всем</option><option value="table">Столу</option><option value="team">Команде</option><option value="tag">По тегу</option><option value="selected">Выбранным</option></select></div><div><label class="fl">Действие</label><select id="msKind"><option value="add">Начислить</option><option value="subtract">Списать</option><option value="set">Установить баланс</option><option value="multiply">Умножить</option><option value="percentAdd">+ %</option><option value="percentSubtract">- %</option></select></div></div>'+
+    '<div class="grid g2" style="margin-top:8px"><div id="msTableW" class="hidden"><label class="fl">Стол</label><select id="msTable">'+tableOpts+'</select></div><div id="msTeamW" class="hidden"><label class="fl">Команда</label><select id="msTeam">'+teamOpts+'</select></div><div id="msTagW" class="hidden"><label class="fl">Тег</label><select id="msTag">'+tagOpts+'</select></div><div><label class="fl">Значение</label><input id="msVal" type="number"></div><div><label class="fl">Причина</label><input id="msReason"></div></div>'+
+    '<div id="msPickW" class="hidden" style="margin-top:8px"><div class="pickbox" id="msPick">'+players().map(p=>'<label class="pick"><input type="checkbox" value="'+p.id+'" style="width:auto"> '+esc(p.name)+'</label>').join("")+'</div></div>'+
+    '<button class="btn primary block" style="margin-top:10px" data-act="massApply">Применить</button></div>';
+}
+function teamsView(){
+  let h='<div class="card"><h2>Создать команду</h2><div class="grid g3"><div style="grid-column:span 2"><label class="fl">Название</label><input id="tmName"></div><div><label class="fl">Цвет</label><input id="tmColor" type="color" value="#14b8a6" style="height:40px"></div></div><button class="btn green block" style="margin-top:10px" data-act="addTeam">＋ Создать</button></div>';
+  h+='<div class="card"><h2>Команды ('+teams().length+')</h2>'+(teams().length?teams().map(t=>{const m=teamMembers(t.id),tot=m.reduce((s,u)=>s+u.balance,0);return '<div class="item" style="border-left:4px solid '+t.color+'"><div class="row spread"><div class="pname"><span class="team-dot" style="background:'+t.color+'"></span>'+esc(t.name)+'</div><div class="pbal">'+fmt(tot)+'</div></div><div class="grid g3 keep" style="margin-top:8px">'+stat("Участников",m.length)+stat("Средний",fmt(m.length?Math.round(tot/m.length):0))+stat("Всего",fmt(tot))+'</div><div style="margin-top:8px">'+(m.map(u=>'<span class="tag-chip on">'+esc(u.name)+' '+fmt(u.balance)+'</span>').join("")||'<span class="muted small">пусто</span>')+'</div><div class="row" style="margin-top:10px"><button class="btn sm green" data-act="teamAdd" data-id="'+t.id+'">＋</button><button class="btn sm red" data-act="teamSub" data-id="'+t.id+'">－</button><button class="btn sm" data-act="teamAssign" data-id="'+t.id+'">👥</button><button class="btn sm" data-act="teamEdit" data-id="'+t.id+'">✏️</button><button class="btn sm red" data-act="teamDel" data-id="'+t.id+'">🗑️</button></div></div>';}).join(""):'<p class="muted">Команд нет.</p>')+'</div>';
+  return h;
+}
+function tablesView(){return '<div class="card"><h2>Столы</h2>'+tables().map(t=>{const m=tableMembers(t.id);return '<div class="item"><div class="row spread"><div class="pname">'+esc(t.name)+'</div><div class="pbal">'+fmt(m.reduce((s,u)=>s+u.balance,0))+'</div></div><div style="margin-top:8px">'+(m.map(u=>'<span class="tag-chip on">'+esc(u.name)+'</span>').join("")||'<span class="muted small">нет игроков</span>')+'</div><div class="row" style="margin-top:8px"><button class="btn sm green" data-act="tableAdd" data-id="'+t.id+'">＋ столу</button><button class="btn sm red" data-act="tableSub" data-id="'+t.id+'">－ столу</button></div></div>';}).join("")+'</div>';}
+function eventsView(){
+  const catOpts='<option value="all">Все категории</option>'+CATEGORIES.map(c=>'<option value="'+esc(c)+'"'+(categoryFilter===c?' selected':'')+'>'+esc(c)+'</option>').join("");
+  return '<div class="card"><h2>Генератор событий</h2><div class="row" style="gap:8px"><select id="catFilter" style="flex:1">'+catOpts+'</select><button class="btn primary" data-act="event">🎴 Получить</button></div>'+
+    '<div class="row" style="margin-top:8px"><select id="modeSel" style="max-width:230px">'+MODES.map(m=>'<option value="'+m.id+'"'+(m.id===room().mode?' selected':'')+'>'+m.name+'</option>').join("")+'</select><select id="trendSel" style="max-width:230px">'+TRENDS.map(t=>'<option value="'+t.id+'"'+(t.id===room().trendId?' selected':'')+'>'+t.name+'</option>').join("")+'</select></div>'+
+    '<div style="margin-top:14px">'+(shownEvent?eventCardHTML(shownEvent):'<p class="muted">Нажмите «Получить».</p>')+'</div></div>';
+}
+function exchangeAdmin(){
+  return '<div class="card"><h2>Управление биржей</h2><div class="row" style="margin-bottom:10px"><button class="btn gold" data-act="tick">🔀 Движение</button><button class="btn red" data-act="shockDown">📉 -30%</button><button class="btn green" data-act="shockUp">📈 +20%</button><button class="btn" data-act="dice">🎲 Кубик</button></div><div class="grid g3">'+assets().map(a=>{const chg=a.previousPrice?((a.price-a.previousPrice)/a.previousPrice*100):0,up=chg>=0;return '<div class="asset"><div class="row spread"><b>'+a.symbol+'</b>'+(a.isHalted?'<span class="badge b-red">стоп</span>':'')+'</div><div class="small muted">'+esc(a.name)+'</div>'+sparkline(a.history,up)+'<div class="row spread"><span class="price">'+fmt(a.price)+'</span><span class="'+(up?'chg-up':'chg-down')+'">'+(up?'▲':'▼')+Math.abs(chg).toFixed(1)+'%</span></div><div class="row" style="margin-top:6px"><input type="number" placeholder="Цена" data-setp="'+a.symbol+'" style="max-width:90px"><button class="btn sm" data-act="setPrice" data-sym="'+a.symbol+'">Задать</button><button class="btn sm" data-act="halt" data-sym="'+a.symbol+'">'+(a.isHalted?'▶':'⏸')+'</button></div></div>';}).join("")+'</div></div>';
+}
+function loansView(){
+  const active=M.loans.filter(l=>l.status==="active");
+  return '<div class="card"><h2>Кредиты ЦБ</h2><div class="grid g3 keep">'+stat("Активных",active.length)+stat("Общий долг",fmt(active.reduce((s,l)=>s+l.outstanding,0)))+stat("Ставка ЦБ",(room().centralBankRate||0)+"%")+'</div><button class="btn primary" style="margin-top:10px" data-act="giveLoan">＋ Выдать заём</button></div>'+
+    '<div class="card"><h2>Список</h2>'+(active.length?active.map(l=>{const u=uid(l.userId);return '<div class="item"><div class="row spread"><div><b>'+esc(u?u.name:"—")+'</b><div class="small muted">ставка '+l.rate+'% · проценты/получку '+fmt(Math.round(l.outstanding*l.rate/100))+'</div></div><div style="text-align:right"><div class="pbal" style="color:var(--orange)">'+fmt(l.outstanding)+'</div><button class="btn sm green" data-act="repay" data-id="'+l.id+'">Погасить</button></div></div></div>';}).join(""):'<p class="muted">Кредитов нет.</p>')+'</div>';
+}
+function poolsView(playerScope){
+  const me=playerScope?uid(session.uid):null;
+  let h='<div class="card"><div class="row spread"><h2>Инвестиционные пулы</h2><button class="btn primary sm" data-act="createPool">＋ Создать</button></div><p class="small muted">Пулы видны игрокам всех столов.</p></div>';
+  const list=M.pools.filter(p=>p.status!=="cancelled");
+  h+='<div class="card"><h2>Пулы ('+list.length+')</h2>'+(list.length?list.map(p=>poolCard(p,me)).join(""):'<p class="muted">Пулов нет.</p>')+'</div>';
+  return h;
+}
+function poolCard(p,me){
+  const pct=Math.min(100,Math.round(p.collectedAmount/p.requiredAmount*100));
+  const st={draft:"b-gray",open:"b-blue",funding:"b-orange",active:"b-green",closed:"b-gray"}[p.status]||"b-gray";
+  const mine=me?(p.participants||[]).find(x=>x.userId===me.id):null;let btns="";
+  if(me&&(p.status==="open"||p.status==="funding"))btns+='<button class="btn sm blue" data-act="joinPool" data-id="'+p.id+'">Вложиться</button>';
+  if(session.role!=="player"){if(p.status==="active")btns+='<button class="btn sm green" data-act="poolPay" data-id="'+p.id+'">💵 Выплата</button>';btns+='<button class="btn sm" data-act="poolClose" data-id="'+p.id+'">Закрыть</button>';}
+  return '<div class="item"><div class="row spread"><b>'+esc(p.title)+'</b><span class="badge '+st+'">'+p.status+'</span></div><div class="small muted">'+esc(p.dealType)+' · доход '+fmt(p.expectedMonthlyIncome)+'/получку · мин '+fmt(p.minContribution)+'</div><div class="prog"><span style="width:'+pct+'%"></span></div><div class="small">'+fmt(p.collectedAmount)+' / '+fmt(p.requiredAmount)+' ('+pct+'%) · участников '+(p.participants||[]).length+(mine?' · ваша доля '+(mine.share||0)+'%':'')+'</div>'+(btns?'<div class="row" style="margin-top:8px">'+btns+'</div>':'')+'</div>';
+}
+function ventureView(playerScope){
+  const me=playerScope?uid(session.uid):null;
+  let h='<div class="card"><div class="row spread"><h2>🚀 Биржа стартапов</h2><button class="btn primary sm" data-act="createStartup">＋ Заявка</button></div><p class="small muted">Поздние игроки финансируют ранних.</p></div>';
+  const list=M.startups.filter(s=>s.status!=="funded");
+  h+='<div class="card"><h2>Заявки ('+list.length+')</h2>'+(list.length?list.map(s=>{const offers=M.offers.filter(o=>o.requestId===s.id&&o.status==="open");const oHTML=offers.map(o=>'<div class="row spread" style="padding:4px 0;border-top:1px solid var(--line)"><span class="small">'+esc(o.investorName)+': '+fmt(o.amount)+' ('+esc(o.offerType)+')</span>'+((session.role!=="player")||(me&&s.creatorId===me.id)?'<button class="btn sm green" data-act="acceptOffer" data-id="'+o.id+'">Принять</button>':'')+'</div>').join("");return '<div class="item"><div class="row spread"><b>'+esc(s.title)+'</b><span class="badge b-gold">'+esc(s.type)+'</span></div><div class="small muted">'+esc(s.creatorName)+' · '+esc(tableName(s.tableId))+' · нужно '+fmt(s.requestedAmount)+' · доля '+s.offeredShare+'%</div>'+(s.description?'<div class="small" style="margin-top:4px">'+esc(s.description)+'</div>':'')+((me&&s.creatorId!==me.id)||session.role!=="player"?'<div class="row" style="margin-top:6px"><button class="btn sm blue" data-act="makeOffer" data-id="'+s.id+'">Предложение</button></div>':'')+(oHTML?'<div style="margin-top:6px">'+oHTML+'</div>':'<div class="small muted" style="margin-top:6px">предложений нет</div>')+'</div>';}).join(""):'<p class="muted">Заявок нет.</p>')+'</div>';
+  return h;
+}
+function txView(){
+  let list=M.transactions;if(txFilter==="round")list=list.filter(t=>t.round===room().round);else if(txFilter!=="all")list=list.filter(t=>t.type===txFilter);
+  const opts=['all:Все','income:Начисления','expense:Списания','transfer:Переводы','eventEffect:События','loan:Кредиты','trade:Биржа','poolContribution:Пулы','round:Текущий раунд'].map(o=>{const[v,l]=o.split(":");return '<option value="'+v+'"'+(txFilter===v?' selected':'')+'>'+l+'</option>';}).join("");
+  return '<div class="card"><div class="row spread"><h2>Транзакции</h2><span class="small muted">'+M.transactions.length+'</span></div><div class="row" style="margin-bottom:8px"><select id="txFilter" style="max-width:220px">'+opts+'</select><button class="btn sm" data-act="copyTx">📋</button></div><div class="scroll"><table class="tx"><thead><tr><th>Игрок</th><th>Тип</th><th>Сумма</th><th>Причина</th><th>Раунд</th></tr></thead><tbody>'+(list.slice(0,200).map(t=>'<tr><td>'+esc(t.targetName||"—")+'</td><td>'+esc(t.type)+'</td><td style="color:'+(t.amount>=0?'var(--green)':'var(--red)')+'">'+(t.amount>=0?'+':'')+fmt(t.amount)+'</td><td>'+esc(t.reason||"")+'</td><td>'+(t.round||"")+'</td></tr>').join("")||'<tr><td colspan="5" class="muted">Нет операций</td></tr>')+'</tbody></table></div></div>';
+}
+function historyView(){return '<div class="card"><h2>История партии</h2>'+(M.history.length?M.history.slice(0,150).map(h=>'<div class="hitem"><div class="ht">'+gameIcon(h.type)+' '+esc(h.title)+'</div>'+(h.desc?'<div class="small">'+esc(h.desc)+'</div>':'')+'<div class="hm">раунд '+(h.round||1)+'</div></div>').join(""):'<p class="muted">Пусто.</p>')+'</div>';}
+function achView(){const open=room().achievements||[];return '<div class="card"><h2>Достижения ('+open.length+'/'+ACHIEVEMENTS.length+')</h2><div class="grid g2">'+ACHIEVEMENTS.map(a=>{const o=open.includes(a.id);return '<div class="item" style="opacity:'+(o?1:.5)+';'+(o?'border-color:var(--gold)':'')+'"><div class="row"><div style="font-size:22px">'+a.icon+'</div><div><b>'+esc(a.title)+'</b></div></div></div>';}).join("")+'</div></div>';}
+function settingsView(){const s=settings();return '<div class="card"><h2>Настройки комнаты</h2><div class="grid g2"><div class="field"><label class="fl">Стартовый баланс</label><input id="seStart" type="number" value="'+(s.startBalance||0)+'"></div><div class="field"><label class="fl">Лимит перевода</label><input id="seTr" type="number" value="'+(s.transferLimit||0)+'"></div><div class="field"><label class="fl">Лимит кредита</label><input id="seLoan" type="number" value="'+(s.loanLimit||0)+'"></div><div class="field"><label class="fl">Ставка кредита %</label><input id="seRate" type="number" value="'+(s.loanRate||0)+'"></div><div class="field"><label class="fl">Ставка ЦБ %</label><input id="seCBR" type="number" value="'+(room().centralBankRate||0)+'"></div></div><button class="btn green" data-act="saveSettings">Сохранить</button></div>'+
+  '<div class="card"><h2>Данные комнаты</h2><div class="info-box small">Код комнаты: <b>'+esc(CODE)+'</b>. Покажите его игрокам.</div><div class="row" style="margin-top:8px"><button class="btn red" data-act="resetRoom">🗑️ Сбросить комнату</button></div></div>';}
+function rulesView(){const r=[["Подключение","Игроки заходят с телефонов по коду комнаты и имени. Банкир/админ — по PIN."],["Кошелёк","Баланс, P2P-переводы. Крупные переводы уходят на подтверждение банкиру."],["Кредит","Заём в ЦБ; проценты списываются на «Дне получки»."],["День получки","Проценты по кредитам − доход от пулов, с предпросмотром."],["Биржа","Покупка/продажа $TECH/$ENERGY/$REALTY. Комиссия 1%. Цены меняют админ, кубик, события."],["Пулы","Складчина в крупную сделку, доход делится пропорционально на «Дне получки»."],["Венчур","Поздние игроки финансируют ранних через заявки и предложения."],["События","Денежные эффекты применяются после предпросмотра «до→после»."],["Роли","Игрок видит своё; банкир — свой стол; админ — всё. Realtime между устройствами."]];return '<div class="card"><h2>Правила</h2>'+r.map((x,i)=>'<div style="margin-bottom:9px"><b>'+(i+1)+'. '+esc(x[0])+'</b><div class="small muted">'+esc(x[1])+'</div></div>').join("")+'<hr class="sep"><p class="small muted">Неофициальный фанатский цифровой модуль. События оригинальны и не воспроизводят материалы CashFlow.</p></div>';}
+
+/* ----- BANKER ----- */
+function bankerView(){const t=session.tab.banker,tid=session.tableId||(tables()[0]&&tables()[0].id);
+  const sel='<div class="card"><label class="fl">Ваш стол</label><select id="bkTable">'+tables().map(x=>'<option value="'+x.id+'"'+(tid===x.id?' selected':'')+'>'+esc(x.name)+'</option>').join("")+'</select></div>';
+  if(t==="players")return sel+calcView(true,tid);
+  if(t==="ops")return sel+'<div class="card"><h2>Операции · '+esc(tableName(tid))+'</h2>'+(tableMembers(tid).length?tableMembers(tid).map(playerCard).join(""):'<p class="muted">Нет игроков.</p>')+'</div>';
+  if(t==="sheets")return sel+sheetsReview(tid);
+  if(t==="approvals"){const list=M.approvals.filter(a=>a.status==="pending");return sel+'<div class="card"><h2>Подтверждения ('+list.length+')</h2>'+(list.length?list.map(a=>'<div class="item"><div class="row spread"><b>'+esc(a.type==="transfer"?"Перевод":a.type==="pool"?"Пул":a.type)+'</b><span class="badge b-yellow">'+fmt(a.amount)+'</span></div><div class="small muted">от '+esc(a.requestedBy)+' · '+esc(a.reason)+'</div><div class="row" style="margin-top:8px"><button class="btn sm green" data-act="approveOk" data-id="'+a.id+'">Подтвердить</button><button class="btn sm red" data-act="approveNo" data-id="'+a.id+'">Отклонить</button></div></div>').join(""):'<p class="muted">Нет ожиданий.</p>')+'</div>';}
+  if(t==="pools")return sel+poolsView(false);
+  if(t==="payday")return sel+'<div class="card"><h2>День получки · '+esc(tableName(tid))+'</h2>'+(tableMembers(tid).length?tableMembers(tid).map(u=>{const pv=paydayPreview(u.id);return '<div class="item"><div class="row spread"><div><b>'+esc(u.name)+'</b><div class="small muted">проценты -'+fmt(pv.interest)+' · пулы +'+fmt(pv.pool)+' · итог '+(pv.net>=0?'+':'')+fmt(pv.net)+'</div></div><button class="btn sm primary" data-act="paydayP" data-id="'+u.id+'">💵</button></div></div>';}).join(""):'<p class="muted">Нет игроков.</p>')+'</div>';
+  if(t==="history")return sel+historyView();
+  return sel;
+}
+
+/* ----- PLAYER ----- */
+function playerView(){const u=uid(session.uid);if(!u)return joinPlayerView();const t=session.tab.player;
+  if(t==="wallet")return walletView(u);if(t==="sheet")return mySheetView(u);if(t==="exchange")return exchangePlayer(u);if(t==="pools")return poolsView(true);if(t==="venture")return ventureView(true);if(t==="news")return newsView();if(t==="profile")return profileView(u);return "";}
+function walletView(u){
+  const neg=u.balance<0,pv=paydayPreview(u.id),loans=loansOf(u.id),myTx=M.transactions.filter(t=>t.playerId===u.id).slice(0,8);
+  const pOpts=players().filter(p=>p.id!==u.id).map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join("");
+  return '<div class="card"><div class="row spread"><div><div class="small muted">'+esc(tableName(u.tableId))+' · '+esc(teamName(u.teamId))+'</div><div class="pname">'+esc(u.name)+'</div></div><div style="text-align:right"><div class="pbal" style="color:'+(neg?'var(--red)':'var(--txt)')+'">'+fmt(u.balance)+'</div><div class="small muted">портфель '+fmt(portfolioValue(u))+'</div></div></div>'+(neg?'<div class="warn-box small" style="margin-top:8px">⚠️ Отрицательный баланс</div>':'')+
+    '<div class="grid g4 keep" style="margin-top:10px"><button class="btn primary block" data-act="plPayday">💵 Получка</button><button class="btn blue block" data-act="plLoan">🏦 Заём</button><button class="btn teal block" data-act="plCreatePool">🧩 Пул</button><button class="btn block" data-act="goExch">📊 Биржа</button></div></div>'+
+    (pOpts?'<div class="card"><h2>Перевод</h2><div class="field"><label class="fl">Получатель</label><select id="plTo">'+pOpts+'</select></div><div class="grid g2"><div class="field"><label class="fl">Сумма</label><input id="plAmt" type="number"></div><div class="field"><label class="fl">Комментарий</label><input id="plCom"></div></div><button class="btn blue block" data-act="plTransfer">↔️ Перевести</button><div class="small muted" style="margin-top:6px">Лимит без подтверждения: '+fmt(settings().transferLimit)+'</div></div>':'')+
+    (loans.length?'<div class="card"><h2>Мои кредиты</h2>'+loans.map(l=>'<div class="row spread" style="padding:5px 0;border-bottom:1px solid var(--line)"><span class="small">ставка '+l.rate+'% · проценты/получку '+fmt(Math.round(l.outstanding*l.rate/100))+'</span><span><b style="color:var(--orange)">'+fmt(l.outstanding)+'</b> <button class="btn sm green" data-act="repay" data-id="'+l.id+'">Погасить</button></span></div>').join("")+'</div>':'')+
+    '<div class="card"><h2>Операции</h2>'+(myTx.length?myTx.map(t=>'<div class="hitem" style="border-left-color:'+(t.amount>=0?'var(--green)':'var(--red)')+'"><div class="row spread"><span class="small">'+esc(t.reason||t.type)+'</span><b style="color:'+(t.amount>=0?'var(--green)':'var(--red)')+'">'+(t.amount>=0?'+':'')+fmt(t.amount)+'</b></div></div>').join(""):'<p class="muted">Операций нет.</p>')+'</div>';
+}
+function exchangePlayer(u){
+  return '<div class="card"><h2>📊 Биржа</h2><div class="small muted">Баланс: '+fmt(u.balance)+' · Комиссия 1%</div></div>'+assets().map(a=>{const chg=a.previousPrice?((a.price-a.previousPrice)/a.previousPrice*100):0,up=chg>=0,pf=(u.portfolio||{})[a.symbol];return '<div class="card"><div class="row spread"><div><b>'+a.symbol+'</b> <span class="small muted">'+esc(a.name)+'</span></div><div style="text-align:right"><span class="price">'+fmt(a.price)+'</span> <span class="'+(up?'chg-up':'chg-down')+'">'+(up?'▲':'▼')+Math.abs(chg).toFixed(1)+'%</span></div></div>'+sparkline(a.history,up)+(pf?'<div class="small ok-box" style="margin:6px 0">У вас '+pf.qty+' шт · '+fmt(a.price*pf.qty)+' · P/L '+((a.price-pf.avg)*pf.qty>=0?'+':'')+fmt((a.price-pf.avg)*pf.qty)+'</div>':'')+(a.isHalted?'<div class="warn-box small">Торговля остановлена</div>':'<div class="row" style="margin-top:6px"><input type="number" placeholder="Кол-во" data-qty="'+a.symbol+'" style="max-width:90px"><button class="btn sm green" data-act="buy" data-sym="'+a.symbol+'">Купить</button><button class="btn sm red" data-act="sell" data-sym="'+a.symbol+'">Продать</button></div>')+'</div>';}).join("");
+}
+function newsView(){return '<div class="card"><h2>📰 Новости</h2>'+(M.news.length?M.news.slice(0,40).map(n=>{const col={crisis:"var(--purple)",market:"var(--gold)",pool:"var(--blue)",venture:"var(--gold)",event:"var(--acc)"}[n.type]||"var(--gray)";return '<div class="hitem" style="border-left-color:'+col+'"><div class="ht">'+esc(n.title)+'</div>'+(n.body?'<div class="small">'+esc(n.body)+'</div>':'')+'</div>';}).join(""):'<p class="muted">Новостей нет.</p>')+'</div>';}
+function profileView(u){const st={ratrace:"Крысиные бега",fasttrack:"Скоростная дорожка",venture:"Венчурный инвестор"}[u.status]||u.status;return '<div class="card"><h2>👤 '+esc(u.name)+'</h2><div class="grid g2 keep">'+stat("Баланс",fmt(u.balance))+stat("Статус",st)+stat("Стол",esc(tableName(u.tableId)))+stat("Команда",esc(teamName(u.teamId)))+'</div><div style="margin-top:10px"><div class="section-title">Теги</div>'+tagsLine(u)+'</div></div>'+
+  '<div class="card"><h2>Экономика</h2><div class="row spread"><span class="section-title">Индекс риска</span><b style="color:'+riskColor(room().riskIndex)+'">'+room().riskIndex+'</b></div>'+riskMeter(room().riskIndex)+'<hr class="sep">'+econBar("Инфляция",(room().economy||{}).inflation||0,false)+econBar("Фондовый рынок",(room().economy||{}).stocks||0,true)+econBar("Деловая активность",(room().economy||{}).business||0,true)+econBar("Настроение",(room().economy||{}).sentiment||0,true)+'</div>';}
+/* ---------- BINDINGS ---------- */
+document.getElementById("topbar").addEventListener("click",e=>{const t=e.target.closest("[data-tab]");if(t){setTab(t.dataset.tab);return;}const a=e.target.closest("[data-act]");if(a)handleAct(a.dataset.act,a);});
+document.getElementById("bottomNav").addEventListener("click",e=>{const t=e.target.closest("[data-tab]");if(t)setTab(t.dataset.tab);});
+
+function bindView(){
+  const view=document.getElementById("view");
+  view.onclick=function(e){
+    const a=e.target.closest("[data-act]");if(a){handleAct(a.dataset.act,a);return;}
+    const m=e.target.closest("[data-money]");if(m){const amt=parseInt(m.dataset.amt,10);changeMoney(m.dataset.money,Math.abs(amt),amt>0?"Быстрое начисление":"Быстрое списание",amt>0);return;}
+    const ph=e.target.closest("[data-phase]");if(ph){setPhase(ph.dataset.phase);return;}
+    const ap=e.target.closest("[data-apply]");if(ap&&shownEvent){applyEventBtn(shownEvent,ap.dataset.apply);return;}
+    const ch=e.target.closest("[data-choice]");if(ch&&shownEvent){choiceBtn(shownEvent,parseInt(ch.dataset.choice,10));return;}
+  };
+  bindSel("catFilter",v=>categoryFilter=v);
+  bindSel("modeSel",v=>updateRoom({mode:v}));
+  bindSel("trendSel",v=>updateRoom({trendId:v}));
+  bindSel("txFilter",v=>{txFilter=v;render();});
+  bindSel("bkTable",v=>{session.tableId=v;saveSess();render();});
+  const ms=document.getElementById("msScope");if(ms){const upd=()=>{tg("msTableW",ms.value!=="table");tg("msTeamW",ms.value!=="team");tg("msTagW",ms.value!=="tag");tg("msPickW",ms.value!=="selected");};ms.onchange=upd;upd();}
+}
+function bindSel(id,cb){const el=document.getElementById(id);if(el)el.onchange=()=>cb(el.value);}
+function tg(id,hide){const el=document.getElementById(id);if(el)el.classList.toggle("hidden",hide);}
+
+async function handleAct(act,el){
+  const id=el.dataset.id,sym=el.dataset.sym;
+  try{switch(act){
+    case"leave":leaveRoom();break;
+    case"createRoom":await createRoom({name:val("cName"),code:val("cCode"),startBalance:parseFloat(val("cBal"))||5000,tables:parseInt(val("cTables"),10),assets:parseInt(val("cAssets"),10),venture:val("cVenture")==="yes",adminPin:val("cAdmin"),bankerPin:val("cBanker")});break;
+    case"enterParticipant":await enterParticipant();break;
+    case"enterAdmin":await enterAdmin();break;
+    case"confirmJoin":await updatePlayer(session.uid,{tableId:val("jpTable")||null,teamId:val("jpTeam")||null});break;
+    case"openSheet":openSheetEditor(id);break;
+    case"myEditSheet":openSheetEditor(session.uid);break;
+    case"creditCashflow":{const u=uid(id);const cf=computeSheet(u.sheet||defaultSheet()).cashflow;confirmModal("Начислить денежный поток?","Начислить «"+u.name+"» месячный денежный поток "+fmt(cf)+" в кошелёк?",()=>changeMoney(id,Math.abs(cf),"Денежный поток (бланк)",cf>=0),"Начислить",cf>=0?"green":"red");break;}
+    case"roleModal":roleModal(id);break;
+    case"event":doDraw();break;
+    case"crisis":doDraw("crisis");break;
+    case"uptrend":doDraw("positive");break;
+    case"newEvent":doDraw();break;
+    case"closeEvent":shownEvent=null;render();break;
+    case"dice":await rollDice();break;
+    case"next":await nextRound();break;
+    case"challenge":drawChallenge();break;
+    case"opp":drawOpportunity();break;
+    case"announce":announceModal();break;
+    case"addPlayer":await addPlayer(val("npName"),parseFloat(val("npBal")),val("npTable")||null,val("npTeam")||null);break;
+    case"transfer":await transfer(val("trFrom"),val("trTo"),parseFloat(val("trAmt"))||0,val("trCom"));break;
+    case"custom":{const amt=parseFloat(document.querySelector('[data-cust="'+id+'"]').value)||0;const op=document.querySelector('[data-custop="'+id+'"]').value;const r=document.querySelector('[data-custr="'+id+'"]').value;if(!amt){toast("⚠️ Укажите сумму","warn");break;}await changeMoney(id,amt,r||(op==="income"?"Начисление":"Списание"),op==="income");break;}
+    case"editPlayer":editPlayerModal(id);break;
+    case"tagsPlayer":tagsModal(id);break;
+    case"delPlayer":{const u=uid(id);confirmModal("Удалить игрока?","«"+u.name+"» будет удалён.",()=>deletePlayer(id),"Удалить","red");break;}
+    case"paydayP":paydayModal(id);break;
+    case"massApply":doMassApply();break;
+    case"addTeam":await addTeam(val("tmName"),val("tmColor"));break;
+    case"teamAdd":teamMoneyModal(id,true);break;
+    case"teamSub":teamMoneyModal(id,false);break;
+    case"teamAssign":teamAssignModal(id);break;
+    case"teamEdit":teamEditModal(id);break;
+    case"teamDel":{const t=teams().find(x=>x.id===id);confirmModal("Удалить команду?","«"+t.name+"» удалится, игроки станут без команды.",()=>deleteTeam(id),"Удалить","red");break;}
+    case"tableAdd":tableMoneyModal(id,true);break;
+    case"tableSub":tableMoneyModal(id,false);break;
+    case"tick":await priceTick();break;
+    case"shockDown":await shock("all",-30);break;
+    case"shockUp":await shock("all",20);break;
+    case"setPrice":{const p=parseFloat(document.querySelector('[data-setp="'+sym+'"]').value);if(isFinite(p))await setPrice(sym,p);break;}
+    case"halt":await toggleHalt(sym);break;
+    case"buy":{const q=parseFloat(document.querySelector('[data-qty="'+sym+'"]').value)||0;await trade(session.uid,sym,q,true);break;}
+    case"sell":{const q=parseFloat(document.querySelector('[data-qty="'+sym+'"]').value)||0;await trade(session.uid,sym,q,false);break;}
+    case"giveLoan":pickPlayerThen(u=>loanModal(u.id));break;
+    case"plLoan":loanModal(session.uid);break;
+    case"repay":{const l=M.loans.find(x=>x.id===id);repayModal(l);break;}
+    case"createPool":case"plCreatePool":createPoolModal();break;
+    case"joinPool":joinPoolModal(id);break;
+    case"poolPay":await poolPayout(id);break;
+    case"poolClose":await closePool(id);break;
+    case"createStartup":createStartupModal();break;
+    case"makeOffer":makeOfferModal(id);break;
+    case"acceptOffer":confirmModal("Принять предложение?","Деньги переведутся инициатору.",()=>acceptOffer(id),"Принять","green");break;
+    case"plPayday":paydayModal(session.uid);break;
+    case"goExch":setTab("exchange");break;
+    case"plTransfer":await transfer(session.uid,val("plTo"),parseFloat(val("plAmt"))||0,val("plCom"));break;
+    case"approveOk":await resolveApproval(id,true);break;
+    case"approveNo":await resolveApproval(id,false);break;
+    case"copyTx":copyText(M.transactions.map(t=>t.targetName+": "+(t.amount>=0?"+":"")+fmt(t.amount)+" — "+t.reason).join("\n"));toast("📋 Скопировано");break;
+    case"saveSettings":await saveSettings({settings:{startBalance:parseFloat(val("seStart"))||0,transferLimit:parseFloat(val("seTr"))||0,loanLimit:parseFloat(val("seLoan"))||0,loanRate:parseFloat(val("seRate"))||0},cbr:parseFloat(val("seCBR"))||0});break;
+    case"resetRoom":resetRoom();break;
+  }}catch(e){toast("⚠️ "+(e.message||e),"warn");}
+}
+async function doDraw(forced){const ev=await drawEvent(forced);shownEvent=ev;render();if(ev.type==="crisis"||ev.impactLevel==="critical")fsEvent(ev);}
+function applyEventBtn(ev,mode){
+  if(mode==="all")return applyEventTo(ev,players());
+  if(mode==="suit")return applyEventTo(ev,suitablePlayers(ev));
+  if(mode==="player")return pickPlayerThen(u=>applyEventTo(ev,[u]));
+  if(mode==="team")return pickTeamThen(tid=>applyEventTo(ev,teamMembers(tid)));
+  if(mode==="table")return pickTableThen(tid=>applyEventTo(ev,tableMembers(tid)));
+}
+function choiceBtn(ev,i){const c=ev.choices[i];const rule=c.targetRule||"player";if(rule==="player")pickPlayerThen(u=>applyChoice(ev,c,{playerId:u.id}));else if(rule==="team")pickTeamThen(tid=>applyChoice(ev,c,{teamId:tid}));else applyChoice(ev,c,{});}
+
+async function enterAdmin(){
+  const code=val("aCode").toUpperCase().trim();if(!code){toast("⚠️ Введите код","warn");return;}
+  const snap=await getDoc(doc(db,"rooms",code));if(!snap.exists()){toast("⚠️ Комната не найдена","warn");return;}
+  const data=snap.data();if(val("aPin")!==(data.settings||{}).adminPin){toast("⚠️ Неверный PIN админа","warn");return;}
+  session={code,role:"admin",uid:null,tableId:(data.tables[0]||{}).id,tab:session.tab};saveSess();subscribeRoom(code);toast("✅ Вход админа в "+code);
+}
+async function enterParticipant(){
+  const code=val("jCode").toUpperCase().trim();if(!code){toast("⚠️ Введите код","warn");return;}
+  const name=val("jName").trim();if(!name){toast("⚠️ Введите имя","warn");return;}
+  const pin=val("jPin").trim();if(pin.length<3){toast("⚠️ Задайте PIN (мин. 3 цифры)","warn");return;}
+  const rsnap=await getDoc(doc(db,"rooms",code));if(!rsnap.exists()){toast("⚠️ Комната не найдена — проверьте код","warn");return;}
+  const usnap=await getDocs(collection(db,"rooms",code,"users"));
+  const found=usnap.docs.map(d=>({id:d.id,...d.data()})).find(u=>(u.name||"").toLowerCase()===name.toLowerCase());
+  if(found){
+    if(found.pin&&found.pin!==pin){toast("⚠️ Неверный PIN для этого имени","warn");return;}
+    session={code,role:found.role||"player",uid:found.id,tableId:found.tableId||null,tab:session.tab};saveSess();subscribeRoom(code);toast("✅ С возвращением, "+esc(name));
+  } else {
+    CODE=code;const sb=(rsnap.data().settings||{}).startBalance||0;
+    const ref=await addDoc(collection(db,"rooms",code,"users"),{name,role:"player",pin,tableId:null,teamId:null,status:"ratrace",balance:sb,tags:[],portfolio:{},notes:"",sheet:defaultSheet(),auditorId:null,online:true,authUid:uidAuth,createdAt:serverTimestamp()});
+    if(sb!==0)await addDoc(collection(db,"rooms",code,"transactions"),{type:"income",targetName:name,playerId:ref.id,amount:sb,reason:"Стартовый баланс",balanceBefore:0,balanceAfter:sb,round:rsnap.data().round||1,createdBy:"player",createdAt:serverTimestamp()});
+    session={code,role:"player",uid:ref.id,tableId:null,tab:session.tab};saveSess();subscribeRoom(code);toast("✅ Регистрация: "+esc(name));
+  }
+}
+
+/* ----- pickers ----- */
+function pickPlayerThen(cb){if(!players().length){toast("⚠️ Нет игроков","warn");return;}modal("Выберите игрока",'<select id="pk">'+players().map(u=>'<option value="'+u.id+'">'+esc(u.name)+' ('+fmt(u.balance)+')</option>').join("")+'</select>',[{label:"Отмена",cls:"ghost"},{label:"Выбрать",cls:"primary",onClick:(c,ov)=>{const u=uid(ov.querySelector("#pk").value);c();if(u)cb(u);}}]);}
+function pickTeamThen(cb){if(!teams().length){toast("⚠️ Нет команд","warn");return;}modal("Выберите команду",'<select id="pk">'+teams().map(t=>'<option value="'+t.id+'">'+esc(t.name)+'</option>').join("")+'</select>',[{label:"Отмена",cls:"ghost"},{label:"Выбрать",cls:"primary",onClick:(c,ov)=>{const v=ov.querySelector("#pk").value;c();cb(v);}}]);}
+function pickTableThen(cb){if(!tables().length){toast("⚠️ Нет столов","warn");return;}modal("Выберите стол",'<select id="pk">'+tables().map(t=>'<option value="'+t.id+'">'+esc(t.name)+'</option>').join("")+'</select>',[{label:"Отмена",cls:"ghost"},{label:"Выбрать",cls:"primary",onClick:(c,ov)=>{const v=ov.querySelector("#pk").value;c();cb(v);}}]);}
+
+/* ----- modals ----- */
+function editPlayerModal(id){const u=uid(id);const tmO='<option value="">Без команды</option>'+teams().map(t=>'<option value="'+t.id+'"'+(t.id===u.teamId?' selected':'')+'>'+esc(t.name)+'</option>').join("");const tbO='<option value="">Без стола</option>'+tables().map(t=>'<option value="'+t.id+'"'+(t.id===u.tableId?' selected':'')+'>'+esc(t.name)+'</option>').join("");
+  modal("Изменить: "+u.name,'<div class="field"><label class="fl">Имя</label><input id="eN" value="'+esc(u.name)+'"></div><div class="field"><label class="fl">Баланс</label><input id="eB" type="number" value="'+u.balance+'"></div><div class="grid g2"><div class="field"><label class="fl">Стол</label><select id="eTbl">'+tbO+'</select></div><div class="field"><label class="fl">Команда</label><select id="eTm">'+tmO+'</select></div></div><div class="field"><label class="fl">Статус</label><select id="eSt"><option value="ratrace"'+(u.status==="ratrace"?' selected':'')+'>Крысиные бега</option><option value="fasttrack"'+(u.status==="fasttrack"?' selected':'')+'>Скоростная дорожка</option><option value="venture"'+(u.status==="venture"?' selected':'')+'>Венчурный инвестор</option></select></div>',[{label:"Отмена",cls:"ghost"},{label:"Сохранить",cls:"green",onClick:(c,ov)=>{updatePlayer(id,{name:ov.querySelector("#eN").value,balance:parseFloat(ov.querySelector("#eB").value),tableId:ov.querySelector("#eTbl").value||null,teamId:ov.querySelector("#eTm").value||null,status:ov.querySelector("#eSt").value});c();toast("✅ Сохранено");}}]);}
+function tagsModal(id){const u=uid(id);const ov=modal("Теги: "+u.name,'<div class="row" style="gap:6px">'+PLAYER_TAGS.map(t=>'<span class="tag-chip'+((u.tags||[]).includes(t)?' on':'')+'" data-tt="'+esc(t)+'">'+esc(t)+'</span>').join("")+'</div>',[{label:"Готово",cls:"primary"}]);ov.querySelectorAll("[data-tt]").forEach(ch=>{ch.onclick=()=>{toggleTag(id,ch.dataset.tt);ch.classList.toggle("on");};});}
+function paydayModal(id){const u=uid(id),pv=paydayPreview(id);modal("💵 День получки: "+u.name,'<div class="info-box small">Проценты: <b>-'+fmt(pv.interest)+'</b><br>Пулы: <b>+'+fmt(pv.pool)+'</b><br>Итог: <b>'+(pv.net>=0?'+':'')+fmt(pv.net)+'</b></div>',[{label:"Отмена",cls:"ghost"},{label:"Подтвердить",cls:"primary",onClick:c=>{doPayday(id);c();}}]);}
+function loanModal(id){const u=uid(id);modal("🏦 Заём: "+u.name,'<p class="small muted">Ставка '+(settings().loanRate||10)+'% · лимит '+fmt(settings().loanLimit)+'</p><div class="field"><label class="fl">Сумма</label><input id="loanAmt" type="number" value="5000"></div><div class="info-box small">Проценты списываются на «Дне получки».</div>',[{label:"Отмена",cls:"ghost"},{label:"Взять",cls:"primary",onClick:(c,ov)=>{takeLoan(id,parseFloat(ov.querySelector("#loanAmt").value)||0);c();}}]);}
+function repayModal(l){const u=uid(l.userId);modal("Погашение",'<p class="small muted">Долг: '+fmt(l.outstanding)+' · баланс '+fmt(u.balance)+'</p><div class="field"><label class="fl">Сумма</label><input id="rep" type="number" value="'+Math.min(l.outstanding,Math.max(0,u.balance))+'"></div>',[{label:"Отмена",cls:"ghost"},{label:"Погасить",cls:"green",onClick:(c,ov)=>{repayLoan(l.id,parseFloat(ov.querySelector("#rep").value)||0);c();}}]);}
+function teamMoneyModal(id,isAdd){const t=teams().find(x=>x.id===id),m=teamMembers(id);if(!m.length){toast("⚠️ В команде нет игроков","warn");return;}modal((isAdd?"Начислить команде: ":"Списать у команды: ")+t.name,'<div class="field"><label class="fl">Тип</label><select id="tmt"><option value="amount">Сумма каждому</option><option value="percent">% наличных</option></select></div><div class="field"><label class="fl">Значение</label><input id="tmv" type="number"></div><div class="field"><label class="fl">Причина</label><input id="tmr"></div>',[{label:"Отмена",cls:"ghost"},{label:isAdd?"Начислить":"Списать",cls:isAdd?"green":"red",onClick:async(c,ov)=>{const type=ov.querySelector("#tmt").value,v=parseFloat(ov.querySelector("#tmv").value)||0,r=ov.querySelector("#tmr").value||"Командная операция";const eff=type==="amount"?{moneyEffectType:isAdd?"add":"subtract",moneyAmount:v}:{moneyEffectType:isAdd?"percentAdd":"percentSubtract",moneyPercent:v};await applyEffectToList(m,eff,"Команда «"+t.name+"»: "+r,isAdd?"income":"expense");addHistory("money",(isAdd?"Начисление команде: ":"Списание у команды: ")+t.name,r);c();toast("✅ Готово");}}]);}
+function tableMoneyModal(id,isAdd){const m=tableMembers(id);if(!m.length){toast("⚠️ Нет игроков","warn");return;}modal((isAdd?"Начислить столу: ":"Списать у стола: ")+tableName(id),'<div class="field"><label class="fl">Сумма каждому</label><input id="tbv" type="number"></div><div class="field"><label class="fl">Причина</label><input id="tbr"></div>',[{label:"Отмена",cls:"ghost"},{label:isAdd?"Начислить":"Списать",cls:isAdd?"green":"red",onClick:async(c,ov)=>{const v=parseFloat(ov.querySelector("#tbv").value)||0,r=ov.querySelector("#tbr").value||"Операция стола";await applyEffectToList(m,{moneyEffectType:isAdd?"add":"subtract",moneyAmount:v},"Стол: "+r,isAdd?"income":"expense");addHistory("money",(isAdd?"Начисление столу: ":"Списание у стола: ")+tableName(id),r);c();toast("✅ Готово");}}]);}
+function teamAssignModal(id){const t=teams().find(x=>x.id===id);modal("Состав: "+t.name,'<div class="pickbox">'+players().map(u=>'<label class="pick"><input type="checkbox" value="'+u.id+'"'+(u.teamId===id?' checked':'')+' style="width:auto"> '+esc(u.name)+'</label>').join("")+'</div>',[{label:"Отмена",cls:"ghost"},{label:"Сохранить",cls:"primary",onClick:(c,ov)=>{const ch=[...ov.querySelectorAll("input:checked")].map(x=>x.value);assignTeam(id,ch);addHistory("team","Состав команды: "+t.name);c();toast("✅ Готово");}}]);}
+function teamEditModal(id){const t=teams().find(x=>x.id===id);modal("Изменить команду",'<div class="field"><label class="fl">Название</label><input id="etn" value="'+esc(t.name)+'"></div><div class="field"><label class="fl">Цвет</label><input id="etc" type="color" value="'+t.color+'" style="height:40px"></div>',[{label:"Отмена",cls:"ghost"},{label:"Сохранить",cls:"green",onClick:(c,ov)=>{updateTeam(id,{name:ov.querySelector("#etn").value,color:ov.querySelector("#etc").value});c();}}]);}
+function createPoolModal(){const who=session.role==="player"?'<input type="hidden" id="poC" value="'+session.uid+'">':'<div class="field"><label class="fl">Инициатор</label><select id="poC">'+players().map(u=>'<option value="'+u.id+'">'+esc(u.name)+'</option>').join("")+'</select></div>';
+  modal("🧩 Создать пул",who+'<div class="field"><label class="fl">Название</label><input id="poT"></div><div class="grid g2"><div class="field"><label class="fl">Тип</label><select id="poType"><option>недвижимость</option><option>бизнес</option><option>другое</option></select></div><div class="field"><label class="fl">Нужно</label><input id="poReq" type="number" value="20000"></div></div><div class="grid g2"><div class="field"><label class="fl">Мин. вклад</label><input id="poMin" type="number" value="5000"></div><div class="field"><label class="fl">Доход/получку</label><input id="poInc" type="number" value="4000"></div></div><label class="pick"><input type="checkbox" id="poAp" style="width:auto"> Подтверждение банкира</label>',[{label:"Отмена",cls:"ghost"},{label:"Создать",cls:"teal",onClick:(c,ov)=>{createPool(ov.querySelector("#poC").value,{title:ov.querySelector("#poT").value,dealType:ov.querySelector("#poType").value,requiredAmount:parseFloat(ov.querySelector("#poReq").value)||10000,minContribution:parseFloat(ov.querySelector("#poMin").value)||1000,expectedMonthlyIncome:parseFloat(ov.querySelector("#poInc").value)||2000,requiresApproval:ov.querySelector("#poAp").checked});c();}}]);}
+function joinPoolModal(poolId){const p=M.pools.find(x=>x.id===poolId);const who=session.role==="player"?'<input type="hidden" id="jpW" value="'+session.uid+'">':'<div class="field"><label class="fl">Игрок</label><select id="jpW">'+players().map(u=>'<option value="'+u.id+'">'+esc(u.name)+' ('+fmt(u.balance)+')</option>').join("")+'</select></div>';modal("Вложиться: "+p.title,who+'<div class="field"><label class="fl">Сумма (мин '+fmt(p.minContribution)+')</label><input id="jpA" type="number" value="'+p.minContribution+'"></div>',[{label:"Отмена",cls:"ghost"},{label:"Вложиться",cls:"blue",onClick:(c,ov)=>{joinPool(poolId,ov.querySelector("#jpW").value,parseFloat(ov.querySelector("#jpA").value)||0);c();}}]);}
+function createStartupModal(){const who=session.role==="player"?'<input type="hidden" id="suW" value="'+session.uid+'">':'<div class="field"><label class="fl">Инициатор</label><select id="suW">'+players().map(u=>'<option value="'+u.id+'">'+esc(u.name)+'</option>').join("")+'</select></div>';modal("🚀 Заявка",who+'<div class="field"><label class="fl">Тип</label><select id="suTy"><option>Ищу инвестора</option><option>Продаю сделку</option><option>Ищу партнёра</option><option>Нужен заём</option><option>Готов отдать долю</option></select></div><div class="field"><label class="fl">Название</label><input id="suTi"></div><div class="grid g2"><div class="field"><label class="fl">Нужно</label><input id="suR" type="number" value="5000"></div><div class="field"><label class="fl">Доля %</label><input id="suSh" type="number" value="20"></div></div><div class="field"><label class="fl">Описание</label><textarea id="suD"></textarea></div>',[{label:"Отмена",cls:"ghost"},{label:"Разместить",cls:"gold",onClick:(c,ov)=>{createStartup(ov.querySelector("#suW").value,{type:ov.querySelector("#suTy").value,title:ov.querySelector("#suTi").value,requestedAmount:parseFloat(ov.querySelector("#suR").value)||5000,offeredShare:parseFloat(ov.querySelector("#suSh").value)||20,description:ov.querySelector("#suD").value});c();}}]);}
+function makeOfferModal(reqId){const who=session.role==="player"?'<input type="hidden" id="moW" value="'+session.uid+'">':'<div class="field"><label class="fl">Инвестор</label><select id="moW">'+players().map(u=>'<option value="'+u.id+'">'+esc(u.name)+' ('+fmt(u.balance)+')</option>').join("")+'</select></div>';modal("Предложение",who+'<div class="grid g2"><div class="field"><label class="fl">Сумма</label><input id="moA" type="number" value="5000"></div><div class="field"><label class="fl">Тип</label><select id="moT"><option>доля</option><option>покупка</option><option>заём</option><option>погашение долга</option><option>партнёрство</option></select></div></div><div class="field"><label class="fl">Условия</label><input id="moTe"></div>',[{label:"Отмена",cls:"ghost"},{label:"Отправить",cls:"blue",onClick:(c,ov)=>{makeOffer(reqId,ov.querySelector("#moW").value,parseFloat(ov.querySelector("#moA").value)||0,ov.querySelector("#moT").value,ov.querySelector("#moTe").value);c();}}]);}
+function doMassApply(){const scope=val("msScope"),kind=val("msKind"),v=parseFloat(val("msVal"))||0,reason=val("msReason")||"Массовая операция";let list=[];if(scope==="all")list=players();else if(scope==="table")list=tableMembers(val("msTable"));else if(scope==="team")list=teamMembers(val("msTeam"));else if(scope==="tag")list=players().filter(u=>(u.tags||[]).includes(val("msTag")));else if(scope==="selected")list=[...document.querySelectorAll("#msPick input:checked")].map(c=>uid(c.value)).filter(Boolean);if(!list.length){toast("⚠️ Нет игроков","warn");return;}confirmModal("Массовая операция","Применить к "+list.length+" игрокам?",()=>massOperation(list,{kind,v,reason}),"Применить","primary");}
+
+/* ====================================================================
+   ФИНАНСОВЫЙ БЛАНК ИГРОКА (CashFlow-стиль) + РОЛИ / АУДИТ
+   ==================================================================== */
+function defaultSheet(){return{
+  profession:"",dream:"",
+  income:{salary:0,interest:0,dividends:0,realEstate:0,business:0},
+  expenses:{taxes:0,homeMortgage:0,carLoan:0,creditCards:0,retail:0,bankLoan:0,other:0},
+  children:0,perChild:0,
+  assets:{savings:0,stocks:[],realEstate:[],business:[]},
+  liabilities:{mortgage:0,carLoan:0,creditCards:0,retail:0,eduLoan:0,bankLoan:0,realEstateLoans:0,businessLoan:0},
+  audit:{status:"draft",auditorId:null,auditorName:"",notes:"",submittedAt:null,verifiedAt:null}
+};}
+function computeSheet(s){s=s||defaultSheet();const i=s.income||{},e=s.expenses||{};
+  const passive=(i.interest||0)+(i.dividends||0)+(i.realEstate||0)+(i.business||0);
+  const totalIncome=(i.salary||0)+passive;
+  const childCost=(s.children||0)*(s.perChild||0);
+  const totalExpenses=(e.taxes||0)+(e.homeMortgage||0)+(e.carLoan||0)+(e.creditCards||0)+(e.retail||0)+(e.bankLoan||0)+(e.other||0)+childCost;
+  const cashflow=totalIncome-totalExpenses;
+  const L=s.liabilities||{};const totalLiab=Object.values(L).reduce((a,b)=>a+(b||0),0);
+  return{passive,totalIncome,childCost,totalExpenses,cashflow,totalLiab};}
+function setPath(o,path,v){const ks=path.split(".");let cur=o;for(let i=0;i<ks.length-1;i++){cur[ks[i]]=cur[ks[i]]||{};cur=cur[ks[i]];}cur[ks[ks.length-1]]=v;}
+const AUDIT_BADGE={draft:["b-gray","черновик"],submitted:["b-yellow","на проверке"],verified:["b-green","подтверждён"],rejected:["b-red","отклонён"]};
+function sheetStatus(u){const st=((u.sheet||{}).audit||{}).status||"draft";const b=AUDIT_BADGE[st];return '<span class="badge '+b[0]+'">'+b[1]+'</span>';}
+
+async function saveSheet(userId,sheet){await updateDoc(doc(db,"rooms",CODE,"users",userId),{sheet});addHistory("sheet","Бланк обновлён: "+(uid(userId)||{}).name);toast("✅ Бланк сохранён");}
+async function submitSheet(userId,sheet){sheet.audit.status="submitted";sheet.audit.submittedAt=Date.now();await updateDoc(doc(db,"rooms",CODE,"users",userId),{sheet});const u=uid(userId);addHistory("sheet","Бланк отправлен на проверку: "+u.name);addNews("Бланк на проверке",u.name+" отправил финансовый бланк аудитору","info","normal");toast("📤 Бланк отправлен аудитору");}
+async function verifySheet(userId,sheet,ok,notes){const me=session.uid?uid(session.uid):null;sheet.audit.status=ok?"verified":"rejected";sheet.audit.notes=notes||"";sheet.audit.auditorId=session.uid||session.role;sheet.audit.auditorName=me?me.name:"Админ";sheet.audit.verifiedAt=Date.now();await updateDoc(doc(db,"rooms",CODE,"users",userId),{sheet});const u=uid(userId);addHistory("sheet",(ok?"Бланк подтверждён: ":"Бланк отклонён: ")+u.name,notes||"");addNews(ok?"Бланк подтверждён":"Бланк отклонён аудитором",u.name+(notes?" — "+notes:""),ok?"event":"crisis","normal");toast(ok?"✅ Бланк подтверждён":"❌ Бланк отклонён");}
+
+/* роли и назначения */
+async function setUserRole(userId,role){await updateDoc(doc(db,"rooms",CODE,"users",userId),{role});const u=uid(userId);addHistory("role","Роль изменена: "+u.name,"→ "+role);addNews("Назначение роли",u.name+" теперь "+({player:"игрок",banker:"банкир",auditor:"аудитор"}[role]),"info","normal");toast("✅ Роль: "+role);}
+async function setUserAuditor(userId,auditorId){const a=auditorId?uid(auditorId):null;await updateDoc(doc(db,"rooms",CODE,"users",userId),{auditorId:auditorId||null});addHistory("role","Назначен аудитор: "+(uid(userId)||{}).name,a?("аудитор "+a.name):"снят");toast("✅ Аудитор назначен");}
+function roleModal(id){const u=uid(id);const aud='<option value="">— не назначен —</option>'+players().filter(p=>p.id!==id).map(p=>'<option value="'+p.id+'"'+(u.auditorId===p.id?' selected':'')+'>'+esc(p.name)+(p.role==="auditor"?" (аудитор)":"")+'</option>').join("");
+  modal("Роль и аудит: "+u.name,
+    '<div class="field"><label class="fl">Роль участника</label><select id="rmRole"><option value="player"'+(u.role==="player"?' selected':'')+'>Игрок</option><option value="banker"'+(u.role==="banker"?' selected':'')+'>Банкир</option><option value="auditor"'+(u.role==="auditor"?' selected':'')+'>Аудитор</option></select></div>'+
+    '<div class="field"><label class="fl">Аудитор этого игрока (проверяет его бланк)</label><select id="rmAud">'+aud+'</select></div>'+
+    '<p class="small muted">Аудитор — участник, который проверяет бланк. По правилам это «игрок справа от вас». Полная роль «Аудитор» открывает доступ ко всем бланкам.</p>',
+    [{label:"Отмена",cls:"ghost"},{label:"Сохранить",cls:"primary",onClick:async(c,ov)=>{const r=ov.querySelector("#rmRole").value,a=ov.querySelector("#rmAud").value;if(r!==u.role)await setUserRole(id,r);if((a||null)!==(u.auditorId||null))await setUserAuditor(id,a);c();}}]);}
+
+/* редактор/просмотр бланка */
+function openSheetEditor(userId){
+  const u=uid(userId);if(!u)return;
+  const editing=JSON.parse(JSON.stringify(u.sheet||defaultSheet()));if(!editing.audit)editing.audit=defaultSheet().audit;
+  const isOwner=session.uid===userId;const role=session.role;
+  const canEdit=isOwner||["banker","auditor","admin"].includes(role);
+  const canAudit=["banker","auditor","admin"].includes(role)||(uid(session.uid||"")||{}).id===u.auditorId;
+  const root=document.getElementById("modalRoot");const ov=document.createElement("div");ov.className="overlay";ov.innerHTML='<div class="modal" id="shM"></div>';ov.addEventListener("click",e=>{if(e.target===ov)ov.remove();});root.appendChild(ov);
+  function readScalars(){
+    document.querySelectorAll('#shM [data-p]').forEach(inp=>{setPath(editing,inp.dataset.p,inp.type==="number"?(parseFloat(inp.value)||0):inp.value);});
+    document.querySelectorAll('#shM [data-arr]').forEach(inp=>{const arr=editing.assets[inp.dataset.arr];const it=arr&&arr[+inp.dataset.i];if(it)it[inp.dataset.k]=inp.dataset.k==="name"?inp.value:(parseFloat(inp.value)||0);});
+  }
+  function recalc(){const c=computeSheet(editing);const el=document.getElementById("shCalc");if(el)el.innerHTML=calcHTML(c);}
+  function draw(){document.getElementById("shM").innerHTML=sheetFormHTML(u,editing,canEdit,canAudit,isOwner);
+    const mod=document.getElementById("shM");
+    mod.querySelectorAll("input,textarea").forEach(inp=>inp.addEventListener("input",()=>{readScalars();recalc();}));
+    mod.onclick=async(e)=>{const a=e.target.closest("[data-sx]");if(!a)return;const act=a.dataset.sx;readScalars();
+      if(act==="addStock")editing.assets.stocks.push({name:"",qty:0,price:0});
+      else if(act==="addRe")editing.assets.realEstate.push({name:"",down:0,price:0});
+      else if(act==="addBiz")editing.assets.business.push({name:"",down:0,price:0});
+      else if(act.indexOf("del:")===0){const[,arr,i]=act.split(":");editing.assets[arr].splice(+i,1);}
+      else if(act==="save"){await saveSheet(userId,editing);ov.remove();return;}
+      else if(act==="submit"){await submitSheet(userId,editing);ov.remove();return;}
+      else if(act==="verify"){await verifySheet(userId,editing,true,document.getElementById("shNotes").value);ov.remove();return;}
+      else if(act==="reject"){await verifySheet(userId,editing,false,document.getElementById("shNotes").value);ov.remove();return;}
+      else if(act==="cancel"){ov.remove();return;}
+      draw();
+    };
+  }
+  draw();
+}
+function calcHTML(c){return '<div class="grid g2 keep" style="gap:6px">'+stat("Общий доход",fmt(c.totalIncome))+stat("Общий расход",fmt(c.totalExpenses))+stat("Пассивный доход",fmt(c.passive))+'<div class="stat" style="border-color:'+(c.cashflow>=0?"var(--green)":"var(--red)")+'"><div class="k">Денежный поток (получка)</div><div class="v" style="color:'+(c.cashflow>=0?"var(--green)":"var(--red)")+'">'+fmt(c.cashflow)+'</div></div></div>';}
+function sheetFormHTML(u,s,canEdit,canAudit,isOwner){
+  const d=canEdit?"":"disabled";
+  const nf=(p,l)=>'<div class="field"><label class="fl">'+l+'</label><input type="number" data-p="'+p+'" value="'+(p.split(".").reduce((o,k)=>o&&o[k],s)||0)+'" '+d+'></div>';
+  const tf=(p,l)=>'<div class="field"><label class="fl">'+l+'</label><input data-p="'+p+'" value="'+esc(p.split(".").reduce((o,k)=>o&&o[k],s)||"")+'" '+d+'></div>';
+  const rows=(arr,keys)=>s.assets[arr].map((it,i)=>'<div class="row" style="gap:5px;margin-bottom:5px"><input data-arr="'+arr+'" data-i="'+i+'" data-k="name" placeholder="Название" value="'+esc(it.name||"")+'" style="flex:2" '+d+'>'+keys.map(k=>'<input type="number" data-arr="'+arr+'" data-i="'+i+'" data-k="'+k+'" placeholder="'+k+'" value="'+(it[k]||0)+'" style="flex:1" '+d+'>').join("")+(canEdit?'<button class="btn sm red" data-sx="del:'+arr+':'+i+'">✕</button>':'')+'</div>').join("");
+  const st=(s.audit||{});
+  return '<div class="row spread"><h2 style="margin:0">🧾 Бланк: '+esc(u.name)+'</h2>'+sheetStatus(u)+'</div>'+
+    '<div class="grid g2" style="margin-top:8px">'+tf("profession","Профессия")+tf("dream","Мечта")+'</div>'+
+    '<div id="shCalc" style="margin:10px 0">'+calcHTML(computeSheet(s))+'</div>'+
+    '<div class="section-title">Доходы</div><div class="grid g2 keep">'+nf("income.salary","Зарплата")+nf("income.interest","Проценты")+nf("income.dividends","Дивиденды")+nf("income.realEstate","Недвижимость")+nf("income.business","Бизнес")+'</div>'+
+    '<div class="section-title" style="margin-top:10px">Расходы</div><div class="grid g2 keep">'+nf("expenses.taxes","Налоги")+nf("expenses.homeMortgage","Ипотека/жильё")+nf("expenses.carLoan","Кредит на авто")+nf("expenses.creditCards","Кредитные карты")+nf("expenses.retail","Розничные")+nf("expenses.bankLoan","Кредит банка")+nf("expenses.other","Прочие")+'</div>'+
+    '<div class="grid g2 keep" style="margin-top:6px">'+nf("children","Кол-во детей")+nf("perChild","Расход на 1 ребёнка")+'</div>'+
+    '<div class="section-title" style="margin-top:10px">Активы</div>'+nf("assets.savings","Сбережения")+
+    '<div class="small muted" style="margin-top:6px">Акции/фонды (название · кол-во · цена)</div>'+rows("stocks",["qty","price"])+(canEdit?'<button class="btn sm" data-sx="addStock">＋ акция</button>':'')+
+    '<div class="small muted" style="margin-top:6px">Недвижимость (название · взнос · цена)</div>'+rows("realEstate",["down","price"])+(canEdit?'<button class="btn sm" data-sx="addRe">＋ недвижимость</button>':'')+
+    '<div class="small muted" style="margin-top:6px">Бизнес (название · взнос · цена)</div>'+rows("business",["down","price"])+(canEdit?'<button class="btn sm" data-sx="addBiz">＋ бизнес</button>':'')+
+    '<div class="section-title" style="margin-top:10px">Пассивы</div><div class="grid g2 keep">'+nf("liabilities.mortgage","Ипотека")+nf("liabilities.carLoan","Кредит на авто")+nf("liabilities.creditCards","Кредитные карты")+nf("liabilities.retail","Розничный кредит")+nf("liabilities.eduLoan","Образ. кредит")+nf("liabilities.bankLoan","Банковский кредит")+nf("liabilities.realEstateLoans","Кредиты на недвиж.")+nf("liabilities.businessLoan","Кредит бизнеса")+'</div>'+
+    '<hr class="sep">'+
+    (st.auditorName?'<div class="small muted">Проверял: <b>'+esc(st.auditorName)+'</b>'+(st.notes?' · заметка: '+esc(st.notes):'')+'</div>':'')+
+    (canAudit?'<div class="field"><label class="fl">Заметка аудитора</label><textarea id="shNotes">'+esc(st.notes||"")+'</textarea></div>':'')+
+    '<div class="row" style="margin-top:10px;justify-content:flex-end">'+
+      '<button class="btn ghost" data-sx="cancel">Закрыть</button>'+
+      (canEdit?'<button class="btn green" data-sx="save">💾 Сохранить</button>':'')+
+      (isOwner?'<button class="btn primary" data-sx="submit">📤 На проверку</button>':'')+
+      (canAudit?'<button class="btn red" data-sx="reject">Отклонить</button><button class="btn blue" data-sx="verify">✓ Подтвердить</button>':'')+
+    '</div>';
+}
+
+/* списки бланков и роль-вьюхи */
+function sheetsReview(scopeTableId){
+  let list=players();if(scopeTableId)list=list.filter(u=>u.tableId===scopeTableId);
+  const me=session.uid;
+  return '<div class="card"><h2>Финансовые бланки ('+list.length+')</h2><p class="small muted">Открывайте бланк для проверки и редактирования. Аудитор подтверждает или отклоняет.</p>'+
+    (list.length?list.map(u=>{const c=computeSheet(u.sheet||defaultSheet());const isMyWard=u.auditorId&&u.auditorId===me;return '<div class="item"><div class="row spread"><div><b>'+esc(u.name)+'</b> '+sheetStatus(u)+(isMyWard?' <span class="badge b-blue">мой подопечный</span>':'')+'<div class="small muted">'+esc(tableName(u.tableId))+' · поток '+fmt(c.cashflow)+' · пассивный '+fmt(c.passive)+(u.auditorId?' · аудитор: '+esc((uid(u.auditorId)||{}).name||"—"):'')+'</div></div><button class="btn sm primary" data-act="openSheet" data-id="'+u.id+'">Открыть</button></div></div>';}).join(""):'<p class="muted">Нет игроков.</p>')+'</div>';
+}
+function auditorView(){const t=session.tab.auditor||"sheets";session.tab.auditor=t;
+  if(t==="sheets")return sheetsReview(null);
+  if(t==="players")return '<div class="card"><h2>Игроки</h2>'+players().map(u=>'<div class="item"><div class="row spread"><div><b>'+esc(u.name)+'</b> '+sheetStatus(u)+'<div class="small muted">'+esc(tableName(u.tableId))+' · баланс '+fmt(u.balance)+'</div></div><button class="btn sm" data-act="openSheet" data-id="'+u.id+'">Бланк</button></div></div>').join("")+'</div>';
+  if(t==="mysheet")return mySheetView(uid(session.uid));
+  if(t==="mywallet")return walletView(uid(session.uid));
+  if(t==="history")return historyView();
+  return "";
+}
+function mySheetView(u){if(!u)return '<div class="card">Профиль не найден.</div>';const c=computeSheet(u.sheet||defaultSheet());const st=((u.sheet||{}).audit||{});
+  return '<div class="card"><div class="row spread"><h2>📝 Мой финансовый бланк</h2>'+sheetStatus(u)+'</div>'+calcHTML(c)+
+    (st.status==="rejected"&&st.notes?'<div class="warn-box small" style="margin-top:8px">Аудитор отклонил: '+esc(st.notes)+'</div>':'')+
+    (st.status==="verified"?'<div class="ok-box small" style="margin-top:8px">✅ Подтверждён аудитором '+esc(st.auditorName||"")+'</div>':'')+
+    '<div class="row" style="margin-top:10px"><button class="btn primary" data-act="myEditSheet">✏️ Заполнить / редактировать</button></div>'+
+    '<p class="small muted" style="margin-top:8px">Заполните доходы, расходы, активы и пассивы — денежный поток и пассивный доход считаются автоматически. Затем отправьте бланк аудитору на проверку.</p></div>';
+}
+
+/* ---------- INIT ---------- */
+if(CONFIG_OK){
+  try{
+    app=initializeApp(firebaseConfig);auth=getAuth(app);db=getFirestore(app);
+    onAuthStateChanged(auth,u=>{if(u){uidAuth=u.uid;if(session.code)subscribeRoom(session.code);else render();}});
+    signInAnonymously(auth).catch(e=>{showError(e);render();});
+  }catch(e){showError(e);render();}
+} else { render(); }
+render();
+
+</script>
+</body>
+</html>

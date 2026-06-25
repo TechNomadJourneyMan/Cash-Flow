@@ -1,0 +1,5 @@
+{
+  "redirects": [
+    { "source": "/", "destination": "/firebase-portal.html", "permanent": false }
+  ]
+}

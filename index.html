@@ -1,0 +1,2004 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>CashFlow Events — симулятор экономики и калькулятор игроков</title>
+<style>
+:root{
+  --bg:#0b1020; --bg2:#0f1730; --panel:#141d3a; --panel2:#1b264a; --line:#26315c;
+  --txt:#e8edff; --muted:#93a0c8; --acc:#5b8cff; --acc2:#7aa2ff;
+  --green:#22c55e; --red:#ef4444; --orange:#f59e0b; --purple:#a855f7;
+  --blue:#3b82f6; --gold:#fbbf24; --gray:#64748b; --teal:#14b8a6; --money:#e2e8f0;
+  --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:radial-gradient(1200px 800px at 80% -10%,#16213f 0%,var(--bg) 55%) fixed;
+  color:var(--txt); font-size:15px; line-height:1.45; -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:1100px;margin:0 auto;padding:14px 14px 90px}
+h1,h2,h3{margin:0 0 8px}
+button{font-family:inherit;cursor:pointer}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.hidden{display:none!important}
+
+/* Header */
+.app-head{display:flex;align-items:center;gap:12px;padding:14px 4px 6px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column}
+.brand .title{font-size:22px;font-weight:800;letter-spacing:.2px}
+.brand .sub{font-size:12.5px;color:var(--muted)}
+.brand .badge-unofficial{font-size:10.5px;color:var(--muted);margin-top:2px}
+
+/* Tabs */
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 0;position:sticky;top:0;z-index:30;
+  background:linear-gradient(180deg,var(--bg) 70%,transparent);backdrop-filter:blur(4px)}
+.tab{flex:0 0 auto;padding:9px 14px;border-radius:999px;border:1px solid var(--line);
+  background:var(--panel);color:var(--muted);font-weight:600;font-size:13px;white-space:nowrap;
+  transition:.15s}
+.tab.active{background:linear-gradient(135deg,var(--acc),#3a6bff);color:#fff;border-color:transparent}
+.tab:hover{color:var(--txt)}
+
+/* Cards & layout */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card h2{font-size:17px}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:760px){.g3,.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.g2,.g3,.g4{grid-template-columns:1fr}.g2.keep,.g4.keep{grid-template-columns:repeat(2,1fr)}}
+
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.spread{justify-content:space-between}
+
+/* Stat tiles */
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px}
+.stat .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.stat .v{font-size:20px;font-weight:800;margin-top:3px}
+
+/* Buttons */
+.btn{border:1px solid var(--line);background:var(--panel2);color:var(--txt);
+  padding:10px 14px;border-radius:12px;font-weight:600;font-size:14px;transition:.12s}
+.btn:hover{transform:translateY(-1px);border-color:var(--acc)}
+.btn:active{transform:translateY(0)}
+.btn.primary{background:linear-gradient(135deg,var(--acc),#3a6bff);border-color:transparent;color:#fff}
+.btn.green{background:linear-gradient(135deg,#16a34a,#22c55e);border-color:transparent;color:#fff}
+.btn.red{background:linear-gradient(135deg,#dc2626,#ef4444);border-color:transparent;color:#fff}
+.btn.purple{background:linear-gradient(135deg,#9333ea,#a855f7);border-color:transparent;color:#fff}
+.btn.gold{background:linear-gradient(135deg,#d97706,#fbbf24);border-color:transparent;color:#1a1300}
+.btn.blue{background:linear-gradient(135deg,#2563eb,#3b82f6);border-color:transparent;color:#fff}
+.btn.ghost{background:transparent}
+.btn.sm{padding:6px 10px;font-size:12.5px;border-radius:10px}
+.btn.block{width:100%;justify-content:center;text-align:center}
+.btn-money{padding:8px 0;border-radius:10px;font-weight:700;font-size:13px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--txt)}
+.btn-money.plus{color:#bbf7d0;border-color:#1f6f43}
+.btn-money.plus:hover{background:#11331f}
+.btn-money.minus{color:#fecaca;border-color:#7f2b2b}
+.btn-money.minus:hover{background:#3a1414}
+
+/* Inputs */
+input,select,textarea{font-family:inherit;font-size:14px;color:var(--txt);background:var(--bg2);
+  border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
+textarea{resize:vertical;min-height:60px}
+label.fl{display:block;font-size:12px;color:var(--muted);margin:0 0 4px}
+.field{margin-bottom:10px}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;
+  padding:3px 9px;border-radius:999px;border:1px solid transparent}
+.b-green{background:rgba(34,197,94,.15);color:#86efac;border-color:rgba(34,197,94,.35)}
+.b-red{background:rgba(239,68,68,.15);color:#fca5a5;border-color:rgba(239,68,68,.35)}
+.b-orange{background:rgba(245,158,11,.15);color:#fcd34d;border-color:rgba(245,158,11,.35)}
+.b-purple{background:rgba(168,85,247,.15);color:#d8b4fe;border-color:rgba(168,85,247,.35)}
+.b-blue{background:rgba(59,130,246,.15);color:#93c5fd;border-color:rgba(59,130,246,.35)}
+.b-gold{background:rgba(251,191,36,.15);color:#fde68a;border-color:rgba(251,191,36,.4)}
+.b-gray{background:rgba(100,116,139,.18);color:#cbd5e1;border-color:rgba(100,116,139,.4)}
+.b-teal{background:rgba(20,184,166,.15);color:#5eead4;border-color:rgba(20,184,166,.35)}
+
+/* Player cards */
+.player{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:10px}
+.player.neg{border-color:var(--red);box-shadow:0 0 0 1px rgba(239,68,68,.25) inset}
+.player .pname{font-weight:800;font-size:16px}
+.player .pbal{font-weight:800;font-size:18px;font-variant-numeric:tabular-nums}
+.team-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px}
+.tag-chip{font-size:10.5px;padding:2px 7px;border-radius:999px;background:var(--bg2);
+  border:1px solid var(--line);color:var(--muted);cursor:pointer}
+.tag-chip.on{background:rgba(91,140,255,.2);border-color:var(--acc);color:#cdd9ff}
+.flash-up{animation:flashUp .8s}
+.flash-down{animation:flashDown .8s}
+@keyframes flashUp{0%{background:rgba(34,197,94,.4)}100%{background:var(--panel2)}}
+@keyframes flashDown{0%{background:rgba(239,68,68,.4)}100%{background:var(--panel2)}}
+
+/* Event card */
+.event-card{border-radius:16px;padding:16px;border:1px solid var(--line);background:var(--panel2);position:relative;overflow:hidden}
+.event-card.appear{animation:cardIn .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes cardIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.event-card .etitle{font-size:18px;font-weight:800;margin:8px 0}
+.edge{height:5px;border-radius:5px;width:60px;margin-bottom:4px}
+.shuffling{text-align:center;padding:30px;font-size:15px;color:var(--muted);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.5}}
+.choice{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:11px;margin-top:8px}
+.choice:hover{border-color:var(--acc)}
+
+/* Economy bars */
+.econ-row{margin-bottom:9px}
+.econ-row .lbl{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px}
+.bar{height:8px;border-radius:6px;background:var(--bg2);overflow:hidden}
+.bar > span{display:block;height:100%;border-radius:6px;transition:width .5s}
+
+/* Risk meter */
+.risk-meter{height:14px;border-radius:8px;background:linear-gradient(90deg,#22c55e,#f59e0b,#ef4444);position:relative;overflow:hidden}
+.risk-meter .knob{position:absolute;top:-3px;width:4px;height:20px;background:#fff;border-radius:3px;box-shadow:0 0 6px #000;transition:left .6s}
+
+/* History */
+.hitem{border-left:3px solid var(--line);padding:8px 10px;margin-bottom:7px;background:var(--bg2);border-radius:0 10px 10px 0}
+.hitem .ht{font-weight:700;font-size:13.5px}
+.hitem .hm{font-size:11.5px;color:var(--muted)}
+
+/* Modal / toast */
+.overlay{position:fixed;inset:0;background:rgba(4,8,20,.7);backdrop-filter:blur(3px);
+  display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;
+  max-width:520px;width:100%;max-height:88vh;overflow:auto;box-shadow:var(--shadow)}
+.toast-wrap{position:fixed;left:0;right:0;bottom:18px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:200;pointer-events:none}
+.toast{background:var(--panel);border:1px solid var(--acc);color:var(--txt);padding:11px 16px;
+  border-radius:12px;font-weight:600;font-size:13.5px;box-shadow:var(--shadow);animation:cardIn .3s}
+.toast.ach{border-color:var(--gold);background:linear-gradient(135deg,#2a2200,#141d3a)}
+
+/* Achievements */
+.ach-card{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px;opacity:.45}
+.ach-card.open{opacity:1;border-color:var(--gold)}
+.ach-card .ai{font-size:24px}
+
+/* tag filter pills in mass op */
+.pickbox{max-height:160px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg2)}
+.pick{display:flex;align-items:center;gap:8px;padding:4px 0}
+
+.section-title{font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:4px 0 8px}
+hr.sep{border:none;border-top:1px solid var(--line);margin:14px 0}
+.scroll-x{overflow-x:auto}
+.warn-box{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:#fecaca;padding:10px;border-radius:10px;font-size:13px}
+.ok-box{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);color:#bbf7d0;padding:10px;border-radius:10px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="app-head">
+    <div style="font-size:30px">💸</div>
+    <div class="brand">
+      <div class="title">CashFlow Events</div>
+      <div class="sub">Экономический симулятор и калькулятор игроков для CashFlow</div>
+      <div class="badge-unofficial">Неофициальный фанатский модуль для финансовых настольных игр в стиле CashFlow</div>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div id="view"></div>
+</div>
+
+<div id="modalRoot"></div>
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+/* ============================================================
+   CashFlow Events — single-file app
+   Разделы кода:
+   1) DATA  — события, челленджи, возможности, тренды, достижения, теги
+   2) STATE — состояние партии + localStorage
+   3) HELPERS — деньги, история, рандом
+   4) PLAYERS / TEAMS — калькулятор
+   5) MONEY OPS — начисление/списание/перевод/массовые
+   6) EVENTS — генератор + применение к балансам
+   7) ECONOMY — кубик, индекс риска, тренд, показатели
+   8) RENDER — вкладки и интерфейс
+   ============================================================ */
+/* ---------- 1) DATA ---------- */
+
+// Категории, типы, редкость — справочники
+const CATEGORIES = ["Глобальная экономика","Недвижимость","Акции и инвестиции","Бизнес и предпринимательство","Личные события","Банки, кредиты и долги","Налоги и государство","Технологии и инновации","Потребительский рынок","Чёрные лебеди и кризисы","Возможности","Социальные тренды","Командные события","Денежные события","Переговоры и сделки"];
+
+const PLAYER_TAGS = ["есть недвижимость","есть бизнес","есть акции","есть кредиты","есть дети","отрицательный cashflow","высокий пассивный доход","много наличных","рискованный инвестор","консервативный инвестор","лидер","новичок","предприниматель","инвестор","должник"];
+
+// Цвет/бейдж по типу события
+const TYPE_META = {
+  positive:{badge:"b-green",edge:"var(--green)",label:"Позитивное"},
+  negative:{badge:"b-red",edge:"var(--red)",label:"Негативное"},
+  mixed:{badge:"b-orange",edge:"var(--orange)",label:"Смешанное"},
+  crisis:{badge:"b-purple",edge:"var(--purple)",label:"Кризис"},
+  opportunity:{badge:"b-blue",edge:"var(--blue)",label:"Возможность"},
+  decision:{badge:"b-teal",edge:"var(--teal)",label:"Решение"}
+};
+const RARITY_META = {
+  common:{w:45,label:"Обычное",badge:"b-gray"},
+  uncommon:{w:25,label:"Необычное",badge:"b-green"},
+  rare:{w:15,label:"Редкое",badge:"b-blue"},
+  epic:{w:10,label:"Эпическое",badge:"b-purple"},
+  legendary:{w:5,label:"Легендарное",badge:"b-gold"}
+};
+
+// Фабрика событий с дефолтами
+let _eid = 0;
+function E(o){
+  _eid++;
+  return Object.assign({
+    id:"E"+String(_eid).padStart(3,"0"),
+    title:"", category:"Глобальная экономика", type:"negative",
+    rarity:"common", impactLevel:"medium", description:"", appliesTo:"Все игроки",
+    effect:"", duration:"1 раунд", discussionQuestion:"",
+    economyImpact:{}, targetRule:"all",
+    moneyEffectType:"none", moneyAmount:0, moneyPercent:0, autoApplicable:false,
+    choices:null
+  }, o);
+}
+
+const EVENTS = [];
+function addEvents(list){ list.forEach(e=>EVENTS.push(e)); }
+
+/* --- Категория 1: Глобальная экономика --- */
+addEvents([
+E({title:"Глобальный экономический рост",category:"Глобальная экономика",type:"positive",rarity:"common",impactLevel:"medium",description:"Мировая экономика ускоряется, растут зарплаты и потребление.",effect:"Все игроки получают +3% к наличным от роста доходов.",targetRule:"all",moneyEffectType:"percentAdd",moneyPercent:3,autoApplicable:true,economyImpact:{business:6,sentiment:8,risk:-5},discussionQuestion:"Куда вложить дополнительный доход, чтобы он работал?"}),
+E({title:"Скачок инфляции",category:"Глобальная экономика",type:"negative",rarity:"common",impactLevel:"medium",description:"Цены растут быстрее доходов, наличные обесцениваются.",effect:"Все теряют 5% наличных из-за инфляции.",targetRule:"all",moneyEffectType:"percentSubtract",moneyPercent:5,autoApplicable:true,economyImpact:{inflation:8,risk:6,sentiment:-5}}),
+E({title:"Снижение ключевой ставки",category:"Глобальная экономика",type:"positive",rarity:"uncommon",impactLevel:"medium",description:"Центробанк удешевляет деньги, кредиты дешевеют.",effect:"Игроки с кредитами экономят на процентах: +400$.",appliesTo:"Игроки с тегом «есть кредиты»",targetRule:"tag:есть кредиты",moneyEffectType:"add",moneyAmount:400,autoApplicable:true,economyImpact:{rate:-8,business:5,risk:-4}}),
+E({title:"Рост ключевой ставки",category:"Глобальная экономика",type:"negative",rarity:"uncommon",impactLevel:"high",description:"Деньги дорожают, обслуживание долга растёт.",effect:"Игроки с кредитами платят 600$ дополнительных процентов.",appliesTo:"Игроки с тегом «есть кредиты»",targetRule:"tag:есть кредиты",moneyEffectType:"subtract",moneyAmount:600,autoApplicable:true,economyImpact:{rate:9,risk:8,business:-5}}),
+E({title:"Восстановление мировой торговли",category:"Глобальная экономика",type:"positive",rarity:"uncommon",impactLevel:"medium",description:"Логистика налаживается, экспортные доходы растут.",effect:"Предприниматели получают +1 200$.",appliesTo:"Игроки с тегом «предприниматель»",targetRule:"tag:предприниматель",moneyEffectType:"add",moneyAmount:1200,autoApplicable:true,economyImpact:{business:7,sentiment:5,risk:-3}}),
+E({title:"Замедление мировой экономики",category:"Глобальная экономика",type:"negative",rarity:"common",impactLevel:"medium",description:"Спрос падает, бизнесы режут расходы.",effect:"Все теряют 4% наличных.",targetRule:"all",moneyEffectType:"percentSubtract",moneyPercent:4,autoApplicable:true,economyImpact:{business:-7,sentiment:-6,risk:5}}),
+E({title:"Валютная нестабильность",category:"Глобальная экономика",type:"mixed",rarity:"rare",impactLevel:"high",description:"Курс скачет: одни выигрывают на разнице, другие теряют.",effect:"Рискованные инвесторы +2%, консервативные -2% наличных (по решению ведущего).",appliesTo:"Зависит от стратегии игрока",targetRule:"all",moneyEffectType:"custom",autoApplicable:false,economyImpact:{inflation:4,risk:7,sentiment:-3},discussionQuestion:"Стоит ли держать часть капитала в разных активах?"}),
+E({title:"Сырьевой суперцикл",category:"Глобальная экономика",type:"positive",rarity:"rare",impactLevel:"high",description:"Цены на ресурсы взлетают, владельцы активов в плюсе.",effect:"Игроки с недвижимостью или бизнесом получают +1 500$.",appliesTo:"Игроки с активами",targetRule:"tag:есть бизнес",moneyEffectType:"add",moneyAmount:1500,autoApplicable:true,economyImpact:{business:8,inflation:5,risk:3}}),
+E({title:"Дефляционный шок",category:"Глобальная экономика",type:"negative",rarity:"rare",impactLevel:"high",description:"Цены падают, но падают и доходы, бизнес замирает.",effect:"Предприниматели теряют 8% наличных.",appliesTo:"Игроки с тегом «предприниматель»",targetRule:"tag:предприниматель",moneyEffectType:"percentSubtract",moneyPercent:8,autoApplicable:true,economyImpact:{inflation:-10,business:-8,risk:7}}),
+E({title:"Глобальный пакет стимулов",category:"Глобальная экономика",type:"positive",rarity:"epic",impactLevel:"high",description:"Правительства заливают экономику деньгами.",effect:"Все игроки получают +1 000$.",targetRule:"all",moneyEffectType:"add",moneyAmount:1000,autoApplicable:true,economyImpact:{business:6,inflation:6,risk:-6,sentiment:9}})
+]);
+
+/* --- Категория 2: Недвижимость --- */
+addEvents([
+E({title:"Бум на рынке недвижимости",category:"Недвижимость",type:"positive",rarity:"common",impactLevel:"medium",description:"Цены на жильё растут, арендодатели богатеют.",effect:"Игроки с недвижимостью получают +1 000$.",appliesTo:"Игроки с тегом «есть недвижимость»",targetRule:"tag:есть недвижимость",moneyEffectType:"add",moneyAmount:1000,autoApplicable:true,economyImpact:{realEstate:9,sentiment:5,risk:3}}),
+E({title:"Падение цен на жильё",category:"Недвижимость",type:"negative",rarity:"common",impactLevel:"medium",description:"Рынок недвижимости корректируется вниз.",effect:"Игроки с недвижимостью теряют 6% наличных.",appliesTo:"Игроки с тегом «есть недвижимость»",targetRule:"tag:есть недвижимость",moneyEffectType:"percentSubtract",moneyPercent:6,autoApplicable:true,economyImpact:{realEstate:-9,risk:6,sentiment:-5}}),
+E({title:"Рост арендных ставок",category:"Недвижимость",type:"positive",rarity:"uncommon",impactLevel:"medium",description:"Аренда дорожает, пассивный доход растёт.",effect:"Игроки с недвижимостью получают +700$ дохода от аренды.",appliesTo:"Игроки с тегом «есть недвижимость»",targetRule:"tag:есть недвижимость",moneyEffectType:"add",moneyAmount:700,autoApplicable:true,economyImpact:{realEstate:6,inflation:3}}),
+E({title:"Капитальный ремонт",category:"Недвижимость",type:"negative",rarity:"common",impactLevel:"low",description:"Внеплановый ремонт съедает наличные.",effect:"Игроки с недвижимостью платят 500$.",appliesTo:"Игроки с тегом «есть недвижимость»",targetRule:"tag:есть недвижимость",moneyEffectType:"subtract",moneyAmount:500,autoApplicable:true,economyImpact:{realEstate:-2}}),
+E({title:"Новая инфраструктура у дома",category:"Недвижимость",type:"positive",rarity:"rare",impactLevel:"medium",description:"Рядом построили метро — объекты подорожали.",effect:"Игроки с недвижимостью получают +1 800$.",appliesTo:"Игроки с тегом «есть недвижимость»",targetRule:"tag:есть недвижимость",moneyEffectType:"add",moneyAmount:1800,autoApplicable:true,economyImpact:{realEstate:8,sentiment:6}}),
+E({title:"Ужесточение ипотеки",category:"Недвижимость",type:"negative",rarity:"uncommon",impactLevel:"medium",description:"Банки повышают требования, спрос на жильё падает.",effect:"Игроки с недвижимостью и кредитами платят 700$.",appliesTo:"Недвижимость + кредиты",targetRule:"tag:есть кредиты",moneyEffectType:"subtract",moneyAmount:700,autoApplicable:true,economyImpact:{realEstate:-6,rate:4,risk:5}}),
+E({title:"Долгий простой аренды",category:"Недвижимость",type:"negative",rarity:"common",impactLevel:"low",description:"Квартира пустует, доход обнуляется на ход.",effect:"Игроки с недвижимостью теряют 400$.",appliesTo:"Игроки с тегом «есть недвижимость»",targetRule:"tag:есть недвижимость",moneyEffectType:"subtract",moneyAmount:400,autoApplicable:true,economyImpact:{realEstate:-3}}),
+E({title:"Льготная программа для жилья",category:"Недвижимость",type:"positive",rarity:"uncommon",impactLevel:"medium",description:"Государство субсидирует покупку — рынок оживает.",effect:"Игроки с недвижимостью получают +900$.",appliesTo:"Игроки с тегом «есть недвижимость»",targetRule:"tag:есть недвижимость",moneyEffectType:"add",moneyAmount:900,autoApplicable:true,economyImpact:{realEstate:7,risk:-3,sentiment:5}})
+]);
+
+/* --- Категория 3: Акции и инвестиции --- */
+addEvents([
+E({title:"Ралли на фондовом рынке",category:"Акции и инвестиции",type:"positive",rarity:"common",impactLevel:"medium",description:"Индексы обновляют максимумы.",effect:"Игроки с акциями получают +8% наличных.",appliesTo:"Игроки с тегом «есть акции»",targetRule:"tag:есть акции",moneyEffectType:"percentAdd",moneyPercent:8,autoApplicable:true,economyImpact:{stocks:10,sentiment:8,risk:4}}),
+E({title:"Коррекция рынка акций",category:"Акции и инвестиции",type:"negative",rarity:"common",impactLevel:"medium",description:"Рынок падает на 10% за неделю.",effect:"Игроки с акциями теряют 10% наличных.",appliesTo:"Игроки с тегом «есть акции»",targetRule:"tag:есть акции",moneyEffectType:"percentSubtract",moneyPercent:10,autoApplicable:true,economyImpact:{stocks:-10,risk:8,sentiment:-7}}),
+E({title:"Дивидендный сезон",category:"Акции и инвестиции",type:"positive",rarity:"uncommon",impactLevel:"low",description:"Компании выплачивают дивиденды.",effect:"Игроки с акциями получают +600$.",appliesTo:"Игроки с тегом «есть акции»",targetRule:"tag:есть акции",moneyEffectType:"add",moneyAmount:600,autoApplicable:true,economyImpact:{stocks:4,sentiment:4}}),
+E({title:"Лопнул спекулятивный пузырь",category:"Акции и инвестиции",type:"crisis",rarity:"epic",impactLevel:"critical",description:"Перегретые активы рушатся, паника на бирже.",effect:"Рискованные инвесторы теряют 15% наличных.",appliesTo:"Игроки с тегом «рискованный инвестор»",targetRule:"tag:рискованный инвестор",moneyEffectType:"percentSubtract",moneyPercent:15,autoApplicable:true,economyImpact:{stocks:-15,risk:14,sentiment:-12}}),
+E({title:"IPO года",category:"Акции и инвестиции",type:"opportunity",rarity:"rare",impactLevel:"high",description:"Громкое размещение даёт ранним инвесторам прибыль.",effect:"Рискованные инвесторы получают +2 000$.",appliesTo:"Игроки с тегом «рискованный инвестор»",targetRule:"tag:рискованный инвестор",moneyEffectType:"add",moneyAmount:2000,autoApplicable:true,economyImpact:{stocks:7,sentiment:6,risk:5}}),
+E({title:"Бегство в защитные активы",category:"Акции и инвестиции",type:"mixed",rarity:"uncommon",impactLevel:"medium",description:"Инвесторы уходят в золото и облигации.",effect:"Консервативные инвесторы +700$, рискованные -500$.",appliesTo:"Зависит от стратегии",targetRule:"tag:консервативный инвестор",moneyEffectType:"add",moneyAmount:700,autoApplicable:true,economyImpact:{stocks:-5,risk:6}}),
+E({title:"Байбэк крупной компании",category:"Акции и инвестиции",type:"positive",rarity:"uncommon",impactLevel:"low",description:"Компания выкупает свои акции, котировки растут.",effect:"Игроки с акциями получают +4% наличных.",appliesTo:"Игроки с тегом «есть акции»",targetRule:"tag:есть акции",moneyEffectType:"percentAdd",moneyPercent:4,autoApplicable:true,economyImpact:{stocks:5,sentiment:3}}),
+E({title:"Маржин-колл",category:"Акции и инвестиции",type:"negative",rarity:"rare",impactLevel:"high",description:"Кредитное плечо обернулось принудительной продажей.",effect:"Рискованные инвесторы с кредитами платят 1 200$.",appliesTo:"Рискованные + кредиты",targetRule:"tag:рискованный инвестор",moneyEffectType:"subtract",moneyAmount:1200,autoApplicable:true,economyImpact:{stocks:-7,risk:9}})
+]);
+/* --- Категория 4: Бизнес и предпринимательство --- */
+addEvents([
+E({title:"Крупный контракт",category:"Бизнес и предпринимательство",type:"positive",rarity:"common",impactLevel:"medium",description:"Бизнес подписал выгодный заказ.",effect:"Игроки с бизнесом получают +1 200$.",appliesTo:"Игроки с тегом «есть бизнес»",targetRule:"tag:есть бизнес",moneyEffectType:"add",moneyAmount:1200,autoApplicable:true,economyImpact:{business:7,sentiment:5}}),
+E({title:"Уход ключевого клиента",category:"Бизнес и предпринимательство",type:"negative",rarity:"common",impactLevel:"medium",description:"Главный клиент разорвал договор.",effect:"Игроки с бизнесом теряют 8% наличных.",appliesTo:"Игроки с тегом «есть бизнес»",targetRule:"tag:есть бизнес",moneyEffectType:"percentSubtract",moneyPercent:8,autoApplicable:true,economyImpact:{business:-7,sentiment:-5,risk:5}}),
+E({title:"Масштабирование бизнеса",category:"Бизнес и предпринимательство",type:"positive",rarity:"uncommon",impactLevel:"high",description:"Удачное расширение увеличило выручку.",effect:"Предприниматели получают +1 800$.",appliesTo:"Игроки с тегом «предприниматель»",targetRule:"tag:предприниматель",moneyEffectType:"add",moneyAmount:1800,autoApplicable:true,economyImpact:{business:9,sentiment:6,risk:3}}),
+E({title:"Рост издержек на персонал",category:"Бизнес и предпринимательство",type:"negative",rarity:"common",impactLevel:"low",description:"Зарплаты выросли, маржа сжалась.",effect:"Игроки с бизнесом платят 500$.",appliesTo:"Игроки с тегом «есть бизнес»",targetRule:"tag:есть бизнес",moneyEffectType:"subtract",moneyAmount:500,autoApplicable:true,economyImpact:{business:-4,inflation:3}}),
+E({title:"Грант для предпринимателей",category:"Бизнес и предпринимательство",type:"positive",rarity:"uncommon",impactLevel:"medium",description:"Государственная программа поддержки малого бизнеса.",effect:"Игроки с тегом «предприниматель» получают +2 000$.",appliesTo:"Игроки с тегом «предприниматель»",targetRule:"tag:предприниматель",moneyEffectType:"add",moneyAmount:2000,autoApplicable:true,economyImpact:{business:6,risk:-4,sentiment:5}}),
+E({title:"Поломка оборудования",category:"Бизнес и предпринимательство",type:"negative",rarity:"common",impactLevel:"low",description:"Простой производства из-за аварии.",effect:"Игроки с бизнесом платят 600$.",appliesTo:"Игроки с тегом «есть бизнес»",targetRule:"tag:есть бизнес",moneyEffectType:"subtract",moneyAmount:600,autoApplicable:true,economyImpact:{business:-3}}),
+E({title:"Вирусный продукт",category:"Бизнес и предпринимательство",type:"positive",rarity:"rare",impactLevel:"high",description:"Продукт неожиданно стал хитом.",effect:"Предприниматели получают +12% наличных.",appliesTo:"Игроки с тегом «предприниматель»",targetRule:"tag:предприниматель",moneyEffectType:"percentAdd",moneyPercent:12,autoApplicable:true,economyImpact:{business:10,sentiment:8}}),
+E({title:"Судебный иск к бизнесу",category:"Бизнес и предпринимательство",type:"negative",rarity:"uncommon",impactLevel:"high",description:"Конкурент подал иск, нужны юристы.",effect:"Игроки с бизнесом платят 1 000$.",appliesTo:"Игроки с тегом «есть бизнес»",targetRule:"tag:есть бизнес",moneyEffectType:"subtract",moneyAmount:1000,autoApplicable:true,economyImpact:{business:-5,risk:6}})
+]);
+
+/* --- Категория 5: Личные события --- */
+addEvents([
+E({title:"Неожиданное наследство",category:"Личные события",type:"positive",rarity:"rare",impactLevel:"high",description:"Дальний родственник оставил наследство.",effect:"Выбранный игрок получает +3 000$.",appliesTo:"Один игрок",targetRule:"player",moneyEffectType:"add",moneyAmount:3000,autoApplicable:true,economyImpact:{sentiment:3}}),
+E({title:"Медицинские расходы",category:"Личные события",type:"negative",rarity:"common",impactLevel:"medium",description:"Внеплановое лечение ударило по бюджету.",effect:"Выбранный игрок платит 800$.",appliesTo:"Один игрок",targetRule:"player",moneyEffectType:"subtract",moneyAmount:800,autoApplicable:true}),
+E({title:"Рождение ребёнка",category:"Личные события",type:"mixed",rarity:"uncommon",impactLevel:"medium",description:"Радостное, но затратное событие.",effect:"Игроки с тегом «есть дети» платят 600$ расходов.",appliesTo:"Игроки с тегом «есть дети»",targetRule:"tag:есть дети",moneyEffectType:"subtract",moneyAmount:600,autoApplicable:true,discussionQuestion:"Как дети меняют финансовую стратегию?"}),
+E({title:"Повышение на работе",category:"Личные события",type:"positive",rarity:"common",impactLevel:"low",description:"Зарплата выросла.",effect:"Выбранный игрок получает +700$.",appliesTo:"Один игрок",targetRule:"player",moneyEffectType:"add",moneyAmount:700,autoApplicable:true,economyImpact:{sentiment:2}}),
+E({title:"Потеря работы",category:"Личные события",type:"negative",rarity:"uncommon",impactLevel:"high",description:"Сокращение лишило основного дохода.",effect:"Выбранный игрок теряет 10% наличных.",appliesTo:"Один игрок",targetRule:"player",moneyEffectType:"percentSubtract",moneyPercent:10,autoApplicable:true,economyImpact:{unemployment:5,sentiment:-4}}),
+E({title:"Подработка",category:"Личные события",type:"positive",rarity:"common",impactLevel:"low",description:"Дополнительный заработок на стороне.",effect:"Выбранный игрок получает +400$.",appliesTo:"Один игрок",targetRule:"player",moneyEffectType:"add",moneyAmount:400,autoApplicable:true}),
+E({title:"Кража кошелька",category:"Личные события",type:"negative",rarity:"common",impactLevel:"low",description:"Украли наличные.",effect:"Выбранный игрок платит 300$.",appliesTo:"Один игрок",targetRule:"player",moneyEffectType:"subtract",moneyAmount:300,autoApplicable:true}),
+E({title:"Выигрыш в лотерею",category:"Личные события",type:"positive",rarity:"epic",impactLevel:"high",description:"Повезло по-крупному.",effect:"Выбранный игрок получает +5 000$.",appliesTo:"Один игрок",targetRule:"player",moneyEffectType:"add",moneyAmount:5000,autoApplicable:true,economyImpact:{sentiment:4}}),
+E({title:"Дорогостоящий ремонт авто",category:"Личные события",type:"negative",rarity:"common",impactLevel:"low",description:"Машина сломалась некстати.",effect:"Выбранный игрок платит 500$.",appliesTo:"Один игрок",targetRule:"player",moneyEffectType:"subtract",moneyAmount:500,autoApplicable:true})
+]);
+
+/* --- Категория 6: Банки, кредиты и долги --- */
+addEvents([
+E({title:"Банковский штраф",category:"Банки, кредиты и долги",type:"negative",rarity:"common",impactLevel:"medium",description:"Просрочка по платежу обернулась штрафом.",effect:"Игроки с кредитами платят 500$.",appliesTo:"Игроки с тегом «есть кредиты»",targetRule:"tag:есть кредиты",moneyEffectType:"subtract",moneyAmount:500,autoApplicable:true,economyImpact:{risk:4}}),
+E({title:"Рефинансирование долга",category:"Банки, кредиты и долги",type:"positive",rarity:"uncommon",impactLevel:"medium",description:"Удалось снизить ставку по кредиту.",effect:"Должники получают +600$ экономии.",appliesTo:"Игроки с тегом «должник»",targetRule:"tag:должник",moneyEffectType:"add",moneyAmount:600,autoApplicable:true,economyImpact:{rate:-3,risk:-4}}),
+E({title:"Кредитный скоринг вырос",category:"Банки, кредиты и долги",type:"positive",rarity:"common",impactLevel:"low",description:"Хорошая история открыла доступ к дешёвым деньгам.",effect:"Игроки с кредитами получают +300$.",appliesTo:"Игроки с тегом «есть кредиты»",targetRule:"tag:есть кредиты",moneyEffectType:"add",moneyAmount:300,autoApplicable:true,economyImpact:{risk:-3}}),
+E({title:"Кредитное сжатие",category:"Банки, кредиты и долги",type:"crisis",rarity:"rare",impactLevel:"high",description:"Банки резко перестали выдавать займы.",effect:"Должники платят 1 000$ по требованию досрочного возврата.",appliesTo:"Игроки с тегом «должник»",targetRule:"tag:должник",moneyEffectType:"subtract",moneyAmount:1000,autoApplicable:true,economyImpact:{rate:8,risk:11,business:-6}}),
+E({title:"Проценты по кредиту",category:"Банки, кредиты и долги",type:"negative",rarity:"common",impactLevel:"low",description:"Ежемесячная выплата по займу.",effect:"Игроки с кредитами теряют 5% наличных.",appliesTo:"Игроки с тегом «есть кредиты»",targetRule:"tag:есть кредиты",moneyEffectType:"percentSubtract",moneyPercent:5,autoApplicable:true}),
+E({title:"Списание части долга",category:"Банки, кредиты и долги",type:"positive",rarity:"rare",impactLevel:"medium",description:"Банк пошёл на реструктуризацию.",effect:"Должники получают +900$.",appliesTo:"Игроки с тегом «должник»",targetRule:"tag:должник",moneyEffectType:"add",moneyAmount:900,autoApplicable:true,economyImpact:{risk:-5}}),
+E({title:"Банковская паника",category:"Банки, кредиты и долги",type:"crisis",rarity:"epic",impactLevel:"critical",description:"Набег вкладчиков на банки, доступ к деньгам ограничен.",effect:"Все теряют 7% наличных.",targetRule:"all",moneyEffectType:"percentSubtract",moneyPercent:7,autoApplicable:true,economyImpact:{risk:15,sentiment:-12,business:-8}}),
+E({title:"Кэшбэк и бонусы банка",category:"Банки, кредиты и долги",type:"positive",rarity:"common",impactLevel:"low",description:"Банк начислил бонусы за активность.",effect:"Все получают +150$.",targetRule:"all",moneyEffectType:"add",moneyAmount:150,autoApplicable:true,economyImpact:{sentiment:2}})
+]);
+/* --- Категория 7: Налоги и государство --- */
+addEvents([
+E({title:"Рост налоговой нагрузки",category:"Налоги и государство",type:"negative",rarity:"common",impactLevel:"medium",description:"Налоги повышены, все платят больше.",effect:"Все игроки платят 5% от наличных.",targetRule:"all",moneyEffectType:"percentSubtract",moneyPercent:5,autoApplicable:true,economyImpact:{business:-4,sentiment:-5,risk:4}}),
+E({title:"Налоговый вычет",category:"Налоги и государство",type:"positive",rarity:"uncommon",impactLevel:"medium",description:"Государство возвращает часть уплаченных налогов.",effect:"Все игроки получают +500$.",targetRule:"all",moneyEffectType:"add",moneyAmount:500,autoApplicable:true,economyImpact:{sentiment:5,risk:-3}}),
+E({title:"Налог на роскошь",category:"Налоги и государство",type:"negative",rarity:"uncommon",impactLevel:"medium",description:"Дополнительный налог на крупные капиталы.",effect:"Игроки с тегом «много наличных» платят 8%.",appliesTo:"Игроки с тегом «много наличных»",targetRule:"tag:много наличных",moneyEffectType:"percentSubtract",moneyPercent:8,autoApplicable:true,economyImpact:{sentiment:-4}}),
+E({title:"Налоговые каникулы для бизнеса",category:"Налоги и государство",type:"positive",rarity:"rare",impactLevel:"medium",description:"Освобождение от налогов на время.",effect:"Игроки с бизнесом получают +1 200$.",appliesTo:"Игроки с тегом «есть бизнес»",targetRule:"tag:есть бизнес",moneyEffectType:"add",moneyAmount:1200,autoApplicable:true,economyImpact:{business:7,risk:-4}}),
+E({title:"Налог на недвижимость вырос",category:"Налоги и государство",type:"negative",rarity:"common",impactLevel:"low",description:"Повышен налог на имущество.",effect:"Игроки с недвижимостью платят 400$.",appliesTo:"Игроки с тегом «есть недвижимость»",targetRule:"tag:есть недвижимость",moneyEffectType:"subtract",moneyAmount:400,autoApplicable:true,economyImpact:{realEstate:-3}}),
+E({title:"Субсидия многодетным",category:"Налоги и государство",type:"positive",rarity:"uncommon",impactLevel:"low",description:"Поддержка семей с детьми.",effect:"Игроки с тегом «есть дети» получают +500$.",appliesTo:"Игроки с тегом «есть дети»",targetRule:"tag:есть дети",moneyEffectType:"add",moneyAmount:500,autoApplicable:true,economyImpact:{sentiment:4}}),
+E({title:"Налоговая проверка",category:"Налоги и государство",type:"negative",rarity:"rare",impactLevel:"high",description:"Внезапная проверка с доначислениями.",effect:"Предприниматели платят 1 000$.",appliesTo:"Игроки с тегом «предприниматель»",targetRule:"tag:предприниматель",moneyEffectType:"subtract",moneyAmount:1000,autoApplicable:true,economyImpact:{business:-4,risk:5}})
+]);
+
+/* --- Категория 8: Технологии и инновации --- */
+addEvents([
+E({title:"Технологический бум",category:"Технологии и инновации",type:"positive",rarity:"uncommon",impactLevel:"high",description:"Прорыв в технологиях поднимает рынки.",effect:"Игроки с акциями получают +10% наличных.",appliesTo:"Игроки с тегом «есть акции»",targetRule:"tag:есть акции",moneyEffectType:"percentAdd",moneyPercent:10,autoApplicable:true,economyImpact:{stocks:10,business:6,risk:-4,sentiment:7}}),
+E({title:"Автоматизация снизила издержки",category:"Технологии и инновации",type:"positive",rarity:"uncommon",impactLevel:"medium",description:"Внедрение роботов удешевило производство.",effect:"Игроки с бизнесом получают +900$.",appliesTo:"Игроки с тегом «есть бизнес»",targetRule:"tag:есть бизнес",moneyEffectType:"add",moneyAmount:900,autoApplicable:true,economyImpact:{business:6,unemployment:3}}),
+E({title:"Кибератака",category:"Технологии и инновации",type:"negative",rarity:"rare",impactLevel:"high",description:"Взлом систем и утечка данных.",effect:"Игроки с бизнесом платят 1 100$.",appliesTo:"Игроки с тегом «есть бизнес»",targetRule:"tag:есть бизнес",moneyEffectType:"subtract",moneyAmount:1100,autoApplicable:true,economyImpact:{business:-5,risk:7}}),
+E({title:"Стартап выстрелил",category:"Технологии и инновации",type:"opportunity",rarity:"rare",impactLevel:"high",description:"Ранняя инвестиция в стартап окупилась.",effect:"Рискованные инвесторы получают +2 500$.",appliesTo:"Игроки с тегом «рискованный инвестор»",targetRule:"tag:рискованный инвестор",moneyEffectType:"add",moneyAmount:2500,autoApplicable:true,economyImpact:{stocks:6,sentiment:6,risk:4}}),
+E({title:"Устаревание технологии",category:"Технологии и инновации",type:"negative",rarity:"uncommon",impactLevel:"medium",description:"Продукт устарел, нужна модернизация.",effect:"Предприниматели платят 700$.",appliesTo:"Игроки с тегом «предприниматель»",targetRule:"tag:предприниматель",moneyEffectType:"subtract",moneyAmount:700,autoApplicable:true,economyImpact:{business:-4}}),
+E({title:"Патент принёс роялти",category:"Технологии и инновации",type:"positive",rarity:"rare",impactLevel:"medium",description:"Интеллектуальная собственность приносит доход.",effect:"Игроки с высоким пассивным доходом получают +1 000$.",appliesTo:"Игроки с тегом «высокий пассивный доход»",targetRule:"tag:высокий пассивный доход",moneyEffectType:"add",moneyAmount:1000,autoApplicable:true,economyImpact:{business:4}})
+]);
+
+/* --- Категория 9: Потребительский рынок --- */
+addEvents([
+E({title:"Потребительский бум",category:"Потребительский рынок",type:"positive",rarity:"common",impactLevel:"medium",description:"Люди активно тратят, выручка растёт.",effect:"Игроки с бизнесом получают +800$.",appliesTo:"Игроки с тегом «есть бизнес»",targetRule:"tag:есть бизнес",moneyEffectType:"add",moneyAmount:800,autoApplicable:true,economyImpact:{business:6,sentiment:6,inflation:3}}),
+E({title:"Потребительский спад",category:"Потребительский рынок",type:"negative",rarity:"common",impactLevel:"medium",description:"Люди экономят, спрос падает.",effect:"Игроки с бизнесом теряют 6% наличных.",appliesTo:"Игроки с тегом «есть бизнес»",targetRule:"tag:есть бизнес",moneyEffectType:"percentSubtract",moneyPercent:6,autoApplicable:true,economyImpact:{business:-6,sentiment:-5}}),
+E({title:"Сезон распродаж",category:"Потребительский рынок",type:"mixed",rarity:"common",impactLevel:"low",description:"Скидки радуют покупателей, но режут маржу.",effect:"Все получают +200$ экономии на покупках.",targetRule:"all",moneyEffectType:"add",moneyAmount:200,autoApplicable:true,economyImpact:{business:-2,sentiment:3}}),
+E({title:"Дефицит товаров",category:"Потребительский рынок",type:"negative",rarity:"uncommon",impactLevel:"medium",description:"Полки пустеют, цены растут.",effect:"Все платят 3% из-за подорожания.",targetRule:"all",moneyEffectType:"percentSubtract",moneyPercent:3,autoApplicable:true,economyImpact:{inflation:6,risk:4}}),
+E({title:"Новый тренд потребления",category:"Потребительский рынок",type:"positive",rarity:"uncommon",impactLevel:"medium",description:"Бизнес поймал волну спроса.",effect:"Предприниматели получают +1 100$.",appliesTo:"Игроки с тегом «предприниматель»",targetRule:"tag:предприниматель",moneyEffectType:"add",moneyAmount:1100,autoApplicable:true,economyImpact:{business:6,sentiment:5}}),
+E({title:"Бойкот бренда",category:"Потребительский рынок",type:"negative",rarity:"rare",impactLevel:"medium",description:"Репутационный скандал ударил по продажам.",effect:"Игроки с бизнесом платят 900$.",appliesTo:"Игроки с тегом «есть бизнес»",targetRule:"tag:есть бизнес",moneyEffectType:"subtract",moneyAmount:900,autoApplicable:true,economyImpact:{business:-5,sentiment:-4}})
+]);
+
+/* --- Категория 10: Чёрные лебеди и кризисы --- */
+addEvents([
+E({title:"Мировой финансовый кризис",category:"Чёрные лебеди и кризисы",type:"crisis",rarity:"legendary",impactLevel:"critical",description:"Системный обвал рынков и доверия.",effect:"Все игроки теряют 12% наличных.",targetRule:"all",moneyEffectType:"percentSubtract",moneyPercent:12,autoApplicable:true,economyImpact:{risk:20,stocks:-18,realEstate:-12,business:-12,sentiment:-15},discussionQuestion:"Кто в кризисе теряет меньше — и почему?"}),
+E({title:"Пандемия и локдаун",category:"Чёрные лебеди и кризисы",type:"crisis",rarity:"epic",impactLevel:"critical",description:"Экономика встала, бизнесы закрыты.",effect:"Игроки с бизнесом теряют 15% наличных.",appliesTo:"Игроки с тегом «есть бизнес»",targetRule:"tag:есть бизнес",moneyEffectType:"percentSubtract",moneyPercent:15,autoApplicable:true,economyImpact:{risk:16,business:-16,unemployment:9,sentiment:-12}}),
+E({title:"Энергетический шок",category:"Чёрные лебеди и кризисы",type:"crisis",rarity:"epic",impactLevel:"high",description:"Резкий скачок цен на энергию.",effect:"Все теряют 6% наличных.",targetRule:"all",moneyEffectType:"percentSubtract",moneyPercent:6,autoApplicable:true,economyImpact:{inflation:10,business:-7,risk:10}}),
+E({title:"Геополитический конфликт",category:"Чёрные лебеди и кризисы",type:"crisis",rarity:"rare",impactLevel:"high",description:"Нестабильность бьёт по рынкам.",effect:"Игроки с акциями теряют 9% наличных.",appliesTo:"Игроки с тегом «есть акции»",targetRule:"tag:есть акции",moneyEffectType:"percentSubtract",moneyPercent:9,autoApplicable:true,economyImpact:{risk:12,stocks:-11,sentiment:-9}}),
+E({title:"Природная катастрофа",category:"Чёрные лебеди и кризисы",type:"crisis",rarity:"rare",impactLevel:"high",description:"Стихия повредила имущество.",effect:"Игроки с недвижимостью платят 1 500$.",appliesTo:"Игроки с тегом «есть недвижимость»",targetRule:"tag:есть недвижимость",moneyEffectType:"subtract",moneyAmount:1500,autoApplicable:true,economyImpact:{realEstate:-8,risk:8,sentiment:-6}}),
+E({title:"Гиперинфляционная спираль",category:"Чёрные лебеди и кризисы",type:"crisis",rarity:"legendary",impactLevel:"critical",description:"Деньги стремительно обесцениваются.",effect:"Все теряют 18% наличных.",targetRule:"all",moneyEffectType:"percentSubtract",moneyPercent:18,autoApplicable:true,economyImpact:{inflation:20,risk:18,sentiment:-14}}),
+E({title:"Крах сырьевого рынка",category:"Чёрные лебеди и кризисы",type:"crisis",rarity:"epic",impactLevel:"high",description:"Цены на ресурсы рухнули.",effect:"Предприниматели теряют 10% наличных.",appliesTo:"Игроки с тегом «предприниматель»",targetRule:"tag:предприниматель",moneyEffectType:"percentSubtract",moneyPercent:10,autoApplicable:true,economyImpact:{business:-10,risk:11,sentiment:-8}})
+]);
+/* --- Категория 11: Возможности (события-возможности) --- */
+addEvents([
+E({title:"Окно для входа в актив",category:"Возможности",type:"opportunity",rarity:"uncommon",impactLevel:"medium",description:"Появился недооценённый актив.",effect:"Инвесторы получают бонус +800$ при покупке.",appliesTo:"Игроки с тегом «инвестор»",targetRule:"tag:инвестор",moneyEffectType:"add",moneyAmount:800,autoApplicable:true,economyImpact:{sentiment:4,risk:-3}}),
+E({title:"Партнёрское предложение",category:"Возможности",type:"opportunity",rarity:"uncommon",impactLevel:"medium",description:"Совместный проект сулит прибыль.",effect:"Предприниматели получают +1 000$.",appliesTo:"Игроки с тегом «предприниматель»",targetRule:"tag:предприниматель",moneyEffectType:"add",moneyAmount:1000,autoApplicable:true,economyImpact:{business:5}}),
+E({title:"Раннее размещение облигаций",category:"Возможности",type:"opportunity",rarity:"rare",impactLevel:"medium",description:"Доступ к выгодным облигациям.",effect:"Консервативные инвесторы получают +700$.",appliesTo:"Игроки с тегом «консервативный инвестор»",targetRule:"tag:консервативный инвестор",moneyEffectType:"add",moneyAmount:700,autoApplicable:true,economyImpact:{risk:-3,sentiment:3}}),
+E({title:"Распродажа активов на просадке",category:"Возможности",type:"opportunity",rarity:"rare",impactLevel:"high",description:"Кризис у других — шанс для вас.",effect:"Игроки с тегом «много наличных» получают +1 500$.",appliesTo:"Игроки с тегом «много наличных»",targetRule:"tag:много наличных",moneyEffectType:"add",moneyAmount:1500,autoApplicable:true,economyImpact:{sentiment:4}}),
+E({title:"Менторская сделка",category:"Возможности",type:"opportunity",rarity:"uncommon",impactLevel:"low",description:"Опытный наставник помог заработать.",effect:"Новички получают +500$.",appliesTo:"Игроки с тегом «новичок»",targetRule:"tag:новичок",moneyEffectType:"add",moneyAmount:500,autoApplicable:true,economyImpact:{sentiment:3}})
+]);
+
+/* --- Категория 12: Социальные тренды --- */
+addEvents([
+E({title:"Тренд на устойчивое потребление",category:"Социальные тренды",type:"positive",rarity:"uncommon",impactLevel:"medium",description:"Зелёные бизнесы в моде.",effect:"Предприниматели получают +700$.",appliesTo:"Игроки с тегом «предприниматель»",targetRule:"tag:предприниматель",moneyEffectType:"add",moneyAmount:700,autoApplicable:true,economyImpact:{business:4,sentiment:4}}),
+E({title:"Демографический сдвиг",category:"Социальные тренды",type:"mixed",rarity:"rare",impactLevel:"medium",description:"Меняется структура спроса.",effect:"Игроки с недвижимостью получают +500$.",appliesTo:"Игроки с тегом «есть недвижимость»",targetRule:"tag:есть недвижимость",moneyEffectType:"add",moneyAmount:500,autoApplicable:true,economyImpact:{realEstate:4}}),
+E({title:"Волна удалённой работы",category:"Социальные тренды",type:"mixed",rarity:"uncommon",impactLevel:"medium",description:"Спрос на офисы падает, на жильё за городом растёт.",effect:"Игроки с недвижимостью теряют 3% наличных.",appliesTo:"Игроки с тегом «есть недвижимость»",targetRule:"tag:есть недвижимость",moneyEffectType:"percentSubtract",moneyPercent:3,autoApplicable:true,economyImpact:{realEstate:-3,business:2}}),
+E({title:"Финансовая грамотность в моде",category:"Социальные тренды",type:"positive",rarity:"common",impactLevel:"low",description:"Люди учатся управлять деньгами.",effect:"Новички получают +300$.",appliesTo:"Игроки с тегом «новичок»",targetRule:"tag:новичок",moneyEffectType:"add",moneyAmount:300,autoApplicable:true,economyImpact:{sentiment:3,risk:-2}}),
+E({title:"Социальная нестабильность",category:"Социальные тренды",type:"negative",rarity:"rare",impactLevel:"high",description:"Протесты и неопределённость пугают инвесторов.",effect:"Все теряют 4% наличных.",targetRule:"all",moneyEffectType:"percentSubtract",moneyPercent:4,autoApplicable:true,economyImpact:{risk:9,sentiment:-8,business:-4}})
+]);
+
+/* --- Категория 13: Командные события --- */
+addEvents([
+E({title:"Командный синдикат",category:"Командные события",type:"positive",rarity:"uncommon",impactLevel:"medium",description:"Команда объединила капитал ради сделки.",effect:"Выбранная команда получает +1 000$ каждому.",appliesTo:"Одна команда",targetRule:"team",moneyEffectType:"add",moneyAmount:1000,autoApplicable:true,economyImpact:{sentiment:4}}),
+E({title:"Командный убыток",category:"Командные события",type:"negative",rarity:"uncommon",impactLevel:"medium",description:"Совместная инвестиция не оправдалась.",effect:"Выбранная команда теряет 6% наличных у каждого.",appliesTo:"Одна команда",targetRule:"team",moneyEffectType:"percentSubtract",moneyPercent:6,autoApplicable:true,economyImpact:{risk:5,sentiment:-4}}),
+E({title:"Командная премия за результат",category:"Командные события",type:"positive",rarity:"rare",impactLevel:"high",description:"Команда выполнила общую цель.",effect:"Выбранная команда получает +2 000$ каждому.",appliesTo:"Одна команда",targetRule:"team",moneyEffectType:"add",moneyAmount:2000,autoApplicable:true,economyImpact:{sentiment:6}}),
+E({title:"Конкуренция между командами",category:"Командные события",type:"mixed",rarity:"rare",impactLevel:"medium",description:"Одна команда выигрывает за счёт другой.",effect:"Применяется по решению ведущего к выбранной команде.",appliesTo:"Команды",targetRule:"team",moneyEffectType:"custom",autoApplicable:false,economyImpact:{risk:4},discussionQuestion:"Кооперация или конкуренция выгоднее в этой партии?"}),
+E({title:"Командный фонд взаимопомощи",category:"Командные события",type:"positive",rarity:"uncommon",impactLevel:"low",description:"Команда создала подушку безопасности.",effect:"Выбранная команда получает +400$ каждому.",appliesTo:"Одна команда",targetRule:"team",moneyEffectType:"add",moneyAmount:400,autoApplicable:true,economyImpact:{risk:-3}})
+]);
+
+/* --- Категория 14: Денежные события --- */
+addEvents([
+E({title:"Прямая дотация всем",category:"Денежные события",type:"positive",rarity:"common",impactLevel:"medium",description:"Каждому игроку начисляется фиксированная сумма.",effect:"Все получают +800$.",targetRule:"all",moneyEffectType:"add",moneyAmount:800,autoApplicable:true,economyImpact:{sentiment:5}}),
+E({title:"Всеобщий сбор",category:"Денежные события",type:"negative",rarity:"common",impactLevel:"medium",description:"Со всех взимается фиксированная сумма.",effect:"Все платят 600$.",targetRule:"all",moneyEffectType:"subtract",moneyAmount:600,autoApplicable:true,economyImpact:{sentiment:-4}}),
+E({title:"Процент на капитал",category:"Денежные события",type:"positive",rarity:"uncommon",impactLevel:"medium",description:"На остаток наличных начисляется процент.",effect:"Все получают +6% наличных.",targetRule:"all",moneyEffectType:"percentAdd",moneyPercent:6,autoApplicable:true,economyImpact:{sentiment:4,inflation:2}}),
+E({title:"Девальвация наличных",category:"Денежные события",type:"negative",rarity:"uncommon",impactLevel:"medium",description:"Все теряют часть покупательной способности.",effect:"Все теряют 7% наличных.",targetRule:"all",moneyEffectType:"percentSubtract",moneyPercent:7,autoApplicable:true,economyImpact:{inflation:8,risk:6}}),
+E({title:"Джекпот для лидера",category:"Денежные события",type:"positive",rarity:"rare",impactLevel:"high",description:"Лидер партии получает бонус.",effect:"Игроки с тегом «лидер» получают +2 500$.",appliesTo:"Игроки с тегом «лидер»",targetRule:"tag:лидер",moneyEffectType:"add",moneyAmount:2500,autoApplicable:true,economyImpact:{sentiment:3}}),
+E({title:"Штраф для должников",category:"Денежные события",type:"negative",rarity:"uncommon",impactLevel:"medium",description:"Должники несут дополнительные издержки.",effect:"Игроки с тегом «должник» платят 700$.",appliesTo:"Игроки с тегом «должник»",targetRule:"tag:должник",moneyEffectType:"subtract",moneyAmount:700,autoApplicable:true,economyImpact:{risk:4}}),
+E({title:"Доход для пассивных инвесторов",category:"Денежные события",type:"positive",rarity:"uncommon",impactLevel:"medium",description:"Пассивный доход капает на счёт.",effect:"Игроки с тегом «высокий пассивный доход» получают +1 200$.",appliesTo:"Игроки с тегом «высокий пассивный доход»",targetRule:"tag:высокий пассивный доход",moneyEffectType:"add",moneyAmount:1200,autoApplicable:true,economyImpact:{sentiment:4}})
+]);
+
+/* --- Категория 15: Переговоры и сделки --- */
+addEvents([
+E({title:"Удачная сделка",category:"Переговоры и сделки",type:"positive",rarity:"common",impactLevel:"medium",description:"Выгодные условия по итогам переговоров.",effect:"Выбранный игрок получает +900$.",appliesTo:"Один игрок",targetRule:"player",moneyEffectType:"add",moneyAmount:900,autoApplicable:true,economyImpact:{business:3}}),
+E({title:"Сорванная сделка",category:"Переговоры и сделки",type:"negative",rarity:"common",impactLevel:"low",description:"Переговоры провалились, потеряны издержки.",effect:"Выбранный игрок платит 400$.",appliesTo:"Один игрок",targetRule:"player",moneyEffectType:"subtract",moneyAmount:400,autoApplicable:true}),
+E({title:"Скидка от поставщика",category:"Переговоры и сделки",type:"positive",rarity:"uncommon",impactLevel:"low",description:"Договорились о лучшей цене.",effect:"Игроки с бизнесом получают +500$.",appliesTo:"Игроки с тегом «есть бизнес»",targetRule:"tag:есть бизнес",moneyEffectType:"add",moneyAmount:500,autoApplicable:true,economyImpact:{business:3}}),
+E({title:"Жёсткий контрагент",category:"Переговоры и сделки",type:"negative",rarity:"uncommon",impactLevel:"medium",description:"Пришлось согласиться на невыгодные условия.",effect:"Предприниматели платят 600$.",appliesTo:"Игроки с тегом «предприниматель»",targetRule:"tag:предприниматель",moneyEffectType:"subtract",moneyAmount:600,autoApplicable:true,economyImpact:{business:-3}}),
+E({title:"Стратегический альянс",category:"Переговоры и сделки",type:"positive",rarity:"rare",impactLevel:"high",description:"Союз с сильным партнёром открыл рынок.",effect:"Лидеры получают +1 800$.",appliesTo:"Игроки с тегом «лидер»",targetRule:"tag:лидер",moneyEffectType:"add",moneyAmount:1800,autoApplicable:true,economyImpact:{business:6,sentiment:5}})
+]);
+/* --- Интерактивные события с выбором (decision) --- */
+// Хелпер варианта выбора. outcomes: массив исходов risk-or-safety {label,chance,...}
+function C(text, opt){
+  return Object.assign({
+    text:text, risk:"", moneyEffectType:"none", moneyAmount:0, moneyPercent:0,
+    targetRule:"player", autoApplicable:true, economyImpact:{}, outcomes:null
+  }, opt||{});
+}
+addEvents([
+E({title:"Рынок на панике",category:"Акции и инвестиции",type:"decision",rarity:"rare",impactLevel:"high",description:"Фондовый рынок падает, но появляются дешёвые активы.",appliesTo:"Один игрок",discussionQuestion:"Покупать на страхе или ждать дна?",choices:[
+  C("Продать часть активов",{risk:"Получаешь наличные, но теряешь будущий доход",moneyEffectType:"add",moneyAmount:1000,economyImpact:{stocks:-3,sentiment:-2}}),
+  C("Купить на просадке",{risk:"Платишь сейчас, но получаешь бонус к будущей сделке",moneyEffectType:"subtract",moneyAmount:800,economyImpact:{stocks:2,risk:3}}),
+  C("Ничего не делать",{risk:"Избегаешь риска, но упускаешь возможность",moneyEffectType:"none"})
+]}),
+E({title:"Предложение о покупке бизнеса",category:"Бизнес и предпринимательство",type:"decision",rarity:"rare",impactLevel:"high",description:"Инвестор хочет выкупить твою долю.",appliesTo:"Один игрок",choices:[
+  C("Продать долю",{risk:"Крупный кэш сейчас, но без будущего дохода",moneyEffectType:"add",moneyAmount:2500,economyImpact:{business:-3}}),
+  C("Удержать и развивать",{risk:"Расходы на развитие, но потенциал роста",moneyEffectType:"subtract",moneyAmount:700,economyImpact:{business:4}}),
+  C("Привлечь партнёра",{risk:"Делишь прибыль, но снижаешь риск",moneyEffectType:"add",moneyAmount:600,economyImpact:{business:2,risk:-2}})
+]}),
+E({title:"Кредит на расширение",category:"Банки, кредиты и долги",type:"decision",rarity:"uncommon",impactLevel:"medium",description:"Банк предлагает заём под рост бизнеса.",appliesTo:"Один игрок",choices:[
+  C("Взять большой кредит",{risk:"Быстрый рост, но высокая долговая нагрузка",moneyEffectType:"add",moneyAmount:2000,economyImpact:{risk:6,business:3}}),
+  C("Взять малый кредит",{risk:"Умеренный рост и умеренный риск",moneyEffectType:"add",moneyAmount:800,economyImpact:{risk:2}}),
+  C("Отказаться",{risk:"Никакого долга, но и роста нет",moneyEffectType:"none",economyImpact:{risk:-2}})
+]}),
+E({title:"Рискованная инвестиция",category:"Акции и инвестиции",type:"decision",rarity:"rare",impactLevel:"high",description:"Знакомый зовёт в высокодоходный, но рискованный проект.",appliesTo:"Один игрок",discussionQuestion:"Какой риск ты готов принять?",choices:[
+  C("Безопасный вклад",{risk:"Гарантированный, но скромный доход",moneyEffectType:"add",moneyAmount:300}),
+  C("Умеренный риск",{risk:"Шанс на хороший доход или небольшой убыток",outcomes:[
+     {label:"Успех (+1 500$)",chance:50,moneyEffectType:"add",moneyAmount:1500},
+     {label:"Нейтрально (0$)",chance:30,moneyEffectType:"none"},
+     {label:"Убыток (-500$)",chance:20,moneyEffectType:"subtract",moneyAmount:500}
+  ]}),
+  C("Высокий риск",{risk:"Крупный куш или серьёзный убыток",outcomes:[
+     {label:"Успех (+3 000$)",chance:40,moneyEffectType:"add",moneyAmount:3000},
+     {label:"Нейтрально (0$)",chance:30,moneyEffectType:"none"},
+     {label:"Убыток (-1 500$)",chance:30,moneyEffectType:"subtract",moneyAmount:1500}
+  ]})
+]}),
+E({title:"Выгодная недвижимость",category:"Недвижимость",type:"decision",rarity:"uncommon",impactLevel:"medium",description:"Появился объект ниже рынка, но нужен быстрый ответ.",appliesTo:"Один игрок",choices:[
+  C("Купить сразу",{risk:"Тратишь наличные, но получаешь актив",moneyEffectType:"subtract",moneyAmount:1500,economyImpact:{realEstate:3}}),
+  C("Поторговаться",{risk:"Можешь сэкономить или упустить",outcomes:[
+     {label:"Скидка получена (-1 000$ вместо -1 500$, +200$ выгоды)",chance:55,moneyEffectType:"add",moneyAmount:200},
+     {label:"Цена прежняя",chance:30,moneyEffectType:"subtract",moneyAmount:1500},
+     {label:"Объект ушёл",chance:15,moneyEffectType:"none"}
+  ]}),
+  C("Отказаться",{risk:"Сохраняешь кэш, упускаешь актив",moneyEffectType:"none"})
+]}),
+E({title:"Стартовать свой бизнес",category:"Бизнес и предпринимательство",type:"decision",rarity:"uncommon",impactLevel:"medium",description:"Идея есть — нужен капитал и решимость.",appliesTo:"Один игрок",choices:[
+  C("Вложить крупно",{risk:"Высокая ставка на успех",outcomes:[
+     {label:"Бизнес взлетел (+2 500$)",chance:45,moneyEffectType:"add",moneyAmount:2500,economyImpact:{business:3}},
+     {label:"Окупаемость нулевая",chance:30,moneyEffectType:"subtract",moneyAmount:300},
+     {label:"Провал (-1 200$)",chance:25,moneyEffectType:"subtract",moneyAmount:1200}
+  ]}),
+  C("Начать осторожно",{risk:"Меньше риск, меньше потенциал",moneyEffectType:"subtract",moneyAmount:400,economyImpact:{business:1}}),
+  C("Остаться на работе",{risk:"Стабильность без скачка",moneyEffectType:"add",moneyAmount:200})
+]}),
+E({title:"Долг другу",category:"Личные события",type:"decision",rarity:"common",impactLevel:"low",description:"Друг просит в долг крупную сумму.",appliesTo:"Один игрок",choices:[
+  C("Дать в долг",{risk:"Можешь не вернуть или укрепить связи",outcomes:[
+     {label:"Вернул с благодарностью (+200$)",chance:60,moneyEffectType:"add",moneyAmount:200},
+     {label:"Вернул ровно",chance:25,moneyEffectType:"none"},
+     {label:"Не вернул (-800$)",chance:15,moneyEffectType:"subtract",moneyAmount:800}
+  ]}),
+  C("Вежливо отказать",{risk:"Сохраняешь деньги, рискуешь отношениями",moneyEffectType:"none"})
+]}),
+E({title:"Предложение работы мечты",category:"Личные события",type:"decision",rarity:"uncommon",impactLevel:"medium",description:"Новая работа с риском, но большими перспективами.",appliesTo:"Один игрок",choices:[
+  C("Сменить работу",{risk:"Период адаптации, затем рост",moneyEffectType:"subtract",moneyAmount:300,economyImpact:{sentiment:2}}),
+  C("Остаться",{risk:"Стабильность без перемен",moneyEffectType:"add",moneyAmount:200})
+]}),
+E({title:"Криптовалютная лихорадка",category:"Акции и инвестиции",type:"decision",rarity:"rare",impactLevel:"high",description:"Все говорят о новом цифровом активе.",appliesTo:"Один игрок",discussionQuestion:"FOMO или холодный расчёт?",choices:[
+  C("Вложить агрессивно",{risk:"Качели волатильности",outcomes:[
+     {label:"Иксы (+4 000$)",chance:35,moneyEffectType:"add",moneyAmount:4000,economyImpact:{risk:5}},
+     {label:"Боковик",chance:25,moneyEffectType:"none"},
+     {label:"Обвал (-2 000$)",chance:40,moneyEffectType:"subtract",moneyAmount:2000,economyImpact:{risk:6}}
+  ]}),
+  C("Вложить немного",{risk:"Ограниченный риск",outcomes:[
+     {label:"Прибыль (+700$)",chance:40,moneyEffectType:"add",moneyAmount:700},
+     {label:"Без изменений",chance:30,moneyEffectType:"none"},
+     {label:"Убыток (-400$)",chance:30,moneyEffectType:"subtract",moneyAmount:400}
+  ]}),
+  C("Пройти мимо",{risk:"Ни риска, ни хайпа",moneyEffectType:"none"})
+]}),
+E({title:"Страховка имущества",category:"Личные события",type:"decision",rarity:"common",impactLevel:"low",description:"Стоит ли застраховать активы?",appliesTo:"Один игрок",choices:[
+  C("Купить страховку",{risk:"Платишь сейчас, защищён от потерь",moneyEffectType:"subtract",moneyAmount:300,economyImpact:{risk:-3}}),
+  C("Сэкономить",{risk:"Экономишь, но без защиты",moneyEffectType:"none",economyImpact:{risk:2}})
+]})
+]);
+addEvents([
+E({title:"Расширение в новый город",category:"Бизнес и предпринимательство",type:"decision",rarity:"uncommon",impactLevel:"medium",description:"Открыть филиал в другом городе?",appliesTo:"Один игрок",choices:[
+  C("Открыть филиал",{risk:"Затраты ради роста сети",moneyEffectType:"subtract",moneyAmount:1000,economyImpact:{business:3}}),
+  C("Франшиза",{risk:"Меньше контроля, меньше риска",moneyEffectType:"add",moneyAmount:500,economyImpact:{business:1}}),
+  C("Остаться локальным",{risk:"Без расходов и без роста",moneyEffectType:"none"})
+]}),
+E({title:"Досрочное погашение кредита",category:"Банки, кредиты и долги",type:"decision",rarity:"common",impactLevel:"low",description:"Есть свободные деньги — гасить долг или инвестировать?",appliesTo:"Один игрок",choices:[
+  C("Погасить долг",{risk:"Меньше процентов в будущем",moneyEffectType:"subtract",moneyAmount:1000,economyImpact:{risk:-4}}),
+  C("Инвестировать",{risk:"Долг остаётся, но деньги работают",outcomes:[
+     {label:"Доход (+1 200$)",chance:50,moneyEffectType:"add",moneyAmount:1200},
+     {label:"Ноль",chance:30,moneyEffectType:"none"},
+     {label:"Убыток (-600$)",chance:20,moneyEffectType:"subtract",moneyAmount:600,economyImpact:{risk:3}}
+  ]})
+]}),
+E({title:"Покупка акций «голубых фишек»",category:"Акции и инвестиции",type:"decision",rarity:"common",impactLevel:"low",description:"Стабильные компании или ничего?",appliesTo:"Один игрок",choices:[
+  C("Купить",{risk:"Низкая доходность, низкий риск",moneyEffectType:"subtract",moneyAmount:500,economyImpact:{stocks:1}}),
+  C("Подождать",{risk:"Кэш под рукой",moneyEffectType:"none"})
+]}),
+E({title:"Венчурный раунд",category:"Возможности",type:"decision",rarity:"epic",impactLevel:"high",description:"Возможность войти в стартап на ранней стадии.",appliesTo:"Один игрок",discussionQuestion:"Стоит ли риск потенциальной выгоды?",choices:[
+  C("Инвестировать крупно",{risk:"Очень рискованно",outcomes:[
+     {label:"Единорог (+6 000$)",chance:25,moneyEffectType:"add",moneyAmount:6000,economyImpact:{stocks:4,risk:4}},
+     {label:"Возврат вложений",chance:30,moneyEffectType:"none"},
+     {label:"Списание (-2 500$)",chance:45,moneyEffectType:"subtract",moneyAmount:2500,economyImpact:{risk:5}}
+  ]}),
+  C("Малый чек",{risk:"Ограниченный риск",outcomes:[
+     {label:"Прибыль (+1 500$)",chance:30,moneyEffectType:"add",moneyAmount:1500},
+     {label:"Возврат",chance:30,moneyEffectType:"none"},
+     {label:"Потеря (-700$)",chance:40,moneyEffectType:"subtract",moneyAmount:700}
+  ]}),
+  C("Пропустить",{risk:"Без риска",moneyEffectType:"none"})
+]}),
+E({title:"Аренда или покупка офиса",category:"Недвижимость",type:"decision",rarity:"common",impactLevel:"low",description:"Бизнесу нужно помещение.",appliesTo:"Один игрок",choices:[
+  C("Купить",{risk:"Большие вложения, актив в собственности",moneyEffectType:"subtract",moneyAmount:1200,economyImpact:{realEstate:2}}),
+  C("Арендовать",{risk:"Гибкость, но без актива",moneyEffectType:"subtract",moneyAmount:300})
+]}),
+E({title:"Партнёрство с конкурентом",category:"Переговоры и сделки",type:"decision",rarity:"rare",impactLevel:"medium",description:"Бывший конкурент предлагает союз.",appliesTo:"Один игрок",choices:[
+  C("Объединиться",{risk:"Синергия или потеря независимости",outcomes:[
+     {label:"Синергия (+1 800$)",chance:55,moneyEffectType:"add",moneyAmount:1800,economyImpact:{business:3}},
+     {label:"Нейтрально",chance:25,moneyEffectType:"none"},
+     {label:"Конфликт (-800$)",chance:20,moneyEffectType:"subtract",moneyAmount:800}
+  ]}),
+  C("Отказаться",{risk:"Сохраняешь автономию",moneyEffectType:"none"})
+]}),
+E({title:"Обучение и переквалификация",category:"Личные события",type:"decision",rarity:"common",impactLevel:"low",description:"Вложить в свои навыки?",appliesTo:"Один игрок",choices:[
+  C("Пройти курс",{risk:"Затраты сейчас, доход потом",moneyEffectType:"subtract",moneyAmount:400,economyImpact:{sentiment:2}}),
+  C("Отложить",{risk:"Без вложений и без роста",moneyEffectType:"none"})
+]}),
+E({title:"Реакция на падение рынка",category:"Чёрные лебеди и кризисы",type:"decision",rarity:"rare",impactLevel:"high",description:"Рынок рухнул. Что делать с активами?",appliesTo:"Один игрок",discussionQuestion:"Паника — худший советчик. Согласны?",choices:[
+  C("Продать в панике",{risk:"Фиксируешь убыток, но спишь спокойно",moneyEffectType:"subtract",moneyAmount:1000,economyImpact:{stocks:-2,sentiment:-2}}),
+  C("Держать",{risk:"Терпение может окупиться",outcomes:[
+     {label:"Отскок (+1 500$)",chance:50,moneyEffectType:"add",moneyAmount:1500,economyImpact:{stocks:2}},
+     {label:"Без изменений",chance:30,moneyEffectType:"none"},
+     {label:"Дальнейшее падение (-800$)",chance:20,moneyEffectType:"subtract",moneyAmount:800}
+  ]}),
+  C("Докупить",{risk:"Усреднение на дне",moneyEffectType:"subtract",moneyAmount:600,economyImpact:{risk:2}})
+]}),
+E({title:"Налоговая оптимизация",category:"Налоги и государство",type:"decision",rarity:"uncommon",impactLevel:"medium",description:"Консультант предлагает легальные схемы экономии.",appliesTo:"Один игрок",choices:[
+  C("Нанять консультанта",{risk:"Платишь за услугу, экономишь на налогах",moneyEffectType:"add",moneyAmount:400,economyImpact:{risk:-2}}),
+  C("Платить как есть",{risk:"Без хлопот, но дороже",moneyEffectType:"none"})
+]}),
+E({title:"Покупка дорогой машины",category:"Личные события",type:"decision",rarity:"common",impactLevel:"low",description:"Статусная покупка или инвестиция?",appliesTo:"Один игрок",choices:[
+  C("Купить премиум",{risk:"Удовольствие, но минус актив",moneyEffectType:"subtract",moneyAmount:1500,economyImpact:{sentiment:1}}),
+  C("Купить практичную",{risk:"Разумный выбор",moneyEffectType:"subtract",moneyAmount:500}),
+  C("Обойтись без авто",{risk:"Экономия",moneyEffectType:"add",moneyAmount:100})
+]}),
+E({title:"Эмиграция бизнеса",category:"Бизнес и предпринимательство",type:"decision",rarity:"rare",impactLevel:"high",description:"Перенести бизнес в другую юрисдикцию?",appliesTo:"Один игрок",choices:[
+  C("Переехать",{risk:"Издержки переезда ради льгот",outcomes:[
+     {label:"Льготы сработали (+2 000$)",chance:50,moneyEffectType:"add",moneyAmount:2000,economyImpact:{business:2}},
+     {label:"Нейтрально",chance:25,moneyEffectType:"subtract",moneyAmount:500},
+     {label:"Бюрократия (-1 200$)",chance:25,moneyEffectType:"subtract",moneyAmount:1200,economyImpact:{risk:3}}
+  ]}),
+  C("Остаться",{risk:"Стабильность",moneyEffectType:"none"})
+]}),
+E({title:"Антикризисная подушка",category:"Денежные события",type:"decision",rarity:"common",impactLevel:"low",description:"Отложить резерв или пустить деньги в дело?",appliesTo:"Один игрок",choices:[
+  C("Создать резерв",{risk:"Деньги не работают, но ты защищён",moneyEffectType:"none",economyImpact:{risk:-3}}),
+  C("Реинвестировать",{risk:"Выше доход, выше уязвимость",outcomes:[
+     {label:"Доход (+900$)",chance:55,moneyEffectType:"add",moneyAmount:900},
+     {label:"Ноль",chance:25,moneyEffectType:"none"},
+     {label:"Потеря (-500$)",chance:20,moneyEffectType:"subtract",moneyAmount:500,economyImpact:{risk:3}}
+  ]})
+]}),
+E({title:"Слияние команд",category:"Командные события",type:"decision",rarity:"rare",impactLevel:"medium",description:"Две команды решают объединить капитал.",appliesTo:"Команда",choices:[
+  C("Объединить ресурсы",{risk:"Сила в числе или хаос в управлении",targetRule:"team",outcomes:[
+     {label:"Синергия (+1 000$ каждому)",chance:60,moneyEffectType:"add",moneyAmount:1000,targetRule:"team"},
+     {label:"Без эффекта",chance:25,moneyEffectType:"none",targetRule:"team"},
+     {label:"Разногласия (-500$ каждому)",chance:15,moneyEffectType:"subtract",moneyAmount:500,targetRule:"team"}
+  ]}),
+  C("Сохранить независимость",{risk:"Каждый сам за себя",moneyEffectType:"none",targetRule:"team"})
+]}),
+E({title:"Скупка на дне кризиса",category:"Возможности",type:"decision",rarity:"epic",impactLevel:"high",description:"Кризис обвалил цены — редкий шанс для смелых.",appliesTo:"Один игрок",discussionQuestion:"Когда другие боятся — действовать?",choices:[
+  C("Вложить всё свободное",{risk:"Максимум риска и потенциала",outcomes:[
+     {label:"Восстановление (+5 000$)",chance:45,moneyEffectType:"add",moneyAmount:5000,economyImpact:{sentiment:3,risk:-2}},
+     {label:"Затяжное дно",chance:30,moneyEffectType:"none"},
+     {label:"Вторая волна (-2 000$)",chance:25,moneyEffectType:"subtract",moneyAmount:2000,economyImpact:{risk:4}}
+  ]}),
+  C("Вложить осторожно",{risk:"Сбалансированно",moneyEffectType:"subtract",moneyAmount:800,economyImpact:{risk:1}}),
+  C("Переждать",{risk:"Сохранить капитал",moneyEffectType:"none",economyImpact:{risk:-2}})
+]}),
+E({title:"Продажа на пике",category:"Акции и инвестиции",type:"decision",rarity:"uncommon",impactLevel:"medium",description:"Активы на максимуме. Зафиксировать прибыль?",appliesTo:"Один игрок",choices:[
+  C("Продать всё",{risk:"Фиксируешь прибыль, но можешь упустить рост",moneyEffectType:"add",moneyAmount:1200,economyImpact:{stocks:-2}}),
+  C("Продать половину",{risk:"Баланс между жадностью и страхом",moneyEffectType:"add",moneyAmount:600}),
+  C("Держать дальше",{risk:"Жадность — друг или враг?",outcomes:[
+     {label:"Рост продолжился (+1 500$)",chance:40,moneyEffectType:"add",moneyAmount:1500},
+     {label:"Стагнация",chance:30,moneyEffectType:"none"},
+     {label:"Разворот (-1 000$)",chance:30,moneyEffectType:"subtract",moneyAmount:1000}
+  ]})
+]}),
+E({title:"Благотворительность",category:"Социальные тренды",type:"decision",rarity:"common",impactLevel:"low",description:"Поддержать общественный проект?",appliesTo:"Один игрок",choices:[
+  C("Сделать пожертвование",{risk:"Минус кэш, плюс репутация",moneyEffectType:"subtract",moneyAmount:300,economyImpact:{sentiment:3}}),
+  C("Воздержаться",{risk:"Деньги при себе",moneyEffectType:"none"})
+]}),
+E({title:"Покупка доли в франшизе",category:"Бизнес и предпринимательство",type:"decision",rarity:"uncommon",impactLevel:"medium",description:"Известный бренд предлагает франшизу.",appliesTo:"Один игрок",choices:[
+  C("Купить франшизу",{risk:"Проверенная модель, но паушальный взнос",moneyEffectType:"subtract",moneyAmount:1300,economyImpact:{business:3}}),
+  C("Построить своё",{risk:"Свобода и риск",moneyEffectType:"subtract",moneyAmount:700,economyImpact:{business:1,risk:2}}),
+  C("Отложить решение",{risk:"Без обязательств",moneyEffectType:"none"})
+]}),
+E({title:"Валютные сбережения",category:"Глобальная экономика",type:"decision",rarity:"common",impactLevel:"low",description:"Хранить ли часть денег в другой валюте?",appliesTo:"Один игрок",choices:[
+  C("Диверсифицировать",{risk:"Защита от девальвации",outcomes:[
+     {label:"Курс помог (+500$)",chance:50,moneyEffectType:"add",moneyAmount:500},
+     {label:"Без изменений",chance:30,moneyEffectType:"none"},
+     {label:"Курс против (-300$)",chance:20,moneyEffectType:"subtract",moneyAmount:300}
+  ]}),
+  C("Держать в одной валюте",{risk:"Просто, но уязвимо",moneyEffectType:"none"})
+]}),
+E({title:"Найм или аутсорс",category:"Бизнес и предпринимательство",type:"decision",rarity:"common",impactLevel:"low",description:"Бизнесу нужны руки.",appliesTo:"Один игрок",choices:[
+  C("Нанять в штат",{risk:"Постоянные расходы, больше контроля",moneyEffectType:"subtract",moneyAmount:600,economyImpact:{unemployment:-2}}),
+  C("Отдать на аутсорс",{risk:"Гибко и дешевле на старте",moneyEffectType:"subtract",moneyAmount:300})
+]}),
+E({title:"Семейный бюджет",category:"Личные события",type:"decision",rarity:"common",impactLevel:"low",description:"Распределить семейные финансы.",appliesTo:"Один игрок",choices:[
+  C("Жёсткая экономия",{risk:"Копишь, но ограничиваешь себя",moneyEffectType:"add",moneyAmount:300,economyImpact:{sentiment:-1}}),
+  C("Сбалансированный бюджет",{risk:"Золотая середина",moneyEffectType:"add",moneyAmount:100}),
+  C("Жить на широкую ногу",{risk:"Радость сейчас, риск потом",moneyEffectType:"subtract",moneyAmount:400,economyImpact:{risk:2}})
+]})
+]);
+/* --- Челленджи (35) --- */
+let _cid=0;
+function CH(o){_cid++;return Object.assign({id:"C"+String(_cid).padStart(2,"0"),title:"",description:"",appliesTo:"Все игроки",reward:"",penalty:"",duration:"1 круг",canAffectMoney:false,moneyEffect:0},o);}
+const CHALLENGES=[
+CH({title:"Финансовая дисциплина",description:"В течение круга нельзя брать новые кредиты.",reward:"+300$ за соблюдение",penalty:"-300$ при нарушении",canAffectMoney:true,moneyEffect:300}),
+CH({title:"Охота за активами",description:"Следующий купивший актив игрок получает бонус.",appliesTo:"Первый покупатель актива",reward:"+500$",canAffectMoney:true,moneyEffect:500}),
+CH({title:"Антикризисный менеджер",description:"Игрок с отрицательным cashflow пересматривает расходы.",appliesTo:"Игроки с тегом «отрицательный cashflow»",reward:"+400$ экономии",canAffectMoney:true,moneyEffect:400}),
+CH({title:"Инвестор на просадке",description:"При следующем падении рынка можно купить актив со скидкой.",reward:"Скидка/бонус +600$",canAffectMoney:true,moneyEffect:600}),
+CH({title:"Командная цель",description:"Команда должна совместно увеличить капитал за круг.",appliesTo:"Команда",reward:"+800$ каждому при успехе",canAffectMoney:true,moneyEffect:800}),
+CH({title:"Долговая разгрузка",description:"Игрок с кредитами может один раз рефинансировать долг.",appliesTo:"Должники",reward:"+500$",canAffectMoney:true,moneyEffect:500}),
+CH({title:"Пассивный доход",description:"Игрок, увеличивший пассивный доход за круг, получает бонус.",reward:"+700$",canAffectMoney:true,moneyEffect:700}),
+CH({title:"Минимализм",description:"Не совершать импульсивных трат до конца круга.",reward:"+250$",penalty:"-250$",canAffectMoney:true,moneyEffect:250}),
+CH({title:"Скоростная сделка",description:"Заключить сделку за один ход.",reward:"+600$",canAffectMoney:true,moneyEffect:600}),
+CH({title:"Диверсификатор",description:"Иметь активы минимум трёх типов.",reward:"+900$",canAffectMoney:true,moneyEffect:900}),
+CH({title:"Налоговый стратег",description:"Снизить один налоговый эффект в этом круге.",reward:"+400$",canAffectMoney:true,moneyEffect:400}),
+CH({title:"Командный спринт",description:"Команда совершает 3 сделки за круг.",appliesTo:"Команда",reward:"+1 000$ команде",canAffectMoney:true,moneyEffect:1000}),
+CH({title:"Кэш-резерв",description:"Сохранить наличный резерв до конца круга.",reward:"+350$",penalty:"-200$",canAffectMoney:true,moneyEffect:350}),
+CH({title:"Ранний инвестор",description:"Первым войти в новую возможность.",reward:"+800$",canAffectMoney:true,moneyEffect:800}),
+CH({title:"Без долгов",description:"Завершить круг без новых обязательств.",reward:"+500$",canAffectMoney:true,moneyEffect:500}),
+CH({title:"Ментор круга",description:"Помочь новичку советом по сделке.",appliesTo:"Лидеры/инвесторы",reward:"+300$ обоим",canAffectMoney:true,moneyEffect:300}),
+CH({title:"Контрциклический ход",description:"Купить актив, когда рынок падает.",reward:"+700$",canAffectMoney:true,moneyEffect:700}),
+CH({title:"Хладнокровие",description:"Не реагировать на панику в этом круге.",reward:"+400$",canAffectMoney:true,moneyEffect:400}),
+CH({title:"Денежный поток+",description:"Увеличить ежемесячный денежный поток.",reward:"+650$",canAffectMoney:true,moneyEffect:650}),
+CH({title:"Бартер",description:"Совершить обмен активами с другим игроком.",reward:"+300$ обоим",canAffectMoney:true,moneyEffect:300}),
+CH({title:"Реинвестор",description:"Вложить полученный доход обратно в актив.",reward:"+550$",canAffectMoney:true,moneyEffect:550}),
+CH({title:"Семейный совет",description:"Игрок с детьми планирует расходы заранее.",appliesTo:"Игроки с тегом «есть дети»",reward:"+400$",canAffectMoney:true,moneyEffect:400}),
+CH({title:"Командный фонд",description:"Команда формирует общий резерв.",appliesTo:"Команда",reward:"+500$ команде",canAffectMoney:true,moneyEffect:500}),
+CH({title:"Антиинфляционный щит",description:"Перевести часть кэша в активы при инфляции.",reward:"+600$",canAffectMoney:true,moneyEffect:600}),
+CH({title:"Сделка года",description:"Заключить самую крупную сделку круга.",reward:"+1 200$",canAffectMoney:true,moneyEffect:1200}),
+CH({title:"Бережливый старт",description:"Новичок завершает круг в плюсе.",appliesTo:"Новички",reward:"+450$",canAffectMoney:true,moneyEffect:450}),
+CH({title:"Стоп-лосс",description:"Вовремя выйти из убыточного актива.",reward:"+350$",canAffectMoney:true,moneyEffect:350}),
+CH({title:"Командная синергия",description:"Двое из команды совершают совместную сделку.",appliesTo:"Команда",reward:"+700$ участникам",canAffectMoney:true,moneyEffect:700}),
+CH({title:"Финансовая подушка",description:"Накопить резерв на 1 раунд расходов.",reward:"+500$",canAffectMoney:true,moneyEffect:500}),
+CH({title:"Терпеливый держатель",description:"Не продавать актив до конца круга.",reward:"+600$",canAffectMoney:true,moneyEffect:600}),
+CH({title:"Переговорщик",description:"Выторговать лучшие условия в сделке.",reward:"+500$",canAffectMoney:true,moneyEffect:500}),
+CH({title:"Технологический апгрейд",description:"Инвестировать в эффективность бизнеса.",appliesTo:"Игроки с бизнесом",reward:"+700$",canAffectMoney:true,moneyEffect:700}),
+CH({title:"Чистый баланс",description:"Закрыть круг без отрицательного баланса.",reward:"+400$",penalty:"-300$",canAffectMoney:true,moneyEffect:400}),
+CH({title:"Командная гонка",description:"Команда обгоняет другую по приросту капитала.",appliesTo:"Команды",reward:"+900$ победителям",canAffectMoney:true,moneyEffect:900}),
+CH({title:"Дальновидность",description:"Подготовиться к кризису заранее.",reward:"+550$",canAffectMoney:true,moneyEffect:550})
+];
+
+/* --- Карточки возможностей (30) --- */
+let _oid=0;
+function OP(o){_oid++;return Object.assign({id:"O"+String(_oid).padStart(2,"0"),title:"",description:"",appliesTo:"Один игрок",effect:"",duration:"одноразовая",rarity:"common",canAffectMoney:false,moneyEffect:0},o);}
+const OPPORTUNITIES=[
+OP({title:"Инвесторская конференция",description:"В следующий раз при взятии карточки сделки возьми две и выбери одну.",effect:"Двойной выбор сделки",rarity:"uncommon"}),
+OP({title:"Контакт с брокером",description:"Можешь один раз продать актив без штрафа.",effect:"Продажа без штрафа",rarity:"uncommon"}),
+OP({title:"Налоговый консультант",description:"Снизь один негативный налоговый эффект на 50%.",effect:"-50% к налоговому штрафу",rarity:"common",canAffectMoney:true,moneyEffect:250}),
+OP({title:"Переговоры с банком",description:"Один раз уменьши штраф по кредиту.",effect:"Скидка на штраф",rarity:"common",canAffectMoney:true,moneyEffect:300}),
+OP({title:"Партнёрство",description:"Объединись с другим игроком для одной сделки, если правила стола допускают.",effect:"Совместная сделка",rarity:"rare"}),
+OP({title:"Финансовый наставник",description:"Можешь отменить одно личное негативное событие.",effect:"Отмена негатива",rarity:"rare"}),
+OP({title:"Командный капитал",description:"Команда получает общий бонус при выполнении условия.",appliesTo:"Команда",effect:"+700$ команде",rarity:"uncommon",canAffectMoney:true,moneyEffect:700}),
+OP({title:"Инсайдерский отчёт",description:"Подсмотри верх колоды событий и реши, тянуть ли.",effect:"Превью события",rarity:"rare"}),
+OP({title:"Грант-акселератор",description:"Получи разовый бонус на развитие бизнеса.",appliesTo:"Предприниматели",effect:"+1 000$",rarity:"uncommon",canAffectMoney:true,moneyEffect:1000}),
+OP({title:"Второй шанс",description:"Переиграй один свой неудачный бросок риска.",effect:"Реролл исхода",rarity:"epic"}),
+OP({title:"Дешёвая ликвидность",description:"Возьми беспроцентный мини-займ на один ход.",effect:"+500$ без процентов",rarity:"common",canAffectMoney:true,moneyEffect:500}),
+OP({title:"Юридическая защита",description:"Игнорируй один судебный/штрафной эффект.",effect:"Иммунитет к штрафу",rarity:"rare"}),
+OP({title:"Рыночный инсайт",description:"Узнай следующий результат экономического кубика заранее.",effect:"Превью кубика",rarity:"uncommon"}),
+OP({title:"Кэшбэк-программа",description:"Верни 10% от следующей крупной траты.",effect:"+10% возврата",rarity:"common",canAffectMoney:true,moneyEffect:200}),
+OP({title:"Бизнес-ангел",description:"Привлеки внешний капитал в свой проект.",appliesTo:"Предприниматели",effect:"+1 500$",rarity:"rare",canAffectMoney:true,moneyEffect:1500}),
+OP({title:"Диверсификационный бонус",description:"Если у тебя 3+ типа активов — получи награду.",effect:"+800$",rarity:"uncommon",canAffectMoney:true,moneyEffect:800}),
+OP({title:"Скидочный купон сделки",description:"Следующую сделку соверши со скидкой.",effect:"-15% к цене актива",rarity:"common",canAffectMoney:true,moneyEffect:300}),
+OP({title:"Стратегический резерв",description:"Защити часть кэша от следующего кризиса.",effect:"Иммунитет половины потерь",rarity:"epic"}),
+OP({title:"Командный буст",description:"Удвой эффект следующего командного бонуса.",appliesTo:"Команда",effect:"x2 командный бонус",rarity:"rare"}),
+OP({title:"Менторская сессия",description:"Новичок получает совет и бонус.",appliesTo:"Новички",effect:"+400$",rarity:"common",canAffectMoney:true,moneyEffect:400}),
+OP({title:"Окно рефинансирования",description:"Снизь нагрузку по всем своим кредитам один раз.",appliesTo:"Должники",effect:"+600$",rarity:"uncommon",canAffectMoney:true,moneyEffect:600}),
+OP({title:"Удачный тайминг",description:"Соверши сделку до того, как рынок отреагирует.",effect:"Приоритет хода",rarity:"rare"}),
+OP({title:"Эксклюзивный лот",description:"Доступ к активу, недоступному другим в этом круге.",effect:"Уникальная сделка",rarity:"epic"}),
+OP({title:"Антикризисный грант",description:"Поддержка во время рецессии.",effect:"+900$",rarity:"uncommon",canAffectMoney:true,moneyEffect:900}),
+OP({title:"Бонус за пассивный доход",description:"Награда за высокий пассивный доход.",appliesTo:"Высокий пассивный доход",effect:"+700$",rarity:"uncommon",canAffectMoney:true,moneyEffect:700}),
+OP({title:"Страховой полис",description:"Защити один актив от случайной потери.",effect:"Защита актива",rarity:"common"}),
+OP({title:"Венчурный билет",description:"Шанс на крупную выплату при следующей возможности.",effect:"x1.5 к следующей прибыли",rarity:"rare"}),
+OP({title:"Деловой контакт",description:"Получи приоритет в следующих переговорах.",effect:"Преимущество в сделке",rarity:"common"}),
+OP({title:"Капитал лидера",description:"Лидер партии получает разовый бонус.",appliesTo:"Лидеры",effect:"+1 200$",rarity:"epic",canAffectMoney:true,moneyEffect:1200}),
+OP({title:"Свежий взгляд",description:"Поменяй один свой тег на более выгодный в этом круге.",effect:"Смена стратегии",rarity:"uncommon"})
+];
+
+/* --- Глобальные тренды (10) --- */
+const TRENDS=[
+{id:"growth",name:"Рост экономики",favor:["Глобальная экономика","Бизнес и предпринимательство","Возможности"],boost:0.6,desc:"Экономика растёт, возможностей больше."},
+{id:"inflation",name:"Инфляционный период",favor:["Налоги и государство","Денежные события","Глобальная экономика"],boost:0.6,desc:"Цены растут, кэш обесценивается."},
+{id:"creditcrunch",name:"Кредитное сжатие",favor:["Банки, кредиты и долги","Чёрные лебеди и кризисы"],boost:0.6,desc:"Деньги дорожают, кредиты недоступны."},
+{id:"realestate",name:"Бум недвижимости",favor:["Недвижимость"],boost:0.8,desc:"Рынок недвижимости на подъёме."},
+{id:"tech",name:"Технологическая революция",favor:["Технологии и инновации","Акции и инвестиции","Возможности"],boost:0.7,desc:"Инновации меняют рынки."},
+{id:"recession",name:"Рецессия",favor:["Чёрные лебеди и кризисы","Потребительский рынок"],boost:0.7,desc:"Спад деловой активности."},
+{id:"bankrisk",name:"Банковская нестабильность",favor:["Банки, кредиты и долги","Чёрные лебеди и кризисы"],boost:0.7,desc:"Банки под давлением."},
+{id:"entrepreneur",name:"Предпринимательский подъём",favor:["Бизнес и предпринимательство","Возможности","Переговоры и сделки"],boost:0.7,desc:"Время новых бизнесов."},
+{id:"consumerdown",name:"Потребительский спад",favor:["Потребительский рынок","Социальные тренды"],boost:0.6,desc:"Люди меньше тратят."},
+{id:"taxpressure",name:"Налоговое давление",favor:["Налоги и государство","Денежные события"],boost:0.6,desc:"Государство усиливает сборы."}
+];
+
+/* --- Экономический кубик (6 граней) --- */
+const DICE=[
+{name:"Бум",emoji:"📈",desc:"Экономика на подъёме, активы дорожают.",impact:{business:8,stocks:8,sentiment:9,risk:-6,realEstate:5}},
+{name:"Стабильность",emoji:"⚖️",desc:"Спокойный рынок без потрясений.",impact:{sentiment:3,risk:-3}},
+{name:"Инфляция",emoji:"🔥",desc:"Цены растут, наличные слабеют.",impact:{inflation:9,rate:4,risk:5,sentiment:-4}},
+{name:"Рецессия",emoji:"📉",desc:"Деловая активность падает.",impact:{business:-9,stocks:-7,unemployment:7,sentiment:-7,risk:7}},
+{name:"Рыночная паника",emoji:"⚡",desc:"Резкий обвал и страх инвесторов.",impact:{stocks:-12,risk:12,sentiment:-11,business:-6}},
+{name:"Неожиданная возможность",emoji:"💎",desc:"Появляются выгодные сделки.",impact:{business:6,stocks:4,sentiment:6,risk:-4}}
+];
+
+/* --- Режимы игры --- */
+const MODES=[
+{id:"basic",name:"Базовый",desc:"События выпадают с обычной вероятностью."},
+{id:"realistic",name:"Реалистичная экономика",desc:"События зависят от состояния экономики и тренда."},
+{id:"crisis",name:"Кризисный",desc:"Кризисы и негатив выпадают чаще."},
+{id:"opportunity",name:"Режим возможностей",desc:"Чаще позитив и стратегические возможности."},
+{id:"chaos",name:"Хаос",desc:"Максимальная непредсказуемость."},
+{id:"team",name:"Командный",desc:"Чаще командные события."},
+{id:"money",name:"Денежный",desc:"Чаще события с авто-применением к балансам."}
+];
+
+/* --- Достижения (12) --- */
+const ACHIEVEMENTS=[
+{id:"first_crisis",icon:"🌪️",title:"Первый кризис",desc:"Выпало первое кризисное событие."},
+{id:"hot_economy",icon:"🔥",title:"Бурная экономика",desc:"Индекс риска достиг 80."},
+{id:"opp_hunter",icon:"🎯",title:"Охотник за возможностями",desc:"Выпало 5 возможностей."},
+{id:"storm",icon:"⛈️",title:"Антикризисная партия",desc:"Выпало 3 кризиса."},
+{id:"decisions",icon:"🧠",title:"Раунд решений",desc:"Пройдено 5 интерактивных выборов."},
+{id:"calm",icon:"🌿",title:"Спокойный рынок",desc:"Риск опустился ниже 20."},
+{id:"econ_storm",icon:"🌊",title:"Экономический шторм",desc:"За партию произошло 20 событий."},
+{id:"first_player",icon:"🙋",title:"Первый игрок",desc:"Добавлен первый игрок."},
+{id:"first_team",icon:"🤝",title:"Командная игра",desc:"Создана первая команда."},
+{id:"banker",icon:"🏦",title:"Банкир партии",desc:"Проведено 20 денежных операций."},
+{id:"big_capital",icon:"💰",title:"Большой капитал",desc:"Общий баланс игроков превысил 100 000$."},
+{id:"dice_master",icon:"🎲",title:"Властелин кубика",desc:"Брошен экономический кубик 5 раз."}
+];
+
+/* ---------- 2) STATE + localStorage ---------- */
+const LS_KEY = "cashflow_events_v1";
+
+function defaultEconomy(){
+  return {inflation:35, rate:30, realEstate:55, stocks:55, unemployment:40, business:55, sentiment:55};
+}
+function defaultState(){
+  return {
+    round:1, mode:"basic", trendId:"growth", riskIndex:35,
+    economy:defaultEconomy(),
+    players:[], teams:[], moneyHistory:[], gameHistory:[],
+    achievements:[], lastEventIds:[],
+    counters:{events:0, crises:0, opportunities:0, decisions:0, moneyOps:0, dice:0},
+    activeTab:"panel", uid:1
+  };
+}
+let state = load() || defaultState();
+
+function load(){
+  try{ const r = localStorage.getItem(LS_KEY); return r? JSON.parse(r): null; }catch(e){ return null; }
+}
+function save(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){ toast("Не удалось сохранить (localStorage)"); }
+}
+function nextId(){ return state.uid++; }
+
+/* ---------- 3) HELPERS ---------- */
+function fmt(n){ // денежный формат
+  n = Math.round(n);
+  const sign = n<0?"-":"";
+  return sign + "$" + Math.abs(n).toLocaleString("ru-RU");
+}
+function nowStr(){
+  const d = new Date();
+  return d.toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+}
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function clamp(n,a,b){ return Math.max(a,Math.min(b,n)); }
+function byId(arr,id){ return arr.find(x=>x.id===id); }
+
+function currentTrend(){ return byId(TRENDS, state.trendId) || TRENDS[0]; }
+function currentMode(){ return MODES.find(m=>m.id===state.mode) || MODES[0]; }
+
+// Toast-уведомления
+function toast(msg, cls){
+  const wrap = document.getElementById("toasts");
+  const el = document.createElement("div");
+  el.className = "toast"+(cls?" "+cls:"");
+  el.innerHTML = msg;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.transition="opacity .4s"; el.style.opacity="0"; setTimeout(()=>el.remove(),400); }, 2600);
+}
+
+// Модальное окно. buttons: [{label,cls,onClick(close)}]
+function modal(title, bodyHTML, buttons){
+  const root = document.getElementById("modalRoot");
+  const ov = document.createElement("div");
+  ov.className="overlay";
+  const btns = (buttons||[{label:"Закрыть",cls:"btn"}]);
+  ov.innerHTML = '<div class="modal"><h2>'+esc(title)+'</h2><div id="mbody">'+bodyHTML+'</div>'+
+    '<div class="row" style="margin-top:14px;justify-content:flex-end"></div></div>';
+  const close = ()=>ov.remove();
+  ov.addEventListener("click",e=>{ if(e.target===ov) close(); });
+  const brow = ov.querySelector(".row");
+  btns.forEach(b=>{
+    const bb=document.createElement("button");
+    bb.className="btn "+(b.cls||"");
+    bb.textContent=b.label;
+    bb.onclick=()=>{ if(b.onClick) b.onClick(close, ov); else close(); };
+    brow.appendChild(bb);
+  });
+  root.appendChild(ov);
+  return ov;
+}
+function confirmModal(title, text, onYes, yesLabel, yesCls){
+  modal(title, '<p>'+esc(text)+'</p>', [
+    {label:"Отмена",cls:"ghost"},
+    {label:yesLabel||"Подтвердить",cls:yesCls||"red",onClick:(close)=>{ close(); onYes(); }}
+  ]);
+}
+
+/* ---------- История партии и операций ---------- */
+function logGame(type, title, desc, players, teams){
+  state.gameHistory.unshift({
+    n: state.gameHistory.length+1, round: state.round, type:type,
+    title:title, desc:desc||"", time:nowStr(),
+    players:players||[], teams:teams||[]
+  });
+  if(state.gameHistory.length>400) state.gameHistory.pop();
+}
+function logMoney(op){
+  op.id = "M"+nextId();
+  op.round = state.round;
+  op.timestamp = nowStr();
+  state.moneyHistory.unshift(op);
+  state.counters.moneyOps++;
+  if(state.moneyHistory.length>600) state.moneyHistory.pop();
+  checkAchievements();
+}
+
+/* ---------- Достижения ---------- */
+function unlock(id){
+  if(state.achievements.includes(id)) return;
+  const a = ACHIEVEMENTS.find(x=>x.id===id); if(!a) return;
+  state.achievements.push(id);
+  logGame("achievement","Достижение: "+a.title, a.desc);
+  toast(a.icon+" Достижение: <b>"+esc(a.title)+"</b>", "ach");
+}
+function checkAchievements(){
+  const c = state.counters;
+  if(c.crises>=1) unlock("first_crisis");
+  if(c.crises>=3) unlock("storm");
+  if(state.riskIndex>=80) unlock("hot_economy");
+  if(state.riskIndex<20) unlock("calm");
+  if(c.opportunities>=5) unlock("opp_hunter");
+  if(c.decisions>=5) unlock("decisions");
+  if(c.events>=20) unlock("econ_storm");
+  if(c.dice>=5) unlock("dice_master");
+  if(state.players.length>=1) unlock("first_player");
+  if(state.teams.length>=1) unlock("first_team");
+  if(c.moneyOps>=20) unlock("banker");
+  if(totalCapital()>=100000) unlock("big_capital");
+}
+
+/* ---------- Экономика: применение влияния ---------- */
+function applyEconomy(delta){
+  if(!delta) return;
+  const e = state.economy;
+  for(const k in delta){
+    if(k==="risk"){ state.riskIndex = clamp(state.riskIndex + delta.risk, 0, 100); continue; }
+    if(e[k]!=null) e[k] = clamp(e[k] + delta[k], 0, 100);
+  }
+  checkAchievements();
+}
+
+function totalCapital(){ return state.players.reduce((s,p)=>s+p.cash,0); }
+/* ---------- 4) PLAYERS / TEAMS ---------- */
+function addPlayer(name, cash, teamId){
+  name = (name||"").trim();
+  if(!name){ toast("⚠️ Введите имя игрока"); return false; }
+  const p = {
+    id:"P"+nextId(), name:name, teamId:teamId||null,
+    cash: isFinite(cash)?cash:0, notes:"", tags:[], isActive:true,
+    createdAt:nowStr(), updatedAt:nowStr()
+  };
+  state.players.push(p);
+  logGame("player","Добавлен игрок: "+name, "Стартовый баланс "+fmt(p.cash), [p.id]);
+  checkAchievements(); save(); render();
+  return true;
+}
+function deletePlayer(id){
+  const p = byId(state.players,id); if(!p) return;
+  state.players = state.players.filter(x=>x.id!==id);
+  logGame("player","Удалён игрок: "+p.name, "Баланс на момент удаления "+fmt(p.cash));
+  save(); render();
+}
+function updatePlayer(id, fields){
+  const p = byId(state.players,id); if(!p) return;
+  const changes=[];
+  if(fields.name!=null && fields.name.trim() && fields.name!==p.name){ changes.push("имя: "+p.name+" → "+fields.name); p.name=fields.name.trim(); }
+  if(fields.cash!=null && isFinite(fields.cash) && fields.cash!==p.cash){
+    logBalanceChange(p, fields.cash, "Ручная корректировка баланса", "setBalance");
+    changes.push("баланс → "+fmt(fields.cash));
+  }
+  if(fields.teamId!==undefined && fields.teamId!==p.teamId){
+    p.teamId = fields.teamId||null; changes.push("команда изменена");
+  }
+  if(fields.tags!=null){ p.tags = fields.tags; }
+  if(fields.notes!=null){ p.notes = fields.notes; }
+  p.updatedAt = nowStr();
+  if(changes.length) logGame("player","Изменён игрок: "+p.name, changes.join("; "), [p.id]);
+  save(); render();
+}
+function toggleTag(id, tag){
+  const p = byId(state.players,id); if(!p) return;
+  if(p.tags.includes(tag)) p.tags = p.tags.filter(t=>t!==tag);
+  else p.tags.push(tag);
+  p.updatedAt=nowStr(); save(); render();
+}
+
+// Команды
+function addTeam(name, color){
+  name=(name||"").trim(); if(!name){ toast("⚠️ Введите название команды"); return; }
+  const t={id:"T"+nextId(), name:name, color:color||"#14b8a6", notes:"", createdAt:nowStr()};
+  state.teams.push(t);
+  logGame("team","Создана команда: "+name, "", [], [t.id]);
+  checkAchievements(); save(); render();
+}
+function deleteTeam(id){
+  const t=byId(state.teams,id); if(!t) return;
+  state.players.forEach(p=>{ if(p.teamId===id) p.teamId=null; });
+  state.teams = state.teams.filter(x=>x.id!==id);
+  logGame("team","Удалена команда: "+t.name, "Игроки стали «без команды»");
+  save(); render();
+}
+function updateTeam(id, fields){
+  const t=byId(state.teams,id); if(!t) return;
+  if(fields.name!=null && fields.name.trim()) t.name=fields.name.trim();
+  if(fields.color!=null) t.color=fields.color;
+  if(fields.notes!=null) t.notes=fields.notes;
+  logGame("team","Изменена команда: "+t.name);
+  save(); render();
+}
+function teamMembers(id){ return state.players.filter(p=>p.teamId===id); }
+function teamName(id){ const t=byId(state.teams,id); return t?t.name:"Без команды"; }
+function teamColor(id){ const t=byId(state.teams,id); return t?t.color:"#64748b"; }
+
+/* ---------- 5) MONEY OPERATIONS ---------- */
+// Базовое изменение баланса с записью в историю
+function logBalanceChange(p, newCash, reason, type, extra){
+  const before = p.cash;
+  p.cash = Math.round(newCash);
+  p.updatedAt = nowStr();
+  const op = Object.assign({
+    type:type, targetType:"player", targetName:p.name, playerId:p.id,
+    amount: Math.round(p.cash-before), percent:0, fromPlayer:null, toPlayer:null,
+    reason:reason||"", balanceBefore:before, balanceAfter:p.cash, relatedEventId:null
+  }, extra||{});
+  logMoney(op);
+  flashPlayer(p.id, p.cash>=before);
+  if(p.cash<0) toast("⚠️ У игрока «"+esc(p.name)+"» отрицательный баланс");
+}
+function flashPlayer(id, up){
+  setTimeout(()=>{
+    const el = document.querySelector('[data-pcard="'+id+'"]');
+    if(el){ el.classList.remove("flash-up","flash-down"); void el.offsetWidth;
+      el.classList.add(up?"flash-up":"flash-down"); }
+  },20);
+}
+
+// Начислить / списать одному игроку
+function changeMoney(playerId, amount, reason, isIncome){
+  const p = byId(state.players,playerId); if(!p) return;
+  const delta = isIncome? Math.abs(amount): -Math.abs(amount);
+  logBalanceChange(p, p.cash+delta, reason||(isIncome?"Начисление":"Списание"), isIncome?"income":"expense");
+  save(); render();
+}
+
+// Перевод между игроками
+function transfer(fromId, toId, amount, comment){
+  if(fromId===toId){ toast("⚠️ Нельзя перевести самому себе"); return; }
+  const a=byId(state.players,fromId), b=byId(state.players,toId);
+  if(!a||!b){ toast("⚠️ Выберите игроков"); return; }
+  amount=Math.abs(amount); if(!amount){ toast("⚠️ Укажите сумму"); return; }
+  const r = comment||"Перевод между игроками";
+  // отправитель
+  const beforeA=a.cash; a.cash-=amount; a.updatedAt=nowStr();
+  logMoney({type:"transfer",targetType:"player",targetName:a.name,playerId:a.id,amount:-amount,percent:0,
+    fromPlayer:a.name,toPlayer:b.name,reason:r,balanceBefore:beforeA,balanceAfter:a.cash,relatedEventId:null});
+  // получатель
+  const beforeB=b.cash; b.cash+=amount; b.updatedAt=nowStr();
+  logMoney({type:"transfer",targetType:"player",targetName:b.name,playerId:b.id,amount:amount,percent:0,
+    fromPlayer:a.name,toPlayer:b.name,reason:r,balanceBefore:beforeB,balanceAfter:b.cash,relatedEventId:null});
+  logGame("money","Перевод: "+a.name+" → "+b.name, fmt(amount)+" — "+r, [a.id,b.id]);
+  flashPlayer(a.id,false); flashPlayer(b.id,true);
+  if(a.cash<0) toast("⚠️ У «"+esc(a.name)+"» отрицательный баланс");
+  save(); render();
+}
+
+// Применить денежный эффект к набору игроков (используется массовыми операциями и событиями)
+// effect: {moneyEffectType, moneyAmount, moneyPercent}
+function applyMoneyEffect(players, effect, reason, eventId){
+  players.forEach(p=>{
+    let nb = p.cash, amt=0, pct=0;
+    switch(effect.moneyEffectType){
+      case "add": nb = p.cash + effect.moneyAmount; amt=effect.moneyAmount; break;
+      case "subtract": nb = p.cash - effect.moneyAmount; amt=-effect.moneyAmount; break;
+      case "percentAdd": amt=Math.round(p.cash*effect.moneyPercent/100); nb=p.cash+amt; pct=effect.moneyPercent; break;
+      case "percentSubtract": amt=-Math.round(p.cash*effect.moneyPercent/100); nb=p.cash+amt; pct=effect.moneyPercent; break;
+      case "set": amt=effect.moneyAmount-p.cash; nb=effect.moneyAmount; break;
+      case "multiply": nb=Math.round(p.cash*effect.factor); amt=nb-p.cash; break;
+      default: return;
+    }
+    const before=p.cash; p.cash=Math.round(nb); p.updatedAt=nowStr();
+    logMoney({type: eventId?"eventEffect":(effect.opType||"income"), targetType:"player", targetName:p.name, playerId:p.id,
+      amount:Math.round(amt), percent:pct, fromPlayer:null, toPlayer:null,
+      reason:reason, balanceBefore:before, balanceAfter:p.cash, relatedEventId:eventId||null});
+    flashPlayer(p.id, p.cash>=before);
+    if(p.cash<0) toast("⚠️ У «"+esc(p.name)+"» отрицательный баланс");
+  });
+}
+
+// Кто подходит под правило применения targetRule
+function resolveTargets(rule, opts){
+  opts=opts||{};
+  if(rule==="all") return state.players.slice();
+  if(rule==="player") return opts.playerId? [byId(state.players,opts.playerId)].filter(Boolean): [];
+  if(rule==="team") return opts.teamId? teamMembers(opts.teamId): [];
+  if(rule && rule.indexOf("tag:")===0){
+    const tag = rule.slice(4);
+    return state.players.filter(p=>p.tags.includes(tag));
+  }
+  if(rule==="selected") return (opts.ids||[]).map(id=>byId(state.players,id)).filter(Boolean);
+  return [];
+}
+
+// Массовая операция
+function massOperation(targets, op){
+  if(!targets.length){ toast("⚠️ Нет подходящих игроков"); return; }
+  const reason = op.reason||"Массовая операция";
+  let eff;
+  if(op.kind==="add") eff={moneyEffectType:"add",moneyAmount:op.amount,opType:"income"};
+  else if(op.kind==="subtract") eff={moneyEffectType:"subtract",moneyAmount:op.amount,opType:"expense"};
+  else if(op.kind==="set") eff={moneyEffectType:"set",moneyAmount:op.amount,opType:"setBalance"};
+  else if(op.kind==="multiply") eff={moneyEffectType:"multiply",factor:op.factor,opType:"percentChange"};
+  else if(op.kind==="percentAdd") eff={moneyEffectType:"percentAdd",moneyPercent:op.percent,opType:"percentChange"};
+  else if(op.kind==="percentSubtract") eff={moneyEffectType:"percentSubtract",moneyPercent:op.percent,opType:"percentChange"};
+  applyMoneyEffect(targets, eff, reason);
+  logGame("money","Массовая операция", reason+" — затронуто игроков: "+targets.length, targets.map(t=>t.id));
+  save(); render();
+}
+/* ---------- 6) EVENTS — генератор ---------- */
+let lastEvent = null;          // последнее показанное событие
+let categoryFilter = "all";    // фильтр категории в генераторе
+
+// Вес события с учётом редкости, режима, тренда, индекса риска
+function eventWeight(ev){
+  let w = RARITY_META[ev.rarity].w;       // базовый вес по редкости
+  const mode = state.mode, trend = currentTrend();
+  // Режимы игры
+  if(mode==="crisis"){ if(ev.type==="crisis"||ev.type==="negative") w*=2.4; }
+  if(mode==="opportunity"){ if(ev.type==="opportunity"||ev.type==="positive"||ev.type==="decision") w*=2.2; }
+  if(mode==="chaos"){ w*= (0.5 + Math.random()*1.8); }
+  if(mode==="team"){ if(ev.category==="Командные события") w*=3.2; }
+  if(mode==="money"){ if(ev.autoApplicable) w*=2.2; }
+  if(mode==="realistic"){
+    // зависимость от показателей экономики
+    if(ev.type==="crisis") w *= 1 + state.riskIndex/60;
+    if(ev.category==="Недвижимость") w *= state.economy.realEstate/55;
+    if(ev.category==="Акции и инвестиции") w *= state.economy.stocks/55;
+    if(ev.category==="Бизнес и предпринимательство") w *= state.economy.business/55;
+  }
+  // Индекс риска повышает кризисы всегда
+  if(ev.type==="crisis") w *= 1 + Math.max(0,(state.riskIndex-50))/50;
+  if(ev.type==="opportunity"||ev.type==="positive") w *= 1 + Math.max(0,(50-state.riskIndex))/80;
+  // Глобальный тренд
+  if(trend.favor.includes(ev.category)) w *= (1+trend.boost);
+  return Math.max(0.1, w);
+}
+
+function drawEvent(){
+  let pool = EVENTS.filter(e=> categoryFilter==="all" || e.category===categoryFilter);
+  // не повторять последнее
+  if(lastEvent && pool.length>1) pool = pool.filter(e=>e.id!==lastEvent.id);
+  // не повторять из недавних (последние 2)
+  if(pool.length>3) pool = pool.filter(e=> state.lastEventIds.slice(0,2).indexOf(e.id)<0);
+  if(!pool.length) pool = EVENTS.slice();
+  // взвешенный выбор
+  const weights = pool.map(eventWeight);
+  const sum = weights.reduce((a,b)=>a+b,0);
+  let r = Math.random()*sum, idx=0;
+  for(let i=0;i<pool.length;i++){ r-=weights[i]; if(r<=0){ idx=i; break; } }
+  const ev = pool[idx];
+  lastEvent = ev;
+  state.lastEventIds.unshift(ev.id);
+  if(state.lastEventIds.length>10) state.lastEventIds.pop();
+  // счётчики и эффект на экономику
+  state.counters.events++;
+  if(ev.type==="crisis") state.counters.crises++;
+  if(ev.type==="opportunity") state.counters.opportunities++;
+  applyEconomy(ev.economyImpact);
+  logGame("event", ev.title, ev.category+" • "+TYPE_META[ev.type].label);
+  checkAchievements(); save();
+  renderEventCard(ev, "event");
+}
+
+// Подобрать подходящих игроков к событию (по targetRule)
+function suitablePlayers(ev){
+  if(ev.targetRule && ev.targetRule.indexOf("tag:")===0){
+    const tag = ev.targetRule.slice(4);
+    return state.players.filter(p=>p.tags.includes(tag));
+  }
+  if(ev.targetRule==="all") return state.players.slice();
+  return [];
+}
+
+// Предпросмотр денежного эффекта
+function previewEffect(targets, ev){
+  return targets.map(p=>{
+    let after=p.cash;
+    switch(ev.moneyEffectType){
+      case "add": after=p.cash+ev.moneyAmount; break;
+      case "subtract": after=p.cash-ev.moneyAmount; break;
+      case "percentAdd": after=p.cash+Math.round(p.cash*ev.moneyPercent/100); break;
+      case "percentSubtract": after=p.cash-Math.round(p.cash*ev.moneyPercent/100); break;
+      case "set": after=ev.moneyAmount; break;
+    }
+    return {p, before:p.cash, after:Math.round(after)};
+  });
+}
+
+// Применить событие к набору игроков c предпросмотром
+function applyEventTo(ev, targets){
+  if(!targets.length){ toast("⚠️ Нет подходящих игроков"); return; }
+  if(ev.moneyEffectType==="none"||ev.moneyEffectType==="custom"){
+    toast("ℹ️ У события нет авто-эффекта — примените вручную");
+    return;
+  }
+  const prev = previewEffect(targets, ev);
+  const rows = prev.map(x=>'<div class="row spread" style="border-bottom:1px solid var(--line);padding:5px 0">'
+     +'<span>'+esc(x.p.name)+'</span><span><span class="muted">'+fmt(x.before)+'</span> → <b style="color:'+(x.after>=x.before?'var(--green)':'var(--red)')+'">'+fmt(x.after)+'</b></span></div>').join("");
+  const totalDelta = prev.reduce((s,x)=>s+(x.after-x.before),0);
+  modal("Предпросмотр эффекта: "+ev.title,
+    '<p class="small muted">'+esc(ev.effect)+'</p>'+rows+
+    '<div class="row spread" style="margin-top:8px"><b>Общий эффект</b><b style="color:'+(totalDelta>=0?'var(--green)':'var(--red)')+'">'+fmt(totalDelta)+'</b></div>',
+    [{label:"Отмена",cls:"ghost"},
+     {label:"Применить",cls:"primary",onClick:(close)=>{
+        applyMoneyEffect(targets, ev, "Эффект события: "+ev.title, ev.id);
+        logGame("event","Применён эффект: "+ev.title, "Игроков: "+targets.length, targets.map(t=>t.id));
+        save(); render(); close();
+        toast("✅ Эффект применён");
+     }}]);
+}
+
+// Применить выбор интерактивного события
+function applyChoice(ev, choice, opts){
+  state.counters.decisions++;
+  applyEconomy(choice.economyImpact);
+  // risk-or-safety мини-игра
+  if(choice.outcomes){
+    const r=Math.random()*100; let acc=0, out=choice.outcomes[choice.outcomes.length-1];
+    for(const o of choice.outcomes){ acc+=o.chance; if(r<=acc){ out=o; break; } }
+    finishChoice(ev, choice, out, opts, out.label);
+  } else {
+    finishChoice(ev, choice, choice, opts, null);
+  }
+}
+function finishChoice(ev, choice, effect, opts, outcomeLabel){
+  const rule = effect.targetRule || choice.targetRule || "player";
+  const targets = resolveTargets(rule, opts);
+  let msg = "Выбор: "+choice.text;
+  if(outcomeLabel) msg += " → "+outcomeLabel;
+  if(effect.moneyEffectType && effect.moneyEffectType!=="none" && targets.length){
+    applyMoneyEffect(targets, effect, "Решение: "+ev.title, ev.id);
+  }
+  logGame("decision", ev.title, msg, targets.map(t=>t.id));
+  checkAchievements(); save(); render();
+  toast("🧠 "+esc(outcomeLabel||choice.text));
+}
+
+/* ---------- 7) ECONOMY: кубик, тренд, раунд ---------- */
+function rollDice(){
+  const d = pick(DICE);
+  applyEconomy(d.impact);
+  state.counters.dice++;
+  logGame("dice","Экономический кубик: "+d.name, d.desc);
+  checkAchievements(); save(); render();
+  modal(d.emoji+" "+d.name,
+    '<p>'+esc(d.desc)+'</p><p class="small muted">Показатели экономики обновлены. Индекс риска: <b>'+state.riskIndex+'</b></p>',
+    [{label:"Ок",cls:"primary"}]);
+}
+function nextRound(){
+  state.round++;
+  logGame("round","Раунд "+state.round, "Начат новый раунд");
+  save(); render();
+  toast("➡️ Раунд "+state.round);
+}
+function crisisRound(){
+  const prevMode = state.mode; state.mode="crisis";
+  drawEvent();
+  state.mode=prevMode;
+  toast("⚡ Кризисный раунд");
+}
+function drawChallenge(){
+  const c = pick(CHALLENGES);
+  logGame("challenge","Челлендж: "+c.title, c.description);
+  save();
+  modal("🎯 Челлендж: "+c.title,
+    '<p>'+esc(c.description)+'</p>'+
+    '<p class="small"><b>Кого касается:</b> '+esc(c.appliesTo)+'</p>'+
+    (c.reward?'<p class="small ok-box">Награда: '+esc(c.reward)+'</p>':'')+
+    (c.penalty?'<p class="small warn-box">Штраф: '+esc(c.penalty)+'</p>':'')+
+    '<p class="small muted">Длительность: '+esc(c.duration)+'</p>',
+    challengeButtons(c));
+}
+function challengeButtons(c){
+  const btns=[{label:"Закрыть",cls:"ghost"},{label:"Ещё челлендж",cls:"btn",onClick:(close)=>{close();drawChallenge();}}];
+  if(c.canAffectMoney){
+    btns.splice(1,0,{label:"Выдать награду игроку",cls:"green",onClick:(close)=>{close();pickPlayerThen(p=>{changeMoney(p.id,c.moneyEffect,"Награда челленджа: "+c.title,true);toast("✅ Награда выдана");});}});
+  }
+  return btns;
+}
+function drawOpportunity(){
+  const o = pick(OPPORTUNITIES);
+  state.counters.opportunities++;
+  logGame("opportunity","Возможность: "+o.title, o.description);
+  checkAchievements(); save(); render();
+  const rm = RARITY_META[o.rarity];
+  modal("💎 Возможность: "+o.title,
+    '<p><span class="badge '+rm.badge+'">'+rm.label+'</span></p>'+
+    '<p>'+esc(o.description)+'</p>'+
+    '<p class="small"><b>Кого касается:</b> '+esc(o.appliesTo)+'</p>'+
+    '<p class="small ok-box">Эффект: '+esc(o.effect)+'</p>'+
+    '<p class="small muted">Длительность: '+esc(o.duration)+'</p>',
+    opportunityButtons(o));
+}
+function opportunityButtons(o){
+  const btns=[{label:"Закрыть",cls:"ghost"},{label:"Ещё возможность",cls:"btn",onClick:(close)=>{close();drawOpportunity();}}];
+  if(o.canAffectMoney){
+    btns.splice(1,0,{label:"Начислить игроку",cls:"blue",onClick:(close)=>{close();pickPlayerThen(p=>{changeMoney(p.id,o.moneyEffect,"Возможность: "+o.title,true);toast("✅ Применено");});}});
+  }
+  return btns;
+}
+
+// Универсальный выбор игрока через модалку
+function pickPlayerThen(cb){
+  if(!state.players.length){ toast("⚠️ Сначала добавьте игроков"); return; }
+  const opts = state.players.map(p=>'<option value="'+p.id+'">'+esc(p.name)+' ('+fmt(p.cash)+')</option>').join("");
+  modal("Выберите игрока",'<select id="pickP">'+opts+'</select>',
+    [{label:"Отмена",cls:"ghost"},{label:"Выбрать",cls:"primary",onClick:(close,ov)=>{
+      const id=ov.querySelector("#pickP").value; const p=byId(state.players,id);
+      close(); if(p) cb(p);
+    }}]);
+}
+function pickTeamThen(cb){
+  if(!state.teams.length){ toast("⚠️ Сначала создайте команду"); return; }
+  const opts = state.teams.map(t=>'<option value="'+t.id+'">'+esc(t.name)+' ('+teamMembers(t.id).length+' чел.)</option>').join("");
+  modal("Выберите команду",'<select id="pickT">'+opts+'</select>',
+    [{label:"Отмена",cls:"ghost"},{label:"Выбрать",cls:"primary",onClick:(close,ov)=>{
+      const id=ov.querySelector("#pickT").value; close(); cb(id);
+    }}]);
+}
+
+/* ---------- Сброс / резервная копия ---------- */
+function resetGame(){
+  confirmModal("Сбросить партию?","Все игроки, команды, балансы и история будут удалены. Это действие необратимо.",()=>{
+    state = defaultState(); lastEvent=null; localStorage.removeItem(LS_KEY); save(); render();
+    toast("🔄 Партия сброшена");
+  },"Сбросить","red");
+}
+function backupJSON(){
+  const data = JSON.stringify(state, null, 2);
+  modal("Резервная копия (JSON)",
+    '<p class="small muted">Скопируйте текст и сохраните. Для восстановления вставьте его в «Загрузить копию».</p>'+
+    '<textarea id="bk" style="min-height:200px;font-family:monospace;font-size:11px">'+esc(data)+'</textarea>',
+    [{label:"Закрыть",cls:"ghost"},{label:"Скопировать",cls:"primary",onClick:(close,ov)=>{
+      const ta=ov.querySelector("#bk"); ta.select(); copyText(data); toast("📋 Скопировано");
+    }}]);
+}
+function restoreJSON(){
+  modal("Загрузить резервную копию",
+    '<p class="small muted">Вставьте сюда ранее скопированный JSON партии.</p>'+
+    '<textarea id="rs" placeholder="Вставьте JSON..." style="min-height:200px;font-family:monospace;font-size:11px"></textarea>',
+    [{label:"Отмена",cls:"ghost"},{label:"Восстановить",cls:"green",onClick:(close,ov)=>{
+      try{
+        const obj = JSON.parse(ov.querySelector("#rs").value);
+        if(!obj || !Array.isArray(obj.players)) throw new Error("bad");
+        state = Object.assign(defaultState(), obj);
+        save(); render(); close(); toast("✅ Партия восстановлена");
+      }catch(e){ toast("⚠️ Неверный JSON"); }
+    }}]);
+}
+function copyText(t){
+  if(navigator.clipboard){ navigator.clipboard.writeText(t).catch(()=>{}); }
+  else { const ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");}catch(e){} ta.remove(); }
+}
+/* ---------- 8) RENDER ---------- */
+const TABS = [
+  {id:"panel",label:"🎛️ Панель"},
+  {id:"calc",label:"🧮 Игроки"},
+  {id:"teams",label:"🤝 Команды"},
+  {id:"events",label:"🎴 События"},
+  {id:"economy",label:"📊 Экономика"},
+  {id:"challenges",label:"🎯 Челленджи"},
+  {id:"opps",label:"💎 Возможности"},
+  {id:"history",label:"📜 История"},
+  {id:"ach",label:"🏆 Достижения"},
+  {id:"rules",label:"📖 Правила"}
+];
+function setTab(id){ state.activeTab=id; save(); render(); window.scrollTo(0,0); }
+
+function render(){
+  renderTabs();
+  const v = document.getElementById("view");
+  const t = state.activeTab;
+  if(t==="panel") v.innerHTML = viewPanel();
+  else if(t==="calc") v.innerHTML = viewCalc();
+  else if(t==="teams") v.innerHTML = viewTeams();
+  else if(t==="events") v.innerHTML = viewEvents();
+  else if(t==="economy") v.innerHTML = viewEconomy();
+  else if(t==="challenges") v.innerHTML = viewChallenges();
+  else if(t==="opps") v.innerHTML = viewOpps();
+  else if(t==="history") v.innerHTML = viewHistory();
+  else if(t==="ach") v.innerHTML = viewAch();
+  else if(t==="rules") v.innerHTML = viewRules();
+  bindView();
+}
+function renderTabs(){
+  document.getElementById("tabs").innerHTML = TABS.map(t=>
+    '<button class="tab'+(state.activeTab===t.id?' active':'')+'" data-tab="'+t.id+'">'+t.label+'</button>'
+  ).join("");
+}
+
+/* ----- Виджеты экономики ----- */
+function riskColor(r){ return r>=70?"var(--red)": r>=40?"var(--orange)":"var(--green)"; }
+function econBar(label, val, goodHigh){
+  const color = goodHigh ? (val>=60?"var(--green)":val>=35?"var(--orange)":"var(--red)")
+                         : (val>=65?"var(--red)":val>=40?"var(--orange)":"var(--green)");
+  return '<div class="econ-row"><div class="lbl"><span>'+label+'</span><span class="muted">'+val+'</span></div>'+
+    '<div class="bar"><span style="width:'+val+'%;background:'+color+'"></span></div></div>';
+}
+function riskMeter(){
+  return '<div class="risk-meter"><div class="knob" style="left:'+state.riskIndex+'%"></div></div>';
+}
+function riskHint(){
+  if(state.riskIndex>70) return '<div class="warn-box small">⚠️ Экономика перегрета. Кризисные события становятся вероятнее.</div>';
+  if(state.riskIndex<30) return '<div class="ok-box small">🌿 Экономика стабильна. Возможности появляются чаще.</div>';
+  return '';
+}
+
+/* ----- 1) Панель партии ----- */
+function viewPanel(){
+  const tr = currentTrend(), md = currentMode();
+  return '<div class="card">'+
+    '<div class="grid g4 keep">'+
+      stat("Раунд", state.round)+
+      stat("Игроков", state.players.length)+
+      stat("Команд", state.teams.length)+
+      stat("Общий капитал", fmt(totalCapital()))+
+    '</div>'+
+    '<div class="grid g2 keep" style="margin-top:12px">'+
+      stat("Режим", md.name)+
+      stat("Глобальный тренд", tr.name)+
+    '</div>'+
+    '<div style="margin-top:14px"><div class="row spread"><span class="section-title">Индекс риска</span>'+
+      '<b style="color:'+riskColor(state.riskIndex)+'">'+state.riskIndex+'/100</b></div>'+
+      riskMeter()+ '<div style="margin-top:8px">'+riskHint()+'</div></div>'+
+  '</div>'+
+
+  '<div class="card"><h2>Действия ведущего</h2>'+
+    '<div class="grid g2 keep">'+
+      '<button class="btn primary block" data-act="event">🎴 Получить событие</button>'+
+      '<button class="btn gold block" data-act="dice">🎲 Экономический кубик</button>'+
+      '<button class="btn purple block" data-act="crisis">⚡ Кризисный раунд</button>'+
+      '<button class="btn blue block" data-act="challenge">🎯 Челлендж</button>'+
+      '<button class="btn green block" data-act="opp">💎 Возможность</button>'+
+      '<button class="btn block" data-act="next">➡️ Следующий раунд</button>'+
+    '</div>'+
+    '<div id="panelEvent" style="margin-top:14px"></div>'+
+  '</div>'+
+
+  '<div class="card"><h2>Настройки партии</h2>'+
+    '<div class="grid g2">'+
+      '<div><label class="fl">Режим игры</label><select id="modeSel">'+
+        MODES.map(m=>'<option value="'+m.id+'"'+(m.id===state.mode?' selected':'')+'>'+m.name+'</option>').join("")+
+      '</select><div class="small muted" style="margin-top:4px">'+esc(md.desc)+'</div></div>'+
+      '<div><label class="fl">Глобальный тренд</label><select id="trendSel">'+
+        TRENDS.map(t=>'<option value="'+t.id+'"'+(t.id===state.trendId?' selected':'')+'>'+t.name+'</option>').join("")+
+      '</select><div class="small muted" style="margin-top:4px">'+esc(tr.desc)+'</div></div>'+
+    '</div>'+
+    '<hr class="sep">'+
+    '<div class="row">'+
+      '<button class="btn sm" data-act="backup">💾 Сохранить копию</button>'+
+      '<button class="btn sm" data-act="restore">📥 Загрузить копию</button>'+
+      '<button class="btn sm red" data-act="reset">🗑️ Сбросить партию</button>'+
+    '</div>'+
+  '</div>';
+}
+function stat(k,v){ return '<div class="stat"><div class="k">'+k+'</div><div class="v">'+v+'</div></div>'; }
+/* ----- 2) Калькулятор игроков ----- */
+function viewCalc(){
+  const teamOpts = '<option value="">Без команды</option>'+state.teams.map(t=>'<option value="'+t.id+'">'+esc(t.name)+'</option>').join("");
+  let html = '<div class="card"><h2>Добавить игрока</h2>'+
+    '<div class="grid g3">'+
+      '<div><label class="fl">Имя</label><input id="newName" placeholder="Имя игрока"></div>'+
+      '<div><label class="fl">Стартовый баланс</label><input id="newCash" type="number" value="0"></div>'+
+      '<div><label class="fl">Команда</label><select id="newTeam">'+teamOpts+'</select></div>'+
+    '</div>'+
+    '<button class="btn green block" style="margin-top:10px" data-act="addPlayer">＋ Добавить игрока</button>'+
+  '</div>';
+
+  // Перевод между игроками
+  if(state.players.length>=2){
+    const pOpts = state.players.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join("");
+    html += '<div class="card"><h2>Перевод между игроками</h2>'+
+      '<div class="grid g2">'+
+        '<div><label class="fl">Отправитель</label><select id="trFrom">'+pOpts+'</select></div>'+
+        '<div><label class="fl">Получатель</label><select id="trTo">'+pOpts+'</select></div>'+
+      '</div>'+
+      '<div class="grid g2" style="margin-top:8px">'+
+        '<div><label class="fl">Сумма</label><input id="trAmount" type="number" placeholder="0"></div>'+
+        '<div><label class="fl">Комментарий</label><input id="trComment" placeholder="Причина перевода"></div>'+
+      '</div>'+
+      '<button class="btn blue block" style="margin-top:10px" data-act="transfer">↔️ Перевести</button>'+
+    '</div>';
+  }
+
+  // Массовые операции
+  if(state.players.length){
+    html += viewMassOps();
+  }
+
+  // Список игроков
+  html += '<div class="card"><div class="row spread"><h2>Игроки ('+state.players.length+')</h2>'+
+    '<span class="small muted">Общий капитал: '+fmt(totalCapital())+'</span></div>';
+  if(!state.players.length) html += '<p class="muted">Пока нет игроков. Добавьте первого выше.</p>';
+  else html += state.players.map(playerCard).join("");
+  html += '</div>';
+  return html;
+}
+
+function playerCard(p){
+  const neg = p.cash<0;
+  const tname = p.teamId? teamName(p.teamId): "Без команды";
+  const tcol = teamColor(p.teamId);
+  const tags = p.tags.length? p.tags.map(t=>'<span class="tag-chip on">'+esc(t)+'</span>').join(" "): '<span class="muted small">нет тегов</span>';
+  const recent = state.moneyHistory.filter(m=>m.playerId===p.id).slice(0,3)
+    .map(m=>'<div class="small muted">'+(m.amount>=0?'＋':'')+fmt(m.amount).replace('$','$')+' — '+esc(m.reason)+'</div>').join("") || '<div class="small muted">операций нет</div>';
+  const qbtn = (amt,cls)=>'<button class="btn-money '+cls+'" data-money="'+p.id+'" data-amt="'+amt+'">'+(amt>0?'+':'')+amt.toLocaleString("ru-RU")+'</button>';
+  return '<div class="player'+(neg?' neg':'')+'" data-pcard="'+p.id+'">'+
+    '<div class="row spread">'+
+      '<div><div class="pname">'+esc(p.name)+'</div>'+
+        '<div class="small"><span class="team-dot" style="background:'+tcol+'"></span>'+esc(tname)+'</div></div>'+
+      '<div style="text-align:right"><div class="pbal" style="color:'+(neg?'var(--red)':'var(--money)')+'">'+fmt(p.cash)+'</div>'+
+        (neg?'<div class="badge b-red">отрицательный</div>':'')+'</div>'+
+    '</div>'+
+    '<div class="grid g4 keep" style="margin-top:10px;gap:6px">'+
+      qbtn(100,'plus')+qbtn(500,'plus')+qbtn(1000,'plus')+qbtn(5000,'plus')+
+      qbtn(-100,'minus')+qbtn(-500,'minus')+qbtn(-1000,'minus')+qbtn(-5000,'minus')+
+    '</div>'+
+    // кастомная операция
+    '<div class="row" style="margin-top:8px;gap:6px">'+
+      '<input type="number" placeholder="Сумма" data-cust="'+p.id+'" style="max-width:110px">'+
+      '<select data-custop="'+p.id+'" style="max-width:120px"><option value="income">Начислить</option><option value="expense">Списать</option></select>'+
+      '<input placeholder="Комментарий" data-custr="'+p.id+'" style="flex:1;min-width:120px">'+
+      '<button class="btn sm primary" data-act="custom" data-id="'+p.id+'">Применить</button>'+
+    '</div>'+
+    '<div style="margin-top:8px">'+tags+'</div>'+
+    '<div style="margin-top:8px">'+recent+'</div>'+
+    '<div class="row" style="margin-top:8px">'+
+      '<button class="btn sm" data-act="editPlayer" data-id="'+p.id+'">✏️ Редактировать</button>'+
+      '<button class="btn sm" data-act="tagsPlayer" data-id="'+p.id+'">🏷️ Теги</button>'+
+      '<button class="btn sm red" data-act="delPlayer" data-id="'+p.id+'">🗑️ Удалить</button>'+
+    '</div>'+
+  '</div>';
+}
+
+function viewMassOps(){
+  const teamOpts = state.teams.map(t=>'<option value="'+t.id+'">'+esc(t.name)+'</option>').join("");
+  const tagOpts = PLAYER_TAGS.map(t=>'<option value="'+esc(t)+'">'+esc(t)+'</option>').join("");
+  return '<div class="card"><h2>Массовая операция</h2>'+
+    '<div class="grid g2">'+
+      '<div><label class="fl">Кому применить</label><select id="massScope">'+
+        '<option value="all">Всем игрокам</option>'+
+        '<option value="team">Команде</option>'+
+        '<option value="tag">Игрокам с тегом</option>'+
+        '<option value="selected">Выбранным вручную</option>'+
+      '</select></div>'+
+      '<div><label class="fl">Действие</label><select id="massKind">'+
+        '<option value="add">Начислить (сумма)</option>'+
+        '<option value="subtract">Списать (сумма)</option>'+
+        '<option value="set">Установить баланс</option>'+
+        '<option value="multiply">Умножить на коэффициент</option>'+
+        '<option value="percentAdd">Прибавить % наличных</option>'+
+        '<option value="percentSubtract">Списать % наличных</option>'+
+      '</select></div>'+
+    '</div>'+
+    '<div class="grid g2" style="margin-top:8px">'+
+      '<div id="massTeamWrap" class="hidden"><label class="fl">Команда</label><select id="massTeam">'+teamOpts+'</select></div>'+
+      '<div id="massTagWrap" class="hidden"><label class="fl">Тег</label><select id="massTag">'+tagOpts+'</select></div>'+
+      '<div><label class="fl">Значение (сумма / % / коэффициент)</label><input id="massVal" type="number" placeholder="напр. 1000 или 10"></div>'+
+      '<div><label class="fl">Причина</label><input id="massReason" placeholder="напр. Инфляция"></div>'+
+    '</div>'+
+    '<div id="massPickWrap" class="hidden" style="margin-top:8px"><label class="fl">Выберите игроков</label>'+
+      '<div class="pickbox" id="massPick">'+state.players.map(p=>'<label class="pick"><input type="checkbox" value="'+p.id+'" style="width:auto"> '+esc(p.name)+' ('+fmt(p.cash)+')</label>').join("")+'</div></div>'+
+    '<button class="btn primary block" style="margin-top:10px" data-act="massApply">Применить массовую операцию</button>'+
+  '</div>';
+}
+/* ----- 3) Команды ----- */
+function viewTeams(){
+  let html = '<div class="card"><h2>Создать команду</h2>'+
+    '<div class="grid g3">'+
+      '<div style="grid-column:span 2"><label class="fl">Название</label><input id="teamName" placeholder="напр. Инвесторы"></div>'+
+      '<div><label class="fl">Цвет</label><input id="teamColor" type="color" value="#14b8a6" style="height:40px;padding:3px"></div>'+
+    '</div>'+
+    '<button class="btn green block" style="margin-top:10px" data-act="addTeam">＋ Создать команду</button>'+
+  '</div>';
+
+  html += '<div class="card"><h2>Команды ('+state.teams.length+')</h2>';
+  if(!state.teams.length) html += '<p class="muted">Команд пока нет.</p>';
+  else html += state.teams.map(teamCard).join("");
+  html += '</div>';
+  return html;
+}
+function teamCard(t){
+  const mem = teamMembers(t.id);
+  const total = mem.reduce((s,p)=>s+p.cash,0);
+  const avg = mem.length? Math.round(total/mem.length): 0;
+  let rich="—", poor="—";
+  if(mem.length){
+    const sorted=[...mem].sort((a,b)=>b.cash-a.cash);
+    rich = sorted[0].name+" ("+fmt(sorted[0].cash)+")";
+    poor = sorted[sorted.length-1].name+" ("+fmt(sorted[sorted.length-1].cash)+")";
+  }
+  const memList = mem.map(p=>'<span class="tag-chip on">'+esc(p.name)+' '+fmt(p.cash)+'</span>').join(" ")||'<span class="muted small">нет участников</span>';
+  return '<div class="player" style="border-left:4px solid '+t.color+'">'+
+    '<div class="row spread"><div class="pname"><span class="team-dot" style="background:'+t.color+'"></span>'+esc(t.name)+'</div>'+
+      '<div class="pbal">'+fmt(total)+'</div></div>'+
+    '<div class="grid g3 keep" style="margin-top:8px">'+
+      stat("Участников", mem.length)+ stat("Средний баланс", fmt(avg))+ stat("Всего", fmt(total))+
+    '</div>'+
+    '<div class="small" style="margin-top:8px"><b>Лидер:</b> '+esc(rich)+' &nbsp; <b>Аутсайдер:</b> '+esc(poor)+'</div>'+
+    '<div style="margin-top:8px">'+memList+'</div>'+
+    '<div class="row" style="margin-top:10px">'+
+      '<button class="btn sm green" data-act="teamAdd" data-id="'+t.id+'">＋ Начислить команде</button>'+
+      '<button class="btn sm red" data-act="teamSub" data-id="'+t.id+'">－ Списать у команды</button>'+
+      '<button class="btn sm" data-act="teamAssign" data-id="'+t.id+'">👥 Состав</button>'+
+      '<button class="btn sm" data-act="teamEdit" data-id="'+t.id+'">✏️ Изменить</button>'+
+      '<button class="btn sm red" data-act="teamDel" data-id="'+t.id+'">🗑️ Удалить</button>'+
+    '</div>'+
+  '</div>';
+}
+
+/* ----- 4) Генератор событий ----- */
+function viewEvents(){
+  const catOpts = '<option value="all">Все категории</option>'+CATEGORIES.map(c=>'<option value="'+esc(c)+'"'+(categoryFilter===c?' selected':'')+'>'+esc(c)+'</option>').join("");
+  return '<div class="card"><h2>Генератор событий</h2>'+
+    '<div class="row" style="gap:8px">'+
+      '<select id="catFilter" style="flex:1">'+catOpts+'</select>'+
+      '<button class="btn primary" data-act="event">🎴 Получить событие</button>'+
+    '</div>'+
+    '<div class="row small muted" style="margin-top:8px">Режим: <b>'+currentMode().name+'</b> • Тренд: <b>'+currentTrend().name+'</b> • Риск: <b style="color:'+riskColor(state.riskIndex)+'">'+state.riskIndex+'</b></div>'+
+    '<div id="eventArea" style="margin-top:14px"><p class="muted">Нажмите «Получить событие», чтобы вытянуть карточку.</p></div>'+
+  '</div>';
+}
+
+// Рендер карточки события (target: "event" — в #eventArea на вкладке событий и #panelEvent на панели)
+function renderEventCard(ev, mode){
+  const area = document.getElementById("eventArea") || document.getElementById("panelEvent");
+  const panelArea = document.getElementById("panelEvent");
+  const html = eventCardHTML(ev);
+  // эффект "тасования"
+  [area, state.activeTab==="panel"?panelArea:null].filter(Boolean).forEach((el,i,arr)=>{
+    if(arr.indexOf(el)!==i) return;
+  });
+  const targetEl = document.getElementById("eventArea") || document.getElementById("panelEvent");
+  if(targetEl){
+    targetEl.innerHTML = '<div class="shuffling">🔀 Тасуем колоду событий…</div>';
+    setTimeout(()=>{ targetEl.innerHTML = html; bindEventCard(ev, targetEl); }, 450);
+  }
+}
+function eventCardHTML(ev){
+  const tm = TYPE_META[ev.type], rm = RARITY_META[ev.rarity];
+  const suit = suitablePlayers(ev);
+  const badges = [
+    '<span class="badge '+tm.badge+'">'+tm.label+'</span>',
+    '<span class="badge '+rm.badge+'">'+rm.label+'</span>',
+    '<span class="badge b-gray">'+esc(ev.category)+'</span>',
+    '<span class="badge b-gray">Влияние: '+ev.impactLevel+'</span>'
+  ];
+  if(ev.autoApplicable) badges.push('<span class="badge b-teal">Денежный эффект</span>');
+  if(ev.type==="crisis") badges.push('<span class="badge b-purple">Кризис</span>');
+  if(ev.targetRule==="all") badges.push('<span class="badge b-blue">Для всех</span>');
+
+  let suitHTML="";
+  if(suit.length) suitHTML = '<div class="small ok-box" style="margin-top:8px">Подходит для: <b>'+suit.map(p=>esc(p.name)).join(", ")+'</b></div>';
+  else if(ev.targetRule && ev.targetRule.indexOf("tag:")===0) suitHTML='<div class="small muted" style="margin-top:8px">Нет игроков с тегом «'+esc(ev.targetRule.slice(4))+'»</div>';
+
+  let choicesHTML="";
+  if(ev.choices){
+    choicesHTML = '<div style="margin-top:10px"><div class="section-title">Варианты решения</div>'+
+      ev.choices.map((c,i)=>{
+        let outc="";
+        if(c.outcomes) outc='<div class="small muted">'+c.outcomes.map(o=>esc(o.label)+' — '+o.chance+'%').join(" • ")+'</div>';
+        return '<div class="choice"><div class="row spread"><b>'+esc(c.text)+'</b>'+
+          '<button class="btn sm primary" data-choice="'+i+'">Выбрать</button></div>'+
+          (c.risk?'<div class="small muted">Риск: '+esc(c.risk)+'</div>':'')+ outc +'</div>';
+      }).join("")+'</div>';
+  }
+
+  // кнопки применения
+  let applyBtns="";
+  if(ev.moneyEffectType!=="none" && ev.moneyEffectType!=="custom" && !ev.choices){
+    applyBtns = '<div class="row" style="margin-top:10px">'+
+      '<button class="btn sm green" data-apply="player">К игроку</button>'+
+      '<button class="btn sm" data-apply="team">К команде</button>'+
+      '<button class="btn sm" data-apply="all">Ко всем</button>'+
+      (ev.targetRule.indexOf("tag:")===0?'<button class="btn sm blue" data-apply="suit">К подходящим</button>':'')+
+      '<button class="btn sm ghost" data-apply="skip">Пропустить</button>'+
+    '</div>';
+  }
+
+  return '<div class="event-card appear">'+
+    '<div class="edge" style="background:'+tm.edge+'"></div>'+
+    '<div class="row" style="gap:5px">'+badges.join(" ")+'</div>'+
+    '<div class="etitle">'+esc(ev.title)+'</div>'+
+    '<p>'+esc(ev.description)+'</p>'+
+    '<div class="small" style="margin-top:6px"><b>Кого касается:</b> '+esc(ev.appliesTo)+'</div>'+
+    (ev.effect?'<div class="small" style="margin-top:6px"><b>Эффект:</b> '+esc(ev.effect)+'</div>':'')+
+    '<div class="small muted" style="margin-top:4px">Длительность: '+esc(ev.duration)+'</div>'+
+    (ev.discussionQuestion?'<div class="small" style="margin-top:6px">💬 <i>'+esc(ev.discussionQuestion)+'</i></div>':'')+
+    suitHTML + choicesHTML + applyBtns +
+    '<div class="row" style="margin-top:10px">'+
+      '<button class="btn sm" data-evcopy="1">📋 Скопировать</button>'+
+      '<button class="btn sm primary" data-act="event">🔄 Новое событие</button>'+
+    '</div>'+
+  '</div>';
+}
+/* ----- 5) Экономическая панель ----- */
+function viewEconomy(){
+  const e = state.economy;
+  return '<div class="card"><h2>Экономическая панель</h2>'+
+    '<div class="row spread"><span class="section-title">Индекс риска</span><b style="color:'+riskColor(state.riskIndex)+'">'+state.riskIndex+'/100</b></div>'+
+    riskMeter()+'<div style="margin-top:8px">'+riskHint()+'</div>'+
+    '<hr class="sep">'+
+    econBar("Инфляция", e.inflation, false)+
+    econBar("Ключевая ставка", e.rate, false)+
+    econBar("Рынок недвижимости", e.realEstate, true)+
+    econBar("Фондовый рынок", e.stocks, true)+
+    econBar("Безработица", e.unemployment, false)+
+    econBar("Деловая активность", e.business, true)+
+    econBar("Настроение инвесторов", e.sentiment, true)+
+    '<hr class="sep">'+
+    '<div class="row">'+
+      '<button class="btn gold" data-act="dice">🎲 Бросить кубик</button>'+
+      '<button class="btn purple" data-act="crisis">⚡ Кризисный раунд</button>'+
+    '</div>'+
+  '</div>'+
+  '<div class="card"><h2>Результаты экономического кубика</h2>'+
+    '<div class="grid g3">'+DICE.map(d=>'<div class="stat"><div class="v">'+d.emoji+'</div><div class="k" style="margin-top:4px">'+d.name+'</div><div class="small muted">'+esc(d.desc)+'</div></div>').join("")+'</div>'+
+  '</div>';
+}
+
+/* ----- 6) Челленджи ----- */
+function viewChallenges(){
+  return '<div class="card"><h2>Челленджи ('+CHALLENGES.length+')</h2>'+
+    '<button class="btn primary block" data-act="challenge">🎯 Получить случайный челлендж</button>'+
+    '<div class="grid g2" style="margin-top:12px">'+CHALLENGES.map(c=>
+      '<div class="stat"><b>'+esc(c.title)+'</b><div class="small muted" style="margin:4px 0">'+esc(c.description)+'</div>'+
+      (c.reward?'<span class="badge b-green">'+esc(c.reward)+'</span> ':'')+
+      (c.canAffectMoney?'<span class="badge b-teal">Денежный</span>':'')+'</div>'
+    ).join("")+'</div>'+
+  '</div>';
+}
+
+/* ----- 7) Возможности ----- */
+function viewOpps(){
+  return '<div class="card"><h2>Карточки возможностей ('+OPPORTUNITIES.length+')</h2>'+
+    '<button class="btn blue block" data-act="opp">💎 Получить возможность</button>'+
+    '<div class="grid g2" style="margin-top:12px">'+OPPORTUNITIES.map(o=>{
+      const rm=RARITY_META[o.rarity];
+      return '<div class="stat"><div class="row spread"><b>'+esc(o.title)+'</b><span class="badge '+rm.badge+'">'+rm.label+'</span></div>'+
+      '<div class="small muted" style="margin:4px 0">'+esc(o.description)+'</div>'+
+      '<span class="badge b-blue">'+esc(o.effect)+'</span></div>';
+    }).join("")+'</div>'+
+  '</div>';
+}
+
+/* ----- 8) История ----- */
+let histFilter="all";
+function viewHistory(){
+  // Денежная история с фильтрами
+  let html = '<div class="card"><div class="row spread"><h2>История операций</h2>'+
+    '<span class="small muted">всего: '+state.moneyHistory.length+'</span></div>'+
+    '<select id="histFilter" style="margin-bottom:10px">'+
+      ['all:Все операции','income:Начисления','expense:Списания','transfer:Переводы','eventEffect:Операции событий','round:Текущий раунд']
+        .map(o=>{const[v,l]=o.split(":");return '<option value="'+v+'"'+(histFilter===v?' selected':'')+'>'+l+'</option>';}).join("")+
+    '</select>'+
+    '<div class="row" style="margin-bottom:10px">'+
+      '<button class="btn sm" data-act="copyHist">📋 Скопировать</button>'+
+      '<button class="btn sm" data-act="exportHist">📤 Экспорт в текст</button>'+
+      '<button class="btn sm red" data-act="clearMoney">🗑️ Очистить операции</button>'+
+    '</div>';
+  let ops = state.moneyHistory;
+  if(histFilter==="round") ops=ops.filter(o=>o.round===state.round);
+  else if(histFilter!=="all") ops=ops.filter(o=>o.type===histFilter);
+  if(!ops.length) html+='<p class="muted">Операций нет.</p>';
+  else html += ops.slice(0,150).map(moneyRow).join("");
+  html += '</div>';
+
+  // Общая история партии
+  html += '<div class="card"><div class="row spread"><h2>История партии</h2>'+
+    '<span class="small muted">записей: '+state.gameHistory.length+'</span></div>'+
+    '<div class="row" style="margin-bottom:10px">'+
+      '<button class="btn sm" data-act="copyGame">📋 Скопировать</button>'+
+      '<button class="btn sm" data-act="exportGame">📤 Экспорт</button>'+
+      '<button class="btn sm red" data-act="clearGame">🗑️ Очистить</button>'+
+    '</div>';
+  if(!state.gameHistory.length) html+='<p class="muted">История пуста.</p>';
+  else html += state.gameHistory.slice(0,200).map(h=>
+    '<div class="hitem"><div class="ht">'+gameIcon(h.type)+' '+esc(h.title)+'</div>'+
+    (h.desc?'<div class="small">'+esc(h.desc)+'</div>':'')+
+    '<div class="hm">#'+h.n+' • раунд '+h.round+' • '+h.time+'</div></div>').join("");
+  html += '</div>';
+  return html;
+}
+function moneyRow(m){
+  const up = m.amount>=0;
+  const col = up?'var(--green)':'var(--red)';
+  const typeLbl = {income:"Начисление",expense:"Списание",transfer:"Перевод",setBalance:"Баланс",percentChange:"% изменение",eventEffect:"Событие"}[m.type]||m.type;
+  return '<div class="hitem" style="border-left-color:'+col+'">'+
+    '<div class="row spread"><div class="ht">'+esc(m.targetName)+' <span class="small muted">('+typeLbl+')</span></div>'+
+    '<b style="color:'+col+'">'+(up?'+':'')+fmt(m.amount)+'</b></div>'+
+    '<div class="small">'+esc(m.reason)+(m.fromPlayer?' • '+esc(m.fromPlayer)+' → '+esc(m.toPlayer):'')+'</div>'+
+    '<div class="hm">'+fmt(m.balanceBefore)+' → '+fmt(m.balanceAfter)+' • раунд '+m.round+' • '+m.timestamp+'</div></div>';
+}
+function gameIcon(t){ return {event:"🎴",dice:"🎲",challenge:"🎯",opportunity:"💎",round:"➡️",player:"🙋",team:"🤝",money:"💵",decision:"🧠",achievement:"🏆"}[t]||"•"; }
+
+function historyToText(){
+  let t="CashFlow Events — история партии\nРаунд: "+state.round+"\n\n=== СОБЫТИЯ ПАРТИИ ===\n";
+  state.gameHistory.slice().reverse().forEach(h=>{ t+="#"+h.n+" [р."+h.round+", "+h.time+"] "+h.title+(h.desc?" — "+h.desc:"")+"\n"; });
+  t+="\n=== ДЕНЕЖНЫЕ ОПЕРАЦИИ ===\n";
+  state.moneyHistory.slice().reverse().forEach(m=>{ t+="["+m.timestamp+", р."+m.round+"] "+m.targetName+": "+(m.amount>=0?"+":"")+fmt(m.amount)+" ("+m.reason+") "+fmt(m.balanceBefore)+"→"+fmt(m.balanceAfter)+"\n"; });
+  return t;
+}
+
+/* ----- 9) Достижения ----- */
+function viewAch(){
+  return '<div class="card"><h2>Достижения ('+state.achievements.length+'/'+ACHIEVEMENTS.length+')</h2>'+
+    '<div class="grid g2" style="margin-top:10px">'+ACHIEVEMENTS.map(a=>{
+      const open=state.achievements.includes(a.id);
+      return '<div class="ach-card'+(open?' open':'')+'"><div class="row"><div class="ai">'+a.icon+'</div>'+
+        '<div><b>'+esc(a.title)+'</b><div class="small muted">'+esc(a.desc)+'</div></div></div>'+
+        (open?'<div class="badge b-gold" style="margin-top:6px">Открыто</div>':'<div class="badge b-gray" style="margin-top:6px">Закрыто</div>')+'</div>';
+    }).join("")+'</div></div>';
+}
+
+/* ----- 10) Правила ----- */
+function viewRules(){
+  const r = [
+    ["Когда тянуть событие","Тяните событие в начале круга или после ключевого хода — чтобы добавить динамику, но не прерывать сделки игроков."],
+    ["Как применять событие","Прочитайте карточку вслух, выберите цель (игрок / команда / все / по тегам) и нажмите кнопку применения. Денежные эффекты можно применить автоматически."],
+    ["Калькулятор игроков","Добавляйте игроков с именем и стартовым балансом. Быстрые кнопки меняют баланс, кастомная операция — с комментарием. Всё пишется в историю."],
+    ["Начисление и списание","Используйте «+/−» или массовую операцию. Отрицательный баланс подсвечивается красным — это сигнал ведущему, а не запрет."],
+    ["Команды","Создавайте команды, распределяйте игроков, применяйте к ним события и операции. Удаление команды не удаляет игроков."],
+    ["Состояние экономики","Индекс риска и показатели меняются от событий и кубика. Высокий риск (>70) повышает шанс кризисов, низкий (<30) — возможностей."],
+    ["Интерактивные решения","Для событий-решений игрок выбирает вариант. Часть вариантов — мини-игра «риск/безопасность» со случайным исходом по процентам."],
+    ["Как не сломать баланс","Адаптируйте суммы под уровень игроков. Базовые суммы рассчитаны на средний этап CashFlow — на старте уменьшайте, в конце увеличивайте."],
+    ["Если событие не подходит","Нажмите «Пропустить» или «Новое событие». Ведущий вправе заменить или смягчить эффект."],
+    ["Гибкость ведущего","Все суммы и проценты — ориентир. Ведущий может округлять, делить на команды и подстраивать под ситуацию за столом."]
+  ];
+  return '<div class="card"><h2>Правила применения</h2>'+
+    r.map((x,i)=>'<div style="margin-bottom:10px"><b>'+(i+1)+'. '+esc(x[0])+'</b><div class="small muted">'+esc(x[1])+'</div></div>').join("")+
+    '<hr class="sep"><p class="small muted">Неофициальный фанатский модуль. Все события оригинальны и не воспроизводят защищённые материалы игры CashFlow.</p>'+
+  '</div>';
+}
+/* ---------- Привязка событий интерфейса ---------- */
+// Делегирование кликов по вкладкам
+document.getElementById("tabs").addEventListener("click", e=>{
+  const b=e.target.closest("[data-tab]"); if(b) setTab(b.dataset.tab);
+});
+
+function bindView(){
+  const view = document.getElementById("view");
+
+  // Делегированный обработчик кликов
+  view.onclick = function(e){
+    const a = e.target.closest("[data-act]");
+    if(a){ handleAct(a.dataset.act, a); return; }
+    const m = e.target.closest("[data-money]");
+    if(m){ const p=byId(state.players,m.dataset.money); const amt=parseInt(m.dataset.amt,10);
+      changeMoney(p.id, Math.abs(amt), (amt>0?"Быстрое начисление":"Быстрое списание"), amt>0); return; }
+  };
+
+  // Селекты на панели
+  const modeSel=document.getElementById("modeSel");
+  if(modeSel) modeSel.onchange=()=>{ state.mode=modeSel.value; save(); render(); };
+  const trendSel=document.getElementById("trendSel");
+  if(trendSel) trendSel.onchange=()=>{ state.trendId=trendSel.value; save(); render(); };
+  const catF=document.getElementById("catFilter");
+  if(catF) catF.onchange=()=>{ categoryFilter=catF.value; };
+  const histF=document.getElementById("histFilter");
+  if(histF) histF.onchange=()=>{ histFilter=histF.value; render(); };
+
+  // Массовые операции: показать нужные поля
+  const ms=document.getElementById("massScope");
+  if(ms){
+    const upd=()=>{
+      document.getElementById("massTeamWrap").classList.toggle("hidden", ms.value!=="team");
+      document.getElementById("massTagWrap").classList.toggle("hidden", ms.value!=="tag");
+      document.getElementById("massPickWrap").classList.toggle("hidden", ms.value!=="selected");
+    };
+    ms.onchange=upd; upd();
+  }
+}
+
+// Центральный обработчик действий
+function handleAct(act, el){
+  const id = el.dataset.id;
+  switch(act){
+    case "event": drawEvent(); break;
+    case "dice": rollDice(); break;
+    case "crisis": crisisRound(); break;
+    case "challenge": drawChallenge(); break;
+    case "opp": drawOpportunity(); break;
+    case "next": nextRound(); break;
+    case "backup": backupJSON(); break;
+    case "restore": restoreJSON(); break;
+    case "reset": resetGame(); break;
+
+    case "addPlayer": {
+      const name=val("newName"), cash=parseFloat(val("newCash"))||0, team=val("newTeam")||null;
+      if(addPlayer(name, cash, team)){ /* очистка через ререндер */ }
+      break; }
+    case "transfer": transfer(val("trFrom"), val("trTo"), parseFloat(val("trAmount"))||0, val("trComment")); break;
+    case "custom": {
+      const amt=parseFloat(document.querySelector('[data-cust="'+id+'"]').value)||0;
+      const op=document.querySelector('[data-custop="'+id+'"]').value;
+      const r=document.querySelector('[data-custr="'+id+'"]').value;
+      if(!amt){ toast("⚠️ Укажите сумму"); break; }
+      changeMoney(id, amt, r||(op==="income"?"Начисление":"Списание"), op==="income");
+      break; }
+    case "editPlayer": editPlayerModal(id); break;
+    case "tagsPlayer": tagsModal(id); break;
+    case "delPlayer": {
+      const p=byId(state.players,id);
+      confirmModal("Удалить игрока?","Игрок «"+p.name+"» будет удалён. Действие записывается в историю.",()=>{deletePlayer(id);toast("🗑️ Игрок удалён");},"Удалить","red");
+      break; }
+    case "massApply": doMassApply(); break;
+
+    case "addTeam": addTeam(val("teamName"), val("teamColor")); break;
+    case "teamAdd": teamMoneyModal(id, true); break;
+    case "teamSub": teamMoneyModal(id, false); break;
+    case "teamAssign": teamAssignModal(id); break;
+    case "teamEdit": teamEditModal(id); break;
+    case "teamDel": {
+      const t=byId(state.teams,id);
+      confirmModal("Удалить команду?","Команда «"+t.name+"» будет удалена. Игроки станут «без команды».",()=>{deleteTeam(id);toast("🗑️ Команда удалена");},"Удалить","red");
+      break; }
+
+    case "copyHist": copyText(state.moneyHistory.map(m=>m.targetName+": "+(m.amount>=0?"+":"")+fmt(m.amount)+" — "+m.reason).join("\n")); toast("📋 История операций скопирована"); break;
+    case "exportHist": exportTextModal("Денежные операции", state.moneyHistory.slice().reverse().map(m=>"["+m.timestamp+"] "+m.targetName+": "+(m.amount>=0?"+":"")+fmt(m.amount)+" ("+m.reason+")").join("\n")); break;
+    case "clearMoney": confirmModal("Очистить операции?","Денежная история будет удалена.",()=>{state.moneyHistory=[];save();render();toast("🗑️ Операции очищены");},"Очистить","red"); break;
+    case "copyGame": copyText(historyToText()); toast("📋 История партии скопирована"); break;
+    case "exportGame": exportTextModal("История партии", historyToText()); break;
+    case "clearGame": confirmModal("Очистить историю партии?","Вся история партии будет удалена.",()=>{state.gameHistory=[];save();render();toast("🗑️ История очищена");},"Очистить","red"); break;
+  }
+}
+function val(id){ const el=document.getElementById(id); return el?el.value:""; }
+
+function exportTextModal(title, text){
+  modal(title, '<textarea style="min-height:240px;font-family:monospace;font-size:11px">'+esc(text)+'</textarea>',
+    [{label:"Закрыть",cls:"ghost"},{label:"Скопировать",cls:"primary",onClick:(c)=>{copyText(text);toast("📋 Скопировано");}}]);
+}
+
+// Привязка кнопок внутри карточки события
+function bindEventCard(ev, el){
+  el.querySelectorAll("[data-apply]").forEach(b=>{
+    b.onclick=()=>{
+      const mode=b.dataset.apply;
+      if(mode==="skip"){ toast("⏭️ Эффект пропущен"); logGame("event","Пропущен эффект: "+ev.title); save(); return; }
+      if(mode==="all"){ applyEventTo(ev, state.players.slice()); return; }
+      if(mode==="suit"){ applyEventTo(ev, suitablePlayers(ev)); return; }
+      if(mode==="player"){ pickPlayerThen(p=>applyEventTo(ev,[p])); return; }
+      if(mode==="team"){ pickTeamThen(tid=>applyEventTo(ev, teamMembers(tid))); return; }
+    };
+  });
+  el.querySelectorAll("[data-choice]").forEach(b=>{
+    b.onclick=()=>{
+      const c=ev.choices[parseInt(b.dataset.choice,10)];
+      const rule=c.targetRule||"player";
+      if(rule==="player"){ pickPlayerThen(p=>applyChoice(ev,c,{playerId:p.id})); }
+      else if(rule==="team"){ pickTeamThen(tid=>applyChoice(ev,c,{teamId:tid})); }
+      else applyChoice(ev,c,{});
+    };
+  });
+  const cp=el.querySelector("[data-evcopy]");
+  if(cp) cp.onclick=()=>{ copyText(ev.title+"\n"+ev.category+" • "+TYPE_META[ev.type].label+"\n"+ev.description+"\nЭффект: "+ev.effect); toast("📋 Событие скопировано"); };
+  const newBtn=el.querySelector('[data-act="event"]');
+  if(newBtn) newBtn.onclick=()=>drawEvent();
+}
+
+/* ---------- Модальные редакторы ---------- */
+function editPlayerModal(id){
+  const p=byId(state.players,id); if(!p) return;
+  const teamOpts='<option value="">Без команды</option>'+state.teams.map(t=>'<option value="'+t.id+'"'+(t.id===p.teamId?' selected':'')+'>'+esc(t.name)+'</option>').join("");
+  modal("Редактировать: "+p.name,
+    '<div class="field"><label class="fl">Имя</label><input id="ePName" value="'+esc(p.name)+'"></div>'+
+    '<div class="field"><label class="fl">Баланс</label><input id="ePCash" type="number" value="'+p.cash+'"></div>'+
+    '<div class="field"><label class="fl">Команда</label><select id="ePTeam">'+teamOpts+'</select></div>'+
+    '<div class="field"><label class="fl">Заметка</label><textarea id="ePNotes">'+esc(p.notes)+'</textarea></div>',
+    [{label:"Отмена",cls:"ghost"},{label:"Сохранить",cls:"green",onClick:(close,ov)=>{
+      updatePlayer(id,{name:ov.querySelector("#ePName").value, cash:parseFloat(ov.querySelector("#ePCash").value),
+        teamId:ov.querySelector("#ePTeam").value||null, notes:ov.querySelector("#ePNotes").value});
+      close(); toast("✅ Сохранено");
+    }}]);
+}
+function tagsModal(id){
+  const p=byId(state.players,id); if(!p) return;
+  const body='<div class="row" style="gap:6px">'+PLAYER_TAGS.map(t=>
+    '<span class="tag-chip'+(p.tags.includes(t)?' on':'')+'" data-tagtoggle="'+esc(t)+'">'+esc(t)+'</span>').join("")+'</div>';
+  const ov=modal("Теги: "+p.name, body, [{label:"Готово",cls:"primary"}]);
+  ov.querySelectorAll("[data-tagtoggle]").forEach(ch=>{
+    ch.onclick=()=>{ toggleTag(id, ch.dataset.tagtoggle); ch.classList.toggle("on"); };
+  });
+}
+function teamMoneyModal(id, isAdd){
+  const t=byId(state.teams,id); const mem=teamMembers(id);
+  if(!mem.length){ toast("⚠️ В команде нет игроков"); return; }
+  modal((isAdd?"Начислить команде: ":"Списать у команды: ")+t.name,
+    '<div class="field"><label class="fl">Тип</label><select id="tmType"><option value="amount">Фиксированная сумма каждому</option><option value="percent">Процент наличных</option></select></div>'+
+    '<div class="field"><label class="fl">Значение</label><input id="tmVal" type="number" placeholder="напр. 1000 или 10"></div>'+
+    '<div class="field"><label class="fl">Причина</label><input id="tmReason" placeholder="Причина"></div>'+
+    '<p class="small muted">Участников: '+mem.length+'</p>',
+    [{label:"Отмена",cls:"ghost"},{label:isAdd?"Начислить":"Списать",cls:isAdd?"green":"red",onClick:(close,ov)=>{
+      const type=ov.querySelector("#tmType").value, v=parseFloat(ov.querySelector("#tmVal").value)||0, r=ov.querySelector("#tmReason").value||"Командная операция";
+      let eff;
+      if(type==="amount") eff={moneyEffectType:isAdd?"add":"subtract",moneyAmount:v,opType:isAdd?"income":"expense"};
+      else eff={moneyEffectType:isAdd?"percentAdd":"percentSubtract",moneyPercent:v,opType:"percentChange"};
+      applyMoneyEffect(mem, eff, "Команда «"+t.name+"»: "+r);
+      logGame("money",(isAdd?"Начисление команде: ":"Списание у команды: ")+t.name, r+" — "+mem.length+" игроков", mem.map(x=>x.id),[id]);
+      save(); render(); close(); toast("✅ Готово");
+    }}]);
+}
+function teamAssignModal(id){
+  const t=byId(state.teams,id);
+  const body=state.players.map(p=>'<label class="pick"><input type="checkbox" value="'+p.id+'"'+(p.teamId===id?' checked':'')+' style="width:auto"> '+esc(p.name)+' <span class="muted small">('+(p.teamId?teamName(p.teamId):'без команды')+')</span></label>').join("")||'<p class="muted">Нет игроков.</p>';
+  modal("Состав команды: "+t.name, '<div class="pickbox">'+body+'</div>',
+    [{label:"Отмена",cls:"ghost"},{label:"Сохранить",cls:"primary",onClick:(close,ov)=>{
+      const checked=[...ov.querySelectorAll('input:checked')].map(c=>c.value);
+      state.players.forEach(p=>{
+        if(checked.includes(p.id)) p.teamId=id;
+        else if(p.teamId===id) p.teamId=null;
+      });
+      logGame("team","Изменён состав команды: "+t.name,"Участников: "+checked.length);
+      save(); render(); close(); toast("✅ Состав обновлён");
+    }}]);
+}
+function teamEditModal(id){
+  const t=byId(state.teams,id);
+  modal("Изменить команду",
+    '<div class="field"><label class="fl">Название</label><input id="etName" value="'+esc(t.name)+'"></div>'+
+    '<div class="field"><label class="fl">Цвет</label><input id="etColor" type="color" value="'+t.color+'" style="height:40px"></div>'+
+    '<div class="field"><label class="fl">Заметка</label><textarea id="etNotes">'+esc(t.notes)+'</textarea></div>',
+    [{label:"Отмена",cls:"ghost"},{label:"Сохранить",cls:"green",onClick:(close,ov)=>{
+      updateTeam(id,{name:ov.querySelector("#etName").value,color:ov.querySelector("#etColor").value,notes:ov.querySelector("#etNotes").value});
+      close(); toast("✅ Сохранено");
+    }}]);
+}
+
+// Применение массовой операции
+function doMassApply(){
+  const scope=val("massScope"), kind=val("massKind"), v=parseFloat(val("massVal"))||0, reason=val("massReason")||"Массовая операция";
+  let targets=[];
+  if(scope==="all") targets=state.players.slice();
+  else if(scope==="team") targets=teamMembers(val("massTeam"));
+  else if(scope==="tag") targets=state.players.filter(p=>p.tags.includes(val("massTag")));
+  else if(scope==="selected") targets=[...document.querySelectorAll('#massPick input:checked')].map(c=>byId(state.players,c.value)).filter(Boolean);
+  if(!targets.length){ toast("⚠️ Нет подходящих игроков"); return; }
+  const op={kind:kind, amount:v, percent:v, factor:v, reason:reason};
+  const labelKind={add:"начислить "+fmt(v),subtract:"списать "+fmt(v),set:"установить баланс "+fmt(v),multiply:"умножить на "+v,percentAdd:"+"+v+"%",percentSubtract:"-"+v+"%"}[kind];
+  confirmModal("Массовая операция","Применить «"+labelKind+"» к "+targets.length+" игрокам?",()=>{
+    massOperation(targets, op); toast("✅ Применено к "+targets.length+" игрокам");
+  },"Применить","primary");
+}
+
+/* ---------- 9) INIT ---------- */
+render();
+
+</script>
+</body>
+</html>

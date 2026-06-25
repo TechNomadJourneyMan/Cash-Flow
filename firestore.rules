@@ -1,0 +1,35 @@
+rules_version = '2';
+// =====================================================================
+// Firestore Security Rules — Digital Central Bank & Global Exchange
+// MVP-уровень для офлайн-игры в доверенной сети (один зал, 20 человек).
+// Доступ открыт только аутентифицированным клиентам (анонимный вход).
+// Роли (admin/banker/player) на уровне MVP проверяются в приложении по
+// PIN-коду комнаты. Для продакшена усильте правила через Custom Claims
+// и Cloud Functions (см. FIREBASE-SETUP.md, раздел «Безопасность»).
+// =====================================================================
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Любой аутентифицированный (в т.ч. анонимный) клиент работает с игрой.
+    function signedIn() { return request.auth != null; }
+
+    match /rooms/{roomCode} {
+      allow read: if signedIn();
+      // Создать комнату может любой аутентифицированный (он становится админом
+      // в рамках сессии). Изменять — тоже (PIN-гейт в приложении).
+      allow create, update: if signedIn();
+      allow delete: if signedIn();
+
+      // Все подколлекции комнаты: игроки, транзакции, история, новости,
+      // пулы, стартапы, предложения, подтверждения, кредиты, audit.
+      match /{sub=**} {
+        allow read, write: if signedIn();
+      }
+    }
+
+    // Запрет на всё остальное.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
