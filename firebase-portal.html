@@ -333,8 +333,12 @@ hr.sep{border-top-color:var(--line);margin:15px 0}
 .board .center .bt{font-family:var(--serif);font-size:min(6.5vw,32px);color:var(--acc);line-height:1.02}
 .board .center .bs{font-size:9.5px;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;margin-top:5px}
 .board .center .bring{font-size:10px;color:var(--faint);margin-top:6px}
-.cell{position:absolute;transform:translate(-50%,-50%);width:11.5%;height:11.5%;border-radius:9px;border:1px solid rgba(255,255,255,.14);
-  display:flex;align-items:center;justify-content:center;text-align:center;font-size:min(3.4vw,15px);line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.cell{position:absolute;transform:translate(-50%,-50%);width:12%;height:12%;border-radius:9px;border:1px solid rgba(255,255,255,.14);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;text-align:center;line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.35);overflow:hidden;padding:1px;color:#fff}
+.cell .ci .ic{display:block}.cell .ci svg{width:min(3.2vw,15px);height:min(3.2vw,15px);display:block}
+.cell .cn{font-size:min(1.5vw,7px);font-weight:700;line-height:1.02;max-width:100%;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.02em;opacity:.95}
+.cell.dreamcell{box-shadow:0 0 0 2px var(--gold),0 2px 8px rgba(0,0,0,.5)}
+.toklayer{position:absolute;inset:0;pointer-events:none}
 .cell.c-payday{background:linear-gradient(135deg,#16a34a,#22c55e)}
 .cell.c-deal{background:linear-gradient(135deg,#b8860b,#e3c089);color:#211700}
 .cell.c-market{background:linear-gradient(135deg,#2563eb,#7ca2ff)}
@@ -347,9 +351,10 @@ hr.sep{border-top-color:var(--line);margin:15px 0}
 .cell.c-dream{background:linear-gradient(135deg,#a16207,#ecd368);color:#241f00}
 .cell.c-tax{background:linear-gradient(135deg,#9f1239,#f5798c)}
 .cell.c-div{background:linear-gradient(135deg,#1d4ed8,#7ca2ff)}
-.tok{position:absolute;transform:translate(-50%,-50%);width:23px;height:23px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-size:9px;font-weight:800;color:#fff;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 7px rgba(0,0,0,.6);z-index:6;
-  transition:left .18s cubic-bezier(.4,1.3,.5,1),top .18s cubic-bezier(.4,1.3,.5,1)}
+.tok{position:absolute;transform:translate(-50%,-50%);width:var(--toksz,22px);height:var(--toksz,22px);border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:auto;
+  font-size:calc(var(--toksz,22px) * .4);font-weight:800;color:#fff;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 7px rgba(0,0,0,.6);z-index:6;
+  transition:left .2s cubic-bezier(.4,1.2,.5,1),top .2s cubic-bezier(.4,1.2,.5,1)}
+.tok.skip{opacity:.5;filter:grayscale(.6)}
 .tok.me{outline:2px solid var(--acc);outline-offset:1px}
 .tok.ready{box-shadow:0 0 0 3px rgba(98,212,160,.75),0 2px 7px rgba(0,0,0,.6);animation:readyPulse 1.4s infinite}
 @keyframes readyPulse{50%{box-shadow:0 0 0 7px rgba(98,212,160,.22),0 2px 7px rgba(0,0,0,.6)}}
@@ -364,7 +369,7 @@ hr.sep{border-top-color:var(--line);margin:15px 0}
 .exq{padding:11px;margin-bottom:0}
 .exq .price{font-size:17px}
 .exq .spark{height:26px}
-@media(max-width:520px){.tok{width:18px;height:18px;font-size:8px}.cell{width:12.5%;height:12.5%;font-size:12px}}
+@media(max-width:520px){.cell{width:13%;height:13%}.cell .cn{font-size:6px}}
 /* ===== Бланк игрока (финансовый отчёт) ===== */
 .stmt .sec{display:flex;align-items:center;gap:8px;margin:14px 0 6px}
 .stmt .sn{min-width:22px;height:22px;padding:0 5px;border-radius:6px;background:var(--acc);color:#1a1300;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:12px}
@@ -683,6 +688,11 @@ const ICONS={
   scale:'<path d="M12 3v18M7 21h10M12 5 5 8M12 5l7 3M5 8 2.5 13a3 3 0 0 0 5 0zM19 8l-2.5 5a3 3 0 0 0 5 0z"/>',
   warning:'<path d="M12 3 2.5 20h19z"/><path d="M12 10v5M12 18h.01"/>',
   crown:'<path d="M3 7l4 4 5-6 5 6 4-4-2 13H5z"/>',
+  heart:'<path d="M12 20.5 4.4 13a4.6 4.6 0 0 1 6.4-6.6l1.2 1.1 1.2-1.1a4.6 4.6 0 0 1 6.4 6.6z"/>',
+  baby:'<circle cx="12" cy="5.5" r="2.5"/><path d="M8 11a4 4 0 0 1 8 0M9 14l-1.8 6M15 14l1.8 6M9 16.5h6"/>',
+  cart:'<circle cx="9.5" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/><path d="M2.5 3H5l2.2 12h10l2-8H6.2"/>',
+  building:'<rect x="5" y="3" width="14" height="18" rx="1.2"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M10 21v-3h4v3"/>',
+  star:'<path d="M12 3.2l2.6 5.5 6 .8-4.4 4.2 1.1 6L12 17.9 6.7 19.7l1.1-6L3.4 9.5l6-.8z"/>',
   dot:'<circle cx="12" cy="12" r="4"/>'
 };
 const EMO={'🏛':'bank','🏦':'bank','🎛':'dashboard','🧮':'calculator','🧾':'receipt','🤝':'teams','🪑':'table','🎴':'layers','📊':'chart','🧩':'puzzle','🚀':'rocket','💳':'card','📜':'scroll','⚙':'gear','📖':'book','👥':'users','⚡':'bolt','✅':'check','💵':'banknote','💼':'briefcase','📝':'note','📰':'newspaper','👤':'user','🔗':'link','💱':'refresh','🔄':'refresh','🗑':'trash','✏':'pencil','🏷':'tag','🎯':'target','💎':'gem','🎲':'dice','📈':'up','📉':'down','➡':'arrowr','📢':'megaphone','🔀':'shuffle','🧠':'bulb','🙋':'userplus','🔥':'flame','🌿':'leaf','❌':'xcircle','🔒':'lock','🔑':'key','🔌':'plug','⏳':'clock','💾':'save','💰':'coins','🏆':'trophy','🎬':'film','🌪':'tornado','🌊':'waves','🌉':'link','🛢':'droplet','⚖':'scale','⚠':'warning','👑':'crown'};
@@ -1165,20 +1175,22 @@ function patchExchangePrices(){
 function priceStampText(){let t=null;try{const ts=M.room&&M.room.lastPriceUpdate;t=ts&&ts.toDate?ts.toDate():null;}catch(e){}return "обновлено "+(t?t.toLocaleTimeString("ru-RU"):"—");}
 function updatePriceStamp(){const el=document.getElementById("priceStamp");if(el)el.textContent=priceStampText();}
 
+// Обновляет DOM только если разметка реально изменилась — убирает лишние перерисовки и мерцание/затемнение экрана
+function setHTML(el,html){if(!el)return;html=iconize(html);if(el.__h===html)return;el.__h=html;el.innerHTML=html;}
 function render(){
   const view=document.getElementById("view"),top=document.getElementById("topbar"),nav=document.getElementById("bottomNav");
-  const SV=h=>view.innerHTML=iconize(h);
-  if(!CONFIG_OK){top.innerHTML="";nav.innerHTML="";SV(configError());return;}
-  if(!session.code){top.innerHTML="";nav.innerHTML="";SV(authView());bindView();return;}
-  if(!M.room){top.innerHTML="";nav.innerHTML="";SV('<div class="card center" style="margin-top:40px">⏳ Загрузка комнаты «'+esc(session.code)+'»…<br><button class="btn ghost" style="margin-top:12px" data-act="leave">Выйти</button></div>');bindView();return;}
+  const SV=h=>setHTML(view,h);
+  if(!CONFIG_OK){setHTML(top,"");setHTML(nav,"");SV(configError());return;}
+  if(!session.code){setHTML(top,"");setHTML(nav,"");SV(authView());bindView();return;}
+  if(!M.room){setHTML(top,"");setHTML(nav,"");SV('<div class="card center" style="margin-top:40px">⏳ Загрузка комнаты «'+esc(session.code)+'»…<br><button class="btn ghost" style="margin-top:12px" data-act="leave">Выйти</button></div>');bindView();return;}
   // живая роль: участник получает роль из своего документа (админ может повысить до банкира/аудитора онлайн)
   if(session.uid){const u=uid(session.uid);if(u)session.role=u.role||"player";}
-  if(session.uid&&!uid(session.uid)){renderTopbar();nav.innerHTML="";SV('<div class="card center" style="margin-top:30px">Профиль не найден.<br><button class="btn ghost" style="margin-top:10px" data-act="leave">Выйти</button></div>');bindView();return;}
-  if(session.role==="player"&&session.uid&&!(uid(session.uid).tableId)){renderTopbar();nav.innerHTML="";SV(joinPlayerView());bindView();return;}
+  if(session.uid&&!uid(session.uid)){renderTopbar();setHTML(nav,"");SV('<div class="card center" style="margin-top:30px">Профиль не найден.<br><button class="btn ghost" style="margin-top:10px" data-act="leave">Выйти</button></div>');bindView();return;}
+  if(session.role==="player"&&session.uid&&!(uid(session.uid).tableId)){renderTopbar();setHTML(nav,"");SV(joinPlayerView());bindView();return;}
   renderTopbar();
-  if(session.role==="admin"){renderTabsBar(ADMIN_TABS);SV(adminView());nav.innerHTML="";}
-  else if(session.role==="banker"){renderTabsBar(BANKER_TABS);SV(bankerView());nav.innerHTML="";}
-  else if(session.role==="auditor"){renderTabsBar(AUDITOR_TABS);SV(auditorView());nav.innerHTML="";}
+  if(session.role==="admin"){renderTabsBar(ADMIN_TABS);SV(adminView());setHTML(nav,"");}
+  else if(session.role==="banker"){renderTabsBar(BANKER_TABS);SV(bankerView());setHTML(nav,"");}
+  else if(session.role==="auditor"){renderTabsBar(AUDITOR_TABS);SV(auditorView());setHTML(nav,"");}
   else{SV(playerView());renderNav();}
   bindView();
 }
@@ -1186,7 +1198,7 @@ function configError(){return '<div class="card" style="max-width:560px;margin:3
 function renderTopbar(){
   const e=room().economy||{};
   let tabs=(session.role==="player")?"":'<div class="tabs" id="tabs"></div>';
-  document.getElementById("topbar").innerHTML=iconize(
+  setHTML(document.getElementById("topbar"),
     '<div class="tb-main"><div class="logo">🏛️</div><div><div class="tb-title">'+esc(room().name||"Комната")+'</div><div class="tb-sub">'+esc(CODE)+' · '+({admin:"Гейм-мастер",banker:"Банкир",player:"Игрок"}[session.role])+'</div></div>'+
     '<span class="rt live" id="rtBadge">realtime</span>'+
     (session.role==="admin"||session.role==="banker"?'<button class="iconbtn" data-act="shareRoom" title="Пригласить">🔗</button>':'')+
@@ -1199,8 +1211,8 @@ function renderTopbar(){
       (session.role!=="player"?'<span class="chip">Капитал <b>'+fmt(totalCapital())+'</b></span>':'')+
     '</div>'+tabs);
 }
-function renderTabsBar(t){const el=document.getElementById("tabs");if(el)el.innerHTML=iconize(t.map(x=>'<button class="tab'+(session.tab[session.role]===x[0]?' on':'')+'" data-tab="'+x[0]+'">'+x[1]+'</button>').join(""));}
-function renderNav(){const n=document.getElementById("bottomNav");n.className="bottomnav";n.innerHTML=iconize(PLAYER_NAV.map(x=>'<div class="bn'+(session.tab.player===x[0]?' on':'')+'" data-tab="'+x[0]+'">'+x[1]+'<span style="display:block">'+x[2]+'</span></div>').join(""));}
+function renderTabsBar(t){const el=document.getElementById("tabs");if(el)setHTML(el,t.map(x=>'<button class="tab'+(session.tab[session.role]===x[0]?' on':'')+'" data-tab="'+x[0]+'">'+x[1]+'</button>').join(""));}
+function renderNav(){const n=document.getElementById("bottomNav");n.className="bottomnav";setHTML(n,PLAYER_NAV.map(x=>'<div class="bn'+(session.tab.player===x[0]?' on':'')+'" data-tab="'+x[0]+'">'+x[1]+'<span style="display:block">'+x[2]+'</span></div>').join(""));}
 
 /* ----- AUTH ----- */
 function brandHeader(sub){return '<div class="card center"><div class="logo" style="font-size:32px">🏛️</div><h2 style="font-family:var(--serif);font-weight:400;font-size:31px;letter-spacing:.3px">Cash-Flow 2.0</h2><p class="small muted">'+sub+'</p></div>';}
@@ -1425,48 +1437,67 @@ function bankerView(){const t=session.tab.banker,tid=session.tableId||(tables()[
 const RAT_CELLS=["start","deal","expense","market","deal","payday","deal","charity","expense","deal","market","payday","baby","deal","expense","downsized"];
 const FAST_CELLS=["biz","dream","div","tax","biz","dream","charity","div","biz","dream","tax","div","biz","dream","div","charity","biz","dream","tax","div","biz","dream","div","tax"];
 const CELL_META={
-  start:{icon:"▶",label:"Старт",cls:"c-start"},payday:{icon:"💵",label:"Получка",cls:"c-payday"},
-  deal:{icon:"💎",label:"Сделка",cls:"c-deal"},market:{icon:"📊",label:"Рынок",cls:"c-market"},
-  expense:{icon:"🛒",label:"Расходы",cls:"c-expense"},charity:{icon:"❤️",label:"Благотвор.",cls:"c-charity"},
-  baby:{icon:"👶",label:"Ребёнок",cls:"c-baby"},downsized:{icon:"⚠️",label:"Увольнение",cls:"c-downsized"},
-  biz:{icon:"🏢",label:"Бизнес",cls:"c-biz"},dream:{icon:"⭐",label:"Мечта",cls:"c-dream"},
-  tax:{icon:"🧾",label:"Налог",cls:"c-tax"},div:{icon:"📈",label:"Дивиденды",cls:"c-div"}
+  start:{ic:"target",label:"Старт",cls:"c-start"},payday:{ic:"banknote",label:"Получка",cls:"c-payday"},
+  deal:{ic:"gem",label:"Сделка",cls:"c-deal"},market:{ic:"chart",label:"Рынок",cls:"c-market"},
+  expense:{ic:"cart",label:"Расходы",cls:"c-expense"},charity:{ic:"heart",label:"Благотвор.",cls:"c-charity"},
+  baby:{ic:"baby",label:"Ребёнок",cls:"c-baby"},downsized:{ic:"warning",label:"Увольнение",cls:"c-downsized"},
+  biz:{ic:"building",label:"Бизнес",cls:"c-biz"},dream:{ic:"star",label:"Мечта",cls:"c-dream"},
+  tax:{ic:"receipt",label:"Налог",cls:"c-tax"},div:{ic:"up",label:"Дивиденды",cls:"c-div"}
 };
 function boardCells(track){return track==="fasttrack"?FAST_CELLS:RAT_CELLS;}
 function cellCenter(track,i){const n=boardCells(track).length,R=track==="fasttrack"?43:26;const ang=(i/n)*2*Math.PI-Math.PI/2;return{x:50+R*Math.cos(ang),y:50+R*Math.sin(ang)};}
 function initials(name){return String(name||"?").trim().slice(0,2).toUpperCase();}
 function tokenColor(p){if(p.teamId){const c=teamColor(p.teamId);if(c)return c;}const pal=["#7ca2ff","#62d4a0","#e9b15c","#f5798c","#b9a0ff","#5fd4c2","#ecd368"];let h=0;const s=String(p.id||p.name||"x");for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return pal[h%pal.length];}
-function ringCellsHTML(track){return boardCells(track).map((t,i)=>{const c=cellCenter(track,i),m=CELL_META[t]||CELL_META.deal;return '<div class="cell '+m.cls+'" id="cell-'+track+'-'+i+'" title="'+esc(m.label)+'" style="left:'+c.x.toFixed(2)+'%;top:'+c.y.toFixed(2)+'%">'+m.icon+'</div>';}).join("");}
-function tokenLayerHTML(ps){
+function dreamAt(track,i){const d=(room().dreams||{})[track+":"+i];return d||null;} // мечта на клетке: {ownerId, ownerName, name}
+function ringCellsHTML(track){return boardCells(track).map((t,i)=>{
+  const c=cellCenter(track,i),m=CELL_META[t]||CELL_META.deal,dr=dreamAt(track,i);
+  const iconName=dr?"star":m.ic, cls=dr?"c-dream dreamcell":m.cls, label=dr?("Мечта: "+dr.name):m.label;
+  return '<div class="cell '+cls+'" id="cell-'+track+'-'+i+'" title="'+esc(label)+'" style="left:'+c.x.toFixed(2)+'%;top:'+c.y.toFixed(2)+'%"><span class="ci">'+ic(iconName)+'</span><span class="cn">'+esc(dr?dr.name:m.label)+'</span></div>';
+}).join("");}
+// Раскладка нескольких фигурок на одной клетке (масштаб под 2..50 игроков)
+function tokenSpread(n){return Math.min(8,2.6+(n-1)*0.6);}
+// Фигурки рисуются в отдельном слое и ПАТЧАТСЯ (не пересоздаются) — плавное движение и без мерцания поля
+function syncBoardTokens(){
+  const layer=document.getElementById("tokenLayer");if(!layer)return;
+  const ps=players();
   const groups={};ps.forEach(p=>{const key=(p.track||"ratrace")+":"+(p.pos||0);(groups[key]=groups[key]||[]).push(p);});
-  let html="";
-  Object.keys(groups).forEach(key=>{const parts=key.split(":"),track=parts[0],pos=+parts[1],arr=groups[key],c=cellCenter(track,pos);
-    arr.forEach((p,k)=>{let dx=0,dy=0;if(arr.length>1){const a=(k/arr.length)*2*Math.PI;dx=3.2*Math.cos(a);dy=3.2*Math.sin(a);}
-      const st=outerStatus(p),extra=(p.id===session.uid?" me":"")+(st.outer?" outer":(st.ready?" ready":""))+((p.investorStatus&&p.investorStatus!=="none")?" investor":"");
-      html+='<span class="tok'+extra+'" data-token="'+p.id+'" style="left:'+(c.x+dx).toFixed(2)+'%;top:'+(c.y+dy).toFixed(2)+'%;background:'+tokenColor(p)+'" title="'+esc(p.name)+'">'+esc(initials(p.name))+'</span>';});
+  const seen={};
+  ps.forEach(p=>{const track=p.track||"ratrace",pos=p.pos||0,arr=groups[track+":"+pos],k=arr.indexOf(p),c=cellCenter(track,pos);
+    let dx=0,dy=0;if(arr.length>1){const a=(k/arr.length)*2*Math.PI,r=tokenSpread(arr.length);dx=r*Math.cos(a);dy=r*Math.sin(a);}
+    const st=outerStatus(p),cls="tok"+(p.id===session.uid?" me":"")+(st.outer?" outer":(st.ready?" ready":""))+((p.investorStatus&&p.investorStatus!=="none")?" investor":"")+((p.skipTurns||0)>0?" skip":"");
+    let el=layer.querySelector('[data-token="'+p.id+'"]');
+    if(!el){el=document.createElement("span");el.setAttribute("data-token",p.id);el.textContent=initials(p.name);layer.appendChild(el);}
+    if(el.className!==cls)el.className=cls;el.title=p.name;el.style.background=tokenColor(p);el.style.left=(c.x+dx).toFixed(2)+"%";el.style.top=(c.y+dy).toFixed(2)+"%";
+    seen[p.id]=1;
   });
-  return html;
+  Array.from(layer.children).forEach(el=>{if(!seen[el.getAttribute("data-token")])el.remove();});
+  layer.style.setProperty("--toksz",(ps.length>28?14:ps.length>16?17:ps.length>8?20:23)+"px"); // размер фигурок под число игроков
 }
-function boardLegend(){return '<div class="legend">'+["payday","deal","market","expense","charity","baby","downsized","biz","dream","div","tax"].map(k=>{const m=CELL_META[k];return '<span>'+m.icon+' '+m.label+'</span>';}).join("")+'</div>';}
+function boardLegend(){return '<div class="legend">'+["payday","deal","market","expense","charity","baby","downsized","biz","dream","div","tax"].map(k=>{const m=CELL_META[k];return '<span>'+ic(m.ic)+' '+m.label+'</span>';}).join("")+'</div>';}
 function boardView(canRollId){
   const ps=players(),me=canRollId?uid(canRollId):null;
   const board='<div class="board">'+ringCellsHTML("fasttrack")+ringCellsHTML("ratrace")+
     '<div class="center"><div class="bt">Cash-Flow</div><div class="bs">виртуальное поле</div><div class="bring">внутри — крысиные бега · снаружи — скоростная дорожка</div></div>'+
-    tokenLayerHTML(ps)+'</div>';
-  const face='<div class="dice-face" id="diceFace">'+(_lastRoll||"🎲")+'</div>';
-  let controls='';
+    '<div class="toklayer" id="tokenLayer"></div></div>';
+  const face='<div class="dice-face" id="diceFace">'+(_lastRoll||ic("dice"))+'</div>';
+  const curId=currentTurnId(),curName=(uid(curId)||{}).name||"—";
+  const turnBar=ps.length?'<div class="small" style="text-align:center;margin-bottom:4px">Ход: <b style="color:var(--acc)">'+esc(curName)+'</b> · бросков '+rollsUsed()+'/'+(curId?maxRolls(uid(curId)):1)+'</div>':'';
+  let controls=turnBar;
   if(session.role==="admin"&&ps.length){
-    controls='<div class="row" style="gap:8px;justify-content:center;align-items:center;flex-wrap:wrap">'+face+
-      '<select id="boardRollWho" style="max-width:150px">'+ps.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join("")+'</select>'+
+    controls+='<div class="row" style="gap:8px;justify-content:center;align-items:center;flex-wrap:wrap">'+face+
+      '<select id="boardRollWho" style="max-width:150px">'+ps.map(p=>'<option value="'+p.id+'"'+(p.id===curId?' selected':'')+'>'+esc(p.name)+'</option>').join("")+'</select>'+
       '<button class="btn gold" data-act="moveDice">🎲 Бросить</button>'+
+      '<button class="btn" data-act="nextTurn">⏭ Следующий ход</button>'+
       '<button class="btn" data-act="adminOuter">🏁 На внешний круг</button></div>';
   } else if(me){
-    const st=outerStatus(me);
-    controls='<div class="row" style="gap:10px;justify-content:center;align-items:center;flex-wrap:wrap">'+face+
-      '<button class="btn gold" data-act="moveDice" data-id="'+me.id+'">🎲 Бросить кубик</button>'+
-      (st.outer?'<button class="btn teal" data-act="invest">🤝 Инвестировать в игрока</button>':(st.ready?'<button class="btn green" data-act="outerExit">🏁 Выйти на внешний круг</button>':''))+'</div>'+
+    const st=outerStatus(me),myTurn=curId===me.id,skip=(me.skipTurns||0)>0,canR=canRoll(me.id);
+    const mainBtn=(skip&&myTurn)
+      ? '<button class="btn" data-act="skipTurn" data-id="'+me.id+'">⏭ Пропустить ход ('+me.skipTurns+')</button>'
+      : '<button class="btn gold" data-act="moveDice" data-id="'+me.id+'"'+(canR?'':' disabled')+'>🎲 Бросить кубик</button>'+(myTurn&&!skip?'<button class="btn ghost" data-act="endTurn" data-id="'+me.id+'">Завершить ход</button>':'');
+    controls+='<div class="row" style="gap:8px;justify-content:center;align-items:center;flex-wrap:wrap">'+face+mainBtn+
+      (st.outer?'<button class="btn teal" data-act="invest">🤝 Инвестировать</button>':(st.ready?'<button class="btn green" data-act="outerExit">🏁 На внешний круг</button>':''))+'</div>'+
       '<div class="row" style="justify-content:center;margin-top:4px"><span class="badge '+st.cls+'">'+st.label+'</span></div>'+
-      '<div class="small muted" style="text-align:center">'+esc(me.name)+' · клетка '+((me.pos||0)+1)+' из '+boardCells(me.track||"ratrace").length+(me.investorStatus&&me.investorStatus!=="none"?' · инвестор':'')+'</div>';
+      '<div class="small muted" style="text-align:center">'+esc(me.name)+' · клетка '+((me.pos||0)+1)+' из '+boardCells(me.track||"ratrace").length+(myTurn?' · ваш ход':' · ждите свой ход')+'</div>';
   }
   return '<div class="card"><div class="row spread"><h2>🗺️ Виртуальное поле</h2><span class="small muted">'+ps.length+' игроков</span></div>'+
     '<div class="board-wrap">'+board+controls+boardLegend()+'</div>'+
@@ -1474,21 +1505,77 @@ function boardView(canRollId){
     investmentsPanel();
 }
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-// Бросок кубика (1–6) и пошаговое перемещение фигурки с закольцовкой. Кнопка блокируется на время анимации.
-async function rollMoveDice(id){
-  if(_rolling)return;_rolling=true;
+
+/* ---------- ОЧЕРЁДНОСТЬ ХОДОВ ---------- */
+function turnList(){return players().slice().sort((a,b)=>String(a.id).localeCompare(String(b.id)));} // стабильный порядок
+function currentTurnId(){const t=room().turn||{};if(t.id&&uid(t.id))return t.id;const l=turnList();return l.length?l[0].id:null;}
+function maxRolls(u){return charityBonusActive(u)?2:1;}          // 2 броска, если действует бонус благотворительности
+function rollsUsed(){return (room().turn||{}).rolls||0;}
+function canRoll(id){if(id!==currentTurnId())return false;const u=uid(id);if(!u||(u.skipTurns||0)>0)return false;return rollsUsed()<maxRolls(u);}
+async function advanceTurn(){
+  const l=turnList();if(!l.length){await updateRoom({turn:{id:null,rolls:0}});return;}
+  const cur=currentTurnId();let idx=l.findIndex(p=>p.id===cur);if(idx<0)idx=0;
+  for(let step=1;step<=l.length;step++){const cand=l[(idx+step)%l.length],cu=uid(cand.id);
+    if((cu.skipTurns||0)>0){await commitUser(cand.id,{skipTurns:(cu.skipTurns||0)-1});addHistory("board","Пропуск хода: "+cand.name);continue;}
+    await updateRoom({turn:{id:cand.id,rolls:0}});return;}
+  await updateRoom({turn:{id:l[0].id,rolls:0}}); // все пропускают — просто на первого
+}
+async function useRoll(id){const u=uid(id),used=rollsUsed()+1;if(used>=maxRolls(u)){await advanceTurn();}else{await updateRoom({turn:{id,rolls:used}});}}
+async function skipTurn(id){const u=uid(id);await commitUser(id,{skipTurns:Math.max(0,(u.skipTurns||0)-1)});await advanceTurn();toast("⏭ Ход пропущен");}
+
+/* ---------- ГЛОБАЛЬНЫЕ СОБЫТИЯ ПОЛЯ (pop-up для всех) ---------- */
+async function broadcastEvent(title,body,opts){opts=opts||{};await updateRoom({boardEvent:{id:"be"+Date.now()+Math.floor(Math.random()*1e4),title,body,playerId:opts.playerId||null,kind:opts.kind||"info"}});}
+let _lastBoardEventId=null;
+function maybeShowBoardEvent(){
+  const be=room().boardEvent;if(!be||!be.id||be.id===_lastBoardEventId)return;_lastBoardEventId=be.id;
+  const mine=be.playerId&&be.playerId===session.uid;
+  let buttons=[{label:"Ок",cls:"primary"}];
+  if(be.kind==="baby"&&mine)buttons=[{label:"🎲 Проверить прибавление",cls:"gold",onClick:c=>{c();resolveBaby(session.uid);}}];
+  modal(be.title,'<div>'+be.body+'</div>'+(mine?'':'<p class="small muted" style="margin-top:8px">Событие у игрока — вы наблюдаете.</p>'),buttons,"fs-event");
+}
+
+/* ---------- СОБЫТИЯ КЛЕТОК ---------- */
+async function creditPayday(id,times){const u=uid(id),cf=playerCashflow(u),amount=cf*times;if(amount!==0)await changeBalance(id,amount,"payday","Расчётный чек — денежный поток с бланка"+(times>1?" ×"+times:""));broadcastEvent("Расчётный чек",esc(u.name)+" прошёл «Получку» и получил денежный поток <b>"+(amount>=0?"+":"")+fmt(amount)+"</b> (с бланка).",{playerId:id,kind:"payday"});}
+function resolveBaby(id){const u=uid(id),r=Math.random(),kids=r<0.25?0:r<0.75?1:2; // 25% нет · 50% один · 25% двойня
+  if(kids>0){const s=JSON.parse(JSON.stringify(sheetOf(u)));s.children=(s.children||0)+kids;commitUser(id,{sheet:s});}
+  broadcastEvent("Пополнение в семье",esc(u.name)+(kids===0?" — в этот раз без прибавления.":kids===2?" — <b>двойня!</b> +2 ребёнка, расходы на детей выросли.":" — родился ребёнок! <b>+1</b>, расходы на детей выросли."),{playerId:id,kind:"babyResult"});}
+async function handleDreamLanding(id,track,pos){const dr=dreamAt(track,pos),u=uid(id);
+  if(!dr){broadcastEvent("Мечта",esc(u.name)+" на клетке мечты.",{playerId:id,kind:"dream"});return;}
+  if(dr.ownerId===id)broadcastEvent("Ваша мечта",esc(u.name)+" дошёл до своей мечты «"+esc(dr.name)+"»!",{playerId:id,kind:"dream"});
+  else broadcastEvent("Чужая мечта",esc(u.name)+" попал на мечту «"+esc(dr.name)+"» игрока "+esc(dr.ownerName)+". Цена покупки для него <b>удвоена</b>: "+fmt((dr.cost||50000)*2)+".",{playerId:id,kind:"dreamOther"});}
+async function handleLanding(id,track,pos,type){
+  const u=uid(id);
+  if(type==="payday")return;                                    // начислено через проход
+  if(type==="baby"){broadcastEvent("Клетка «Ребёнок»",esc(u.name)+" попал на «Ребёнок». Нажмите кнопку, чтобы узнать прибавление.",{playerId:id,kind:"baby"});return;}
+  if(type==="deal"){const small=(u.balance||0)<20000;broadcastEvent(small?"Мелкая сделка":"Крупная сделка",esc(u.name)+" на «Сделке». "+(small?"Баланс меньше $20 000 → тяните карточку <b>МЕЛКОЙ</b> сделки.":"Тяните карточку <b>КРУПНОЙ</b> сделки.")+" (карточка в реальности)",{playerId:id,kind:"deal"});return;}
+  if(type==="market"){broadcastEvent("Рынок",esc(u.name)+" на «Рынке». Тяните карточку <b>РЫНКА</b> в реальности — предложение купить/продать актив.",{playerId:id,kind:"market"});return;}
+  if(type==="expense"){broadcastEvent("Расходы",esc(u.name)+" на «Расходах». Тяните карточку <b>РАСХОДОВ</b> в реальности и оплатите.",{playerId:id,kind:"expense"});return;}
+  if(type==="charity"){broadcastEvent("Благотворительность",esc(u.name)+" на «Благотворительности» — можно пожертвовать 10% и получить 2 броска на 3 раунда.",{playerId:id,kind:"charity"});return;}
+  if(type==="downsized"){const exp=playerExpensesTotal(u);if(exp>0)await changeBalance(id,-exp,"downsized","Увольнение: списание общих расходов");await commitUser(id,{skipTurns:2});broadcastEvent("Увольнение",esc(u.name)+" уволен: <b>пропускает 2 хода</b> и оплачивает общие расходы "+fmt(exp)+".",{playerId:id,kind:"downsized"});return;}
+  if(type==="dream"){await handleDreamLanding(id,track,pos);return;}
+  const m=CELL_META[type]||CELL_META.deal;broadcastEvent(m.label,esc(u.name)+" попал на «"+m.label+"».",{playerId:id,kind:type});
+}
+
+// Бросок кубика (1–6) с пошаговой анимацией, закольцовкой, начислением «Получки» при проходе и событием клетки.
+async function rollMoveDice(id,adminForce){
+  if(_rolling)return;
+  const u=uid(id);if(!u)return;
+  if(!adminForce&&!canRoll(id)){toast((u.skipTurns||0)>0?"⏭ Пропуск хода":"⚠️ Сейчас не ваш ход","warn");return;}
+  _rolling=true;
   try{
-    const u=uid(id);if(!u)return;
-    const track=u.track||"ratrace",n=boardCells(track).length;
+    const track=u.track||"ratrace",cells=boardCells(track),n=cells.length;
     const roll=1+Math.floor(Math.random()*6);_lastRoll=roll;
     const face=document.getElementById("diceFace");if(face){face.textContent=roll;face.classList.remove("roll");void face.offsetWidth;face.classList.add("roll");}
-    let cur=u.pos||0;const tokenEl=document.querySelector('[data-token="'+id+'"]');
-    for(let s=0;s<roll;s++){cur=(cur+1)%n;/* закольцовка: с последней клетки на первую */if(tokenEl){const c=cellCenter(track,cur);tokenEl.style.left=c.x.toFixed(2)+"%";tokenEl.style.top=c.y.toFixed(2)+"%";}await sleep(200);}
-    _rolling=false;                                   // разблокируем ДО commit, чтобы перерисовка прошла
-    await commitUser(id,{pos:cur,track});             // сохраняем позицию
-    const m=CELL_META[boardCells(track)[cur]];
+    let cur=u.pos||0,passedPayday=0;const tokenEl=document.querySelector('[data-token="'+id+'"]');
+    for(let s=0;s<roll;s++){cur=(cur+1)%n;if(cells[cur]==="payday")passedPayday++;if(tokenEl){const c=cellCenter(track,cur);tokenEl.style.left=c.x.toFixed(2)+"%";tokenEl.style.top=c.y.toFixed(2)+"%";}await sleep(200);}
+    _rolling=false;
+    await commitUser(id,{pos:cur,track});
+    const landed=cells[cur],m=CELL_META[landed];
     addHistory("board","🎲 "+u.name+": "+roll,"клетка «"+m.label+"»");
-    toast("🎲 "+roll+" → "+m.icon+" "+m.label);
+    toast("🎲 "+roll+" → "+m.label);
+    if(passedPayday>0)await creditPayday(id,passedPayday);       // расчётный чек при проходе/попадании на «Получку»
+    await handleLanding(id,track,cur,landed);                    // событие приземления
+    if(!adminForce)await useRoll(id);                            // учёт очереди ходов
   }catch(e){showError(e);}finally{_rolling=false;scheduleRender();}
 }
 // Перевод игрока на внешний круг (скоростная дорожка). byAdmin=true — ручной перевод (возможен override).
@@ -1599,6 +1686,8 @@ function bindView(){
     const ch=e.target.closest("[data-choice]");if(ch&&shownEvent){choiceBtn(shownEvent,parseInt(ch.dataset.choice,10));return;}
   };
   const dq=document.getElementById("dashQR");if(dq&&!dq.dataset.done){dq.dataset.done="1";renderQR(dq,inviteLink());}
+  syncBoardTokens(); // фигурки поля патчатся отдельно от разметки (без пересборки и мерцания)
+  maybeShowBoardEvent(); // глобальный pop-up события поля — для всех игроков
   bindSel("catFilter",v=>categoryFilter=v);
   bindSel("modeSel",v=>updateRoom({mode:v}));
   bindSel("trendSel",v=>updateRoom({trendId:v}));
@@ -1677,7 +1766,10 @@ async function handleAct(act,el){
     case"makeOffer":makeOfferModal(id);break;
     case"acceptOffer":confirmModal("Принять предложение?","Деньги переведутся инициатору.",()=>acceptOffer(id),"Принять","green");break;
     case"plPayday":paydayModal(session.uid);break;
-    case"moveDice":{const who=session.role==="admin"?val("boardRollWho"):(id||session.uid);if(who)await rollMoveDice(who);break;}
+    case"moveDice":{const who=session.role==="admin"?val("boardRollWho"):(id||session.uid);if(who)await rollMoveDice(who,session.role==="admin");break;}
+    case"endTurn":await advanceTurn();break;
+    case"nextTurn":await advanceTurn();break;
+    case"skipTurn":await skipTurn(id||session.uid);break;
     case"outerExit":{const u=uid(session.uid);if(!canMoveToOuter(u)){toast("⚠️ Условия выхода ещё не выполнены","warn");break;}confirmModal("Выйти на внешний круг?","Долги закрыты и пассивный доход выше расходов. Перейти на скоростную дорожку?",()=>moveToOuter(session.uid,false),"Выйти","gold");break;}
     case"adminOuter":{const who=val("boardRollWho")||id;if(who)outerTransferModal(who);break;}
     case"toOuter":outerTransferModal(id);break;
@@ -1806,7 +1898,16 @@ function setPath(o,path,v){const ks=path.split(".");let cur=o;for(let i=0;i<ks.l
 const AUDIT_BADGE={draft:["b-gray","черновик"],submitted:["b-yellow","на проверке"],verified:["b-green","подтверждён"],rejected:["b-red","отклонён"]};
 function sheetStatus(u){const st=((u.sheet||{}).audit||{}).status||"draft";const b=AUDIT_BADGE[st];return '<span class="badge '+b[0]+'">'+b[1]+'</span>';}
 
-async function saveSheet(userId,sheet){await commitUser(userId,{sheet});addHistory("sheet","Бланк обновлён: "+(uid(userId)||{}).name);toast("✅ Бланк сохранён");}
+// Отметить мечту игрока (из бланка) на поле — на свободной клетке типа «Мечта» внешнего круга
+async function setDreamOnBoard(id,name){
+  name=(name||"").trim();const dreams=Object.assign({},room().dreams||{});
+  let key=Object.keys(dreams).find(k=>dreams[k].ownerId===id);
+  if(!name){if(key){delete dreams[key];await updateRoom({dreams});}return;}
+  if(!key){const idx=FAST_CELLS.findIndex((t,i)=>t==="dream"&&!dreams["fasttrack:"+i]);if(idx<0)return;key="fasttrack:"+idx;}
+  dreams[key]={ownerId:id,ownerName:(uid(id)||{}).name||"",name,cost:50000};
+  await updateRoom({dreams});
+}
+async function saveSheet(userId,sheet){await commitUser(userId,{sheet});await setDreamOnBoard(userId,sheet.dream);addHistory("sheet","Бланк обновлён: "+(uid(userId)||{}).name);toast("✅ Бланк сохранён");}
 async function submitSheet(userId,sheet){sheet.audit.status="submitted";sheet.audit.submittedAt=Date.now();await commitUser(userId,{sheet});const u=uid(userId);addHistory("sheet","Бланк отправлен на проверку: "+u.name);addNews("Бланк на проверке",u.name+" отправил финансовый бланк аудитору","info","normal");toast("📤 Бланк отправлен аудитору");}
 async function verifySheet(userId,sheet,ok,notes){const me=session.uid?uid(session.uid):null;sheet.audit.status=ok?"verified":"rejected";sheet.audit.notes=notes||"";sheet.audit.auditorId=session.uid||session.role;sheet.audit.auditorName=me?me.name:"Админ";sheet.audit.verifiedAt=Date.now();await commitUser(userId,{sheet});const u=uid(userId);addHistory("sheet",(ok?"Бланк подтверждён: ":"Бланк отклонён: ")+u.name,notes||"");addNews(ok?"Бланк подтверждён":"Бланк отклонён аудитором",u.name+(notes?" — "+notes:""),ok?"event":"crisis","normal");toast(ok?"✅ Бланк подтверждён":"❌ Бланк отклонён");}
 
@@ -1954,6 +2055,7 @@ function devSeed(){
     tables:[{id:"TBL1",name:"Стол 1"}],teams:[],assets:ass,
     economy:{inflation:42,stocks:58,business:61,sentiment:55},riskIndex:48,centralBankRate:8,
     round:3,phase:"active",mode:"basic",trendId:"growth",counters:{},achievements:["first_player"],
+    turn:{id:"u1",rolls:0},dreams:{"fasttrack:1":{ownerId:"u3",ownerName:"Дана",name:"Вилла у моря",cost:50000}},boardEvent:null,
     lastPriceUpdate:{toDate:()=>new Date(now)}};
   return {room,users};
 }
