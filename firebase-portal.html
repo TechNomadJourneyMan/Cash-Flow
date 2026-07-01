@@ -128,12 +128,16 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opa
 .rt.live::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:middle;box-shadow:0 0 8px var(--green);animation:pulseDot 2s infinite}
 @keyframes pulseDot{50%{opacity:.4}}
 
-/* ---- Tabs ---- */
-.tabs{gap:4px;padding:10px 0 4px;-ms-overflow-style:none;scrollbar-width:none}
+/* ---- Tabs — компактный слайдер на мобильных ---- */
+.tabs{gap:4px;padding:10px 0 4px;-ms-overflow-style:none;scrollbar-width:none;scroll-snap-type:x proximity;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent)}
 .tabs::-webkit-scrollbar{display:none}
-.tab{border:1px solid transparent;background:transparent;color:var(--muted);font-weight:600;font-size:13px;padding:8px 14px;border-radius:11px;transition:.18s ease}
+.tab{border:1px solid transparent;background:transparent;color:var(--muted);font-weight:600;font-size:13px;padding:8px 14px;border-radius:11px;transition:.18s ease;scroll-snap-align:start;white-space:nowrap}
 .tab:hover{color:var(--txt);background:var(--panel)}
+.tab:active{transform:scale(.96)}
 .tab.on{background:var(--acc-soft);color:var(--acc);border-color:var(--acc-line)}
+@media(max-width:400px){.tab{padding:7px 11px;font-size:12px}}
 
 /* ---- Cards ---- */
 .card{background:linear-gradient(180deg,rgba(255,255,255,.022),transparent),var(--panel);
@@ -225,9 +229,10 @@ input[type=color]{padding:4px;min-height:46px}
 
 /* ---- Toast ---- */
 .toast-wrap{bottom:calc(86px + var(--sa-b))}
-.toast{background:rgba(25,25,32,.96);border:1px solid var(--line);backdrop-filter:blur(14px);border-radius:13px;font-weight:600;font-size:13px;box-shadow:var(--shadow)}
+.toast{background:rgba(25,25,32,.96);border:1px solid var(--line);backdrop-filter:blur(14px);border-radius:13px;font-weight:600;font-size:13px;box-shadow:var(--shadow);animation:toastIn .28s cubic-bezier(.2,.8,.2,1)}
 .toast.warn{border-color:rgba(245,121,140,.5)}
 .toast.ach{border-color:var(--acc-line);background:linear-gradient(180deg,rgba(227,192,137,.1),rgba(25,25,32,.96))}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
 
 /* ---- Modal: bottom-sheet on mobile ---- */
 .overlay{background:rgba(5,5,7,.66);backdrop-filter:blur(8px)}
@@ -241,13 +246,20 @@ input[type=color]{padding:4px;min-height:46px}
 }
 @keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 
-/* ---- Bottom nav (player) ---- */
-.bottomnav{background:rgba(13,13,16,.82);backdrop-filter:saturate(160%) blur(18px);border-top:1px solid var(--line);padding:8px 6px calc(8px + var(--sa-b))}
-.bn{color:var(--faint);font-size:10px;font-weight:600;letter-spacing:.01em;padding:5px 2px;border-radius:12px;transition:.16s;position:relative}
+/* ---- Bottom nav (player) — компактный слайдер на мобильных ---- */
+.bottomnav{background:rgba(13,13,16,.82);backdrop-filter:saturate(160%) blur(18px);border-top:1px solid var(--line);
+  padding:8px 6px calc(8px + var(--sa-b));justify-content:flex-start;overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x proximity;-ms-overflow-style:none;scrollbar-width:none;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent)}
+.bottomnav::-webkit-scrollbar{display:none}
+.bn{flex:0 0 auto;min-width:62px;color:var(--faint);font-size:10px;font-weight:600;letter-spacing:.01em;padding:5px 8px;border-radius:12px;transition:.16s;position:relative;scroll-snap-align:center}
 .bn .ic{font-size:19px;margin-bottom:2px;transition:.2s;display:inline-block}
-.bn.on{color:var(--acc)}
+.bn.on{color:var(--acc);background:var(--acc-soft)}
 .bn.on .ic{transform:translateY(-2px) scale(1.06)}
 .bn.on::after{content:"";position:absolute;top:2px;left:50%;width:4px;height:4px;border-radius:50%;background:var(--acc);transform:translateX(-50%);box-shadow:0 0 8px var(--acc)}
+.bn:active{transform:scale(.92)}
+@media(max-width:400px){.bn{min-width:54px;font-size:9px;padding:5px 5px}.bn .ic{font-size:17px}}
 
 /* ---- Boxes ---- */
 .warn-box{background:rgba(245,121,140,.08);border:1px solid rgba(245,121,140,.28);color:#fbb6c0;border-radius:12px;padding:11px}
@@ -292,6 +304,7 @@ hr.sep{border-top-color:var(--line);margin:15px 0}
 .copyrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .iconbtn{width:42px;height:42px;border-radius:11px;border:1px solid var(--line);background:var(--panel2);display:inline-flex;align-items:center;justify-content:center;font-size:16px;transition:.16s}
 .iconbtn:hover{border-color:var(--acc-line);background:var(--panel)}
+.iconbtn:active{transform:scale(.9)}
 
 /* subtle scrollbars */
 *::-webkit-scrollbar{width:8px;height:8px}
@@ -311,6 +324,10 @@ hr.sep{border-top-color:var(--line);margin:15px 0}
 .pres.on{background:var(--green);box-shadow:0 0 7px var(--green)}
 .rolepill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:7px;letter-spacing:.02em}
 .rp-admin{background:var(--acc-soft);color:var(--acc)} .rp-banker{background:rgba(124,162,255,.14);color:var(--blue)} .rp-auditor{background:rgba(95,212,194,.14);color:var(--teal)} .rp-player{background:rgba(120,120,130,.16);color:var(--muted)}
+/* уважаем «уменьшить анимацию» — короче переходы, никаких decorative-keyframes */
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
 </style>
 </head>
 <body>
@@ -365,6 +382,11 @@ hr.sep{border-top-color:var(--line);margin:15px 0}
 @keyframes diceShake{0%,100%{transform:rotate(0)}25%{transform:rotate(-16deg) scale(1.08)}75%{transform:rotate(16deg) scale(1.08)}}
 .legend{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
 .legend span{font-size:10.5px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:2px 7px}
+/* переключатель режима карточек (реал / онлайн) */
+.modetoggle{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.modetoggle .mt-opt{border:none;background:transparent;color:var(--muted);font-weight:600;font-size:12.5px;padding:7px 13px;border-radius:999px;transition:.16s ease;display:inline-flex;align-items:center;gap:5px}
+.modetoggle .mt-opt.on{background:var(--acc);color:#1b1505;box-shadow:0 3px 10px -4px rgba(227,192,137,.6)}
+.modetoggle.sm .mt-opt{font-size:11px;padding:5px 10px}
 /* компактные карточки биржи */
 .exq{padding:11px;margin-bottom:0}
 .exq .price{font-size:17px}
@@ -693,9 +715,10 @@ const ICONS={
   cart:'<circle cx="9.5" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/><path d="M2.5 3H5l2.2 12h10l2-8H6.2"/>',
   building:'<rect x="5" y="3" width="14" height="18" rx="1.2"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M10 21v-3h4v3"/>',
   star:'<path d="M12 3.2l2.6 5.5 6 .8-4.4 4.2 1.1 6L12 17.9 6.7 19.7l1.1-6L3.4 9.5l6-.8z"/>',
+  board:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="6.4" r="1.1"/><circle cx="17.6" cy="12" r="1.1"/><circle cx="12" cy="17.6" r="1.1"/><circle cx="6.4" cy="12" r="1.1"/>',
   dot:'<circle cx="12" cy="12" r="4"/>'
 };
-const EMO={'🏛':'bank','🏦':'bank','🎛':'dashboard','🧮':'calculator','🧾':'receipt','🤝':'teams','🪑':'table','🎴':'layers','📊':'chart','🧩':'puzzle','🚀':'rocket','💳':'card','📜':'scroll','⚙':'gear','📖':'book','👥':'users','⚡':'bolt','✅':'check','💵':'banknote','💼':'briefcase','📝':'note','📰':'newspaper','👤':'user','🔗':'link','💱':'refresh','🔄':'refresh','🗑':'trash','✏':'pencil','🏷':'tag','🎯':'target','💎':'gem','🎲':'dice','📈':'up','📉':'down','➡':'arrowr','📢':'megaphone','🔀':'shuffle','🧠':'bulb','🙋':'userplus','🔥':'flame','🌿':'leaf','❌':'xcircle','🔒':'lock','🔑':'key','🔌':'plug','⏳':'clock','💾':'save','💰':'coins','🏆':'trophy','🎬':'film','🌪':'tornado','🌊':'waves','🌉':'link','🛢':'droplet','⚖':'scale','⚠':'warning','👑':'crown'};
+const EMO={'🏛':'bank','🏦':'bank','🎛':'dashboard','🧮':'calculator','🧾':'receipt','🤝':'teams','🪑':'table','🎴':'layers','📊':'chart','🧩':'puzzle','🚀':'rocket','💳':'card','📜':'scroll','⚙':'gear','📖':'book','👥':'users','⚡':'bolt','✅':'check','💵':'banknote','💼':'briefcase','📝':'note','📰':'newspaper','👤':'user','🔗':'link','💱':'refresh','🔄':'refresh','🗑':'trash','✏':'pencil','🏷':'tag','🎯':'target','💎':'gem','🎲':'dice','📈':'up','📉':'down','➡':'arrowr','📢':'megaphone','🔀':'shuffle','🧠':'bulb','🙋':'userplus','🔥':'flame','🌿':'leaf','❌':'xcircle','🔒':'lock','🔑':'key','🔌':'plug','⏳':'clock','💾':'save','💰':'coins','🏆':'trophy','🎬':'film','🌪':'tornado','🌊':'waves','🌉':'link','🛢':'droplet','⚖':'scale','⚠':'warning','👑':'crown','🗺':'board','🏢':'building','⭐':'star','🛒':'cart','👶':'baby','❤':'heart'};
 const EMO_RE=new RegExp('('+Object.keys(EMO).map(e=>e.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\uFE0F?','g');
 function ic(name){return '<span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[name]||ICONS.dot)+'</svg></span>';}
 function iconize(s){return String(s==null?"":s).replace(EMO_RE,(m,e)=>ic(EMO[e]));}
@@ -1175,8 +1198,10 @@ function patchExchangePrices(){
 function priceStampText(){let t=null;try{const ts=M.room&&M.room.lastPriceUpdate;t=ts&&ts.toDate?ts.toDate():null;}catch(e){}return "обновлено "+(t?t.toLocaleTimeString("ru-RU"):"—");}
 function updatePriceStamp(){const el=document.getElementById("priceStamp");if(el)el.textContent=priceStampText();}
 
-// Обновляет DOM только если разметка реально изменилась — убирает лишние перерисовки и мерцание/затемнение экрана
-function setHTML(el,html){if(!el)return;html=iconize(html);if(el.__h===html)return;el.__h=html;el.innerHTML=html;}
+// Обновляет DOM только если разметка реально изменилась — убирает лишние перерисовки.
+// Сравнение — ДО iconize() (regex по всей строке), чтобы не тратить время на конвертацию,
+// когда контент вообще не поменялся (частый случай при no-op вызовах render()).
+function setHTML(el,raw){if(!el)return;if(el.__raw===raw)return;el.__raw=raw;el.innerHTML=iconize(raw);}
 function render(){
   const view=document.getElementById("view"),top=document.getElementById("topbar"),nav=document.getElementById("bottomNav");
   const SV=h=>setHTML(view,h);
@@ -1414,7 +1439,12 @@ function rosterView(){
   return h;
 }
 function achView(){const open=room().achievements||[];return '<div class="card"><h2>Достижения ('+open.length+'/'+ACHIEVEMENTS.length+')</h2><div class="grid g2">'+ACHIEVEMENTS.map(a=>{const o=open.includes(a.id);return '<div class="item" style="opacity:'+(o?1:.5)+';'+(o?'border-color:var(--gold)':'')+'"><div class="row"><div style="font-size:22px">'+a.icon+'</div><div><b>'+esc(a.title)+'</b></div></div></div>';}).join("")+'</div></div>';}
+function cardModeToggleHTML(compact){
+  const online=cardMode()==="online";
+  return '<div class="modetoggle'+(compact?' sm':'')+'"><button class="mt-opt'+(online?'':' on')+'" data-act="toggleCardMode">'+ic("users")+' Реал</button><button class="mt-opt'+(online?' on':'')+'" data-act="toggleCardMode">'+ic("bolt")+' Онлайн</button></div>';
+}
 function settingsView(){const s=settings();return '<div class="card"><h2>Настройки комнаты</h2><div class="grid g2"><div class="field"><label class="fl">Стартовый баланс</label><input id="seStart" type="number" value="'+(s.startBalance||0)+'"></div><div class="field"><label class="fl">Лимит перевода</label><input id="seTr" type="number" value="'+(s.transferLimit||0)+'"></div><div class="field"><label class="fl">Лимит кредита</label><input id="seLoan" type="number" value="'+(s.loanLimit||0)+'"></div><div class="field"><label class="fl">Ставка кредита %</label><input id="seRate" type="number" value="'+(s.loanRate||0)+'"></div><div class="field"><label class="fl">Ставка ЦБ %</label><input id="seCBR" type="number" value="'+(room().centralBankRate||0)+'"></div></div><button class="btn green" data-act="saveSettings">Сохранить</button></div>'+
+  '<div class="card"><h2>Режим карточек поля</h2><p class="small muted">«Реал» — на «Рынке/Сделке/Расходах» игроки тянут физическую карточку за столом (по умолчанию). «Онлайн» — карточек нет: эффект выбирается автоматически и приходит как доп. событие.</p>'+cardModeToggleHTML(false)+'</div>'+
   '<div class="card"><h2>Данные комнаты</h2><div class="info-box small">Код комнаты: <b>'+esc(CODE)+'</b>. Покажите его игрокам.</div><div class="row" style="margin-top:8px"><button class="btn red" data-act="resetRoom">🗑️ Сбросить комнату</button></div></div>';}
 function rulesView(){const r=[["Подключение","Игроки заходят с телефонов по коду комнаты и имени. Банкир/админ — по PIN."],["Кошелёк","Баланс, P2P-переводы. Крупные переводы уходят на подтверждение банкиру."],["Кредит","Заём в ЦБ; проценты списываются на «Дне получки»."],["День получки","Проценты по кредитам − доход от пулов, с предпросмотром."],["Биржа","Акции, паевые фонды, stable-активы, недвижимость, металлы, искусство, бизнес, облигации и коллекционные активы. Комиссия 1%. Активы с доходностью приносят пассивный доход на «Дне получки». Цены меняются по волатильности актива, кубиком и событиями."],["Пулы","Складчина в крупную сделку, доход делится пропорционально на «Дне получки»."],["Венчур","Поздние игроки финансируют ранних через заявки и предложения."],["События","Денежные эффекты применяются после предпросмотра «до→после»."],["Роли","Игрок видит своё; банкир — свой стол; админ — всё. Realtime между устройствами."]];return '<div class="card"><h2>Правила</h2>'+r.map((x,i)=>'<div style="margin-bottom:9px"><b>'+(i+1)+'. '+esc(x[0])+'</b><div class="small muted">'+esc(x[1])+'</div></div>').join("")+'<hr class="sep"><p class="small muted">Неофициальный фанатский цифровой модуль. События оригинальны и не воспроизводят материалы CashFlow.</p></div>';}
 
@@ -1488,7 +1518,8 @@ function boardView(canRollId){
       '<select id="boardRollWho" style="max-width:150px">'+ps.map(p=>'<option value="'+p.id+'"'+(p.id===curId?' selected':'')+'>'+esc(p.name)+'</option>').join("")+'</select>'+
       '<button class="btn gold" data-act="moveDice">🎲 Бросить</button>'+
       '<button class="btn" data-act="nextTurn">⏭ Следующий ход</button>'+
-      '<button class="btn" data-act="adminOuter">🏁 На внешний круг</button></div>';
+      '<button class="btn" data-act="adminOuter">🏁 На внешний круг</button></div>'+
+      '<div class="row" style="justify-content:center;margin-top:6px">'+cardModeToggleHTML(true)+'</div>';
   } else if(me){
     const st=outerStatus(me),myTurn=curId===me.id,skip=(me.skipTurns||0)>0,canR=canRoll(me.id);
     const mainBtn=(skip&&myTurn)
@@ -1523,16 +1554,33 @@ async function advanceTurn(){
 async function useRoll(id){const u=uid(id),used=rollsUsed()+1;if(used>=maxRolls(u)){await advanceTurn();}else{await updateRoom({turn:{id,rolls:used}});}}
 async function skipTurn(id){const u=uid(id);await commitUser(id,{skipTurns:Math.max(0,(u.skipTurns||0)-1)});await advanceTurn();toast("⏭ Ход пропущен");}
 
-/* ---------- ГЛОБАЛЬНЫЕ СОБЫТИЯ ПОЛЯ (pop-up для всех) ---------- */
+/* ---------- ГЛОБАЛЬНЫЕ СОБЫТИЯ ПОЛЯ ----------
+   Событие рассылается всем, но полноэкранный модал (тёмный оверлей) получает
+   ТОЛЬКО игрок, который реально попал на клетку — ему нужно действие (например,
+   «Проверить прибавление»). Все остальные (другие игроки и админ) видят лёгкий
+   тост без затемнения экрана — раньше модал открывался у всех и это выглядело
+   как резкое затемнение/высветление экрана при каждом ходе любого игрока. */
+function stripTags(s){return String(s==null?"":s).replace(/<[^>]*>/g,"");}
 async function broadcastEvent(title,body,opts){opts=opts||{};await updateRoom({boardEvent:{id:"be"+Date.now()+Math.floor(Math.random()*1e4),title,body,playerId:opts.playerId||null,kind:opts.kind||"info"}});}
 let _lastBoardEventId=null;
 function maybeShowBoardEvent(){
   const be=room().boardEvent;if(!be||!be.id||be.id===_lastBoardEventId)return;_lastBoardEventId=be.id;
   const mine=be.playerId&&be.playerId===session.uid;
+  if(!mine){toast(esc(be.title)+": "+stripTags(be.body).slice(0,110));return;} // без полноэкранного оверлея (тело уже экранировано при формировании события)
   let buttons=[{label:"Ок",cls:"primary"}];
-  if(be.kind==="baby"&&mine)buttons=[{label:"🎲 Проверить прибавление",cls:"gold",onClick:c=>{c();resolveBaby(session.uid);}}];
-  modal(be.title,'<div>'+be.body+'</div>'+(mine?'':'<p class="small muted" style="margin-top:8px">Событие у игрока — вы наблюдаете.</p>'),buttons,"fs-event");
+  if(be.kind==="baby")buttons=[{label:"🎲 Проверить прибавление",cls:"gold",onClick:c=>{c();resolveBaby(session.uid);}}];
+  modal(be.title,'<div>'+be.body+'</div>',buttons,"fs-event");
 }
+
+/* ---------- РЕЖИМ ИГРЫ: РЕАЛЬНЫЕ КАРТОЧКИ / ОНЛАЙН ----------
+   real (по умолчанию) — на «Рынке/Сделке/Расходах» игроки тянут физическую карточку за столом.
+   online — физических карточек нет: карточка выбирается автоматически и применяется как доп. событие. */
+function cardMode(){return settings().cardMode||"real";}
+async function toggleCardMode(){const s=settings(),next=(s.cardMode||"real")==="real"?"online":"real";await updateRoom({settings:Object.assign({},s,{cardMode:next})});toast(next==="online"?"💻 Онлайн-режим: карточки выпадают автоматически":"🎮 Реальный режим: карточки тянутся вживую");}
+const DECK_MARKET=[["Скупщик активов","Инвестор предложил выкупить один из ваших активов с наценкой.",600],["Всплеск спроса","Спрос на активы вашей категории неожиданно вырос.",450],["Удачные новости","Одна из ваших позиций подорожала на новостях.",700],["Рыночная коррекция","Лёгкая просадка ваших активов.",-350],["Аналитик повысил прогноз","Портфель немного прибавил в цене.",300],["Курсовые колебания","Небольшие потери на разнице курсов.",-200],["Спрос на сырьё","Сырьевые активы в цене — вам повезло.",500],["Спокойный день","Рынок стабилен, эффект незначителен.",100]];
+const DECK_DEAL_SMALL=[["Гараж на продажу","Недорогой актив с гарантированным доходом.",800],["Доля в кофейне","Маленькая, но стабильная инвестиция.",650],["Актив с рук","Скромная, но выгодная сделка.",500],["Партнёрская скидка","Знакомый предложил актив дешевле рынка.",700],["Мини-стартап","Небольшое вложение с быстрой отдачей.",550]];
+const DECK_DEAL_BIG=[["Коммерческая недвижимость","Крупный объект с хорошим потенциалом.",2500],["Доля в бизнесе","Серьёзное предложение от партнёра.",3000],["Закрытый фонд","Сделка для крупных инвесторов.",2200],["Строительный проект","Крупная, но перспективная стройка.",2800],["Франшиза","Готовый бизнес под ключ.",3200]];
+const DECK_EXPENSE=[["Ремонт автомобиля","Неожиданная поломка потребовала ремонта.",-400],["Юридические издержки","Пришлось оплатить услуги юриста.",-600],["Поломка техники","Бытовая техника вышла из строя.",-300],["Внеплановый визит к врачу","Медицинские расходы.",-350],["Рост местных сборов","Повысили налог.",-250],["Авария в доме","Прорвало трубу — пришлось чинить.",-500]];
 
 /* ---------- СОБЫТИЯ КЛЕТОК ---------- */
 async function creditPayday(id,times){const u=uid(id),cf=playerCashflow(u),amount=cf*times;if(amount!==0)await changeBalance(id,amount,"payday","Расчётный чек — денежный поток с бланка"+(times>1?" ×"+times:""));broadcastEvent("Расчётный чек",esc(u.name)+" прошёл «Получку» и получил денежный поток <b>"+(amount>=0?"+":"")+fmt(amount)+"</b> (с бланка).",{playerId:id,kind:"payday"});}
@@ -1547,9 +1595,19 @@ async function handleLanding(id,track,pos,type){
   const u=uid(id);
   if(type==="payday")return;                                    // начислено через проход
   if(type==="baby"){broadcastEvent("Клетка «Ребёнок»",esc(u.name)+" попал на «Ребёнок». Нажмите кнопку, чтобы узнать прибавление.",{playerId:id,kind:"baby"});return;}
-  if(type==="deal"){const small=(u.balance||0)<20000;broadcastEvent(small?"Мелкая сделка":"Крупная сделка",esc(u.name)+" на «Сделке». "+(small?"Баланс меньше $20 000 → тяните карточку <b>МЕЛКОЙ</b> сделки.":"Тяните карточку <b>КРУПНОЙ</b> сделки.")+" (карточка в реальности)",{playerId:id,kind:"deal"});return;}
-  if(type==="market"){broadcastEvent("Рынок",esc(u.name)+" на «Рынке». Тяните карточку <b>РЫНКА</b> в реальности — предложение купить/продать актив.",{playerId:id,kind:"market"});return;}
-  if(type==="expense"){broadcastEvent("Расходы",esc(u.name)+" на «Расходах». Тяните карточку <b>РАСХОДОВ</b> в реальности и оплатите.",{playerId:id,kind:"expense"});return;}
+  if(type==="deal"){
+    const small=(u.balance||0)<20000;
+    if(cardMode()==="online"){const c=pick(small?DECK_DEAL_SMALL:DECK_DEAL_BIG);if(c[2])await changeBalance(id,c[2],"card",(small?"Мелкая":"Крупная")+" сделка (авто): "+c[0]);broadcastEvent(c[0],esc(u.name)+" — "+(small?"мелкая":"крупная")+" сделка (авто-карточка): "+esc(c[1])+" <b>"+(c[2]>=0?"+":"")+fmt(c[2])+"</b>",{playerId:id,kind:"deal"});return;}
+    broadcastEvent(small?"Мелкая сделка":"Крупная сделка",esc(u.name)+" на «Сделке». "+(small?"Баланс меньше $20 000 → тяните карточку <b>МЕЛКОЙ</b> сделки.":"Тяните карточку <b>КРУПНОЙ</b> сделки.")+" (карточка в реальности)",{playerId:id,kind:"deal"});return;
+  }
+  if(type==="market"){
+    if(cardMode()==="online"){const c=pick(DECK_MARKET);if(c[2])await changeBalance(id,c[2],"card","Рынок (авто): "+c[0]);broadcastEvent(c[0],esc(u.name)+" — рынок (авто-карточка): "+esc(c[1])+" <b>"+(c[2]>=0?"+":"")+fmt(c[2])+"</b>",{playerId:id,kind:"market"});return;}
+    broadcastEvent("Рынок",esc(u.name)+" на «Рынке». Тяните карточку <b>РЫНКА</b> в реальности — предложение купить/продать актив.",{playerId:id,kind:"market"});return;
+  }
+  if(type==="expense"){
+    if(cardMode()==="online"){const c=pick(DECK_EXPENSE);await changeBalance(id,c[2],"card","Расходы (авто): "+c[0]);broadcastEvent(c[0],esc(u.name)+" — расходы (авто-карточка): "+esc(c[1])+" <b>"+fmt(c[2])+"</b>",{playerId:id,kind:"expense"});return;}
+    broadcastEvent("Расходы",esc(u.name)+" на «Расходах». Тяните карточку <b>РАСХОДОВ</b> в реальности и оплатите.",{playerId:id,kind:"expense"});return;
+  }
   if(type==="charity"){broadcastEvent("Благотворительность",esc(u.name)+" на «Благотворительности» — можно пожертвовать 10% и получить 2 броска на 3 раунда.",{playerId:id,kind:"charity"});return;}
   if(type==="downsized"){const exp=playerExpensesTotal(u);if(exp>0)await changeBalance(id,-exp,"downsized","Увольнение: списание общих расходов");await commitUser(id,{skipTurns:2});broadcastEvent("Увольнение",esc(u.name)+" уволен: <b>пропускает 2 хода</b> и оплачивает общие расходы "+fmt(exp)+".",{playerId:id,kind:"downsized"});return;}
   if(type==="dream"){await handleDreamLanding(id,track,pos);return;}
@@ -1769,6 +1827,7 @@ async function handleAct(act,el){
     case"moveDice":{const who=session.role==="admin"?val("boardRollWho"):(id||session.uid);if(who)await rollMoveDice(who,session.role==="admin");break;}
     case"endTurn":await advanceTurn();break;
     case"nextTurn":await advanceTurn();break;
+    case"toggleCardMode":await toggleCardMode();break;
     case"skipTurn":await skipTurn(id||session.uid);break;
     case"outerExit":{const u=uid(session.uid);if(!canMoveToOuter(u)){toast("⚠️ Условия выхода ещё не выполнены","warn");break;}confirmModal("Выйти на внешний круг?","Долги закрыты и пассивный доход выше расходов. Перейти на скоростную дорожку?",()=>moveToOuter(session.uid,false),"Выйти","gold");break;}
     case"adminOuter":{const who=val("boardRollWho")||id;if(who)outerTransferModal(who);break;}
