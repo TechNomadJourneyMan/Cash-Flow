@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0b">
-<title>Digital Central Bank — Firebase Portal</title>
+<title>Cash-Flow 2.0</title>
 <link rel="preconnect" href="https://api.fontshare.com">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -47,6 +47,7 @@ hr.sep{border:none;border-top:1px solid var(--line);margin:13px 0}
 .btn.teal{background:linear-gradient(135deg,#0d9488,#14b8a6);border-color:transparent;color:#fff}
 .btn.ghost{background:transparent}.btn.sm{padding:6px 10px;font-size:12px;border-radius:9px}.btn.block{width:100%;justify-content:center;text-align:center;display:block}
 .btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.busy{opacity:.6;cursor:progress;pointer-events:none;position:relative}
 .btn-money{padding:8px 0;border-radius:9px;font-weight:700;font-size:12.5px;border:1px solid var(--line);background:var(--panel2);color:var(--txt)}
 .btn-money.plus{color:#bbf7d0;border-color:#1f6f43}.btn-money.minus{color:#fecaca;border-color:#7f2b2b}
 input,select,textarea{font-family:inherit;font-size:14px;color:var(--txt);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
@@ -322,10 +323,63 @@ hr.sep{border-top-color:var(--line);margin:15px 0}
 <div id="modalRoot"></div>
 <div class="toast-wrap" id="toasts"></div>
 
+<style>
+/* ===== Виртуальное поле (оригинальная стилизация, две кольцевые дорожки) ===== */
+.board-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.board{position:relative;width:min(92vw,560px);aspect-ratio:1;margin:2px auto;border-radius:50%;
+  background:radial-gradient(circle at 50% 44%, #221a3a 0%, #120e22 60%, #0b0816 100%);
+  border:1px solid var(--line);box-shadow:var(--shadow),inset 0 0 60px rgba(0,0,0,.6)}
+.board .center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;width:44%;pointer-events:none}
+.board .center .bt{font-family:var(--serif);font-size:min(6.5vw,32px);color:var(--acc);line-height:1.02}
+.board .center .bs{font-size:9.5px;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;margin-top:5px}
+.board .center .bring{font-size:10px;color:var(--faint);margin-top:6px}
+.cell{position:absolute;transform:translate(-50%,-50%);width:11.5%;height:11.5%;border-radius:9px;border:1px solid rgba(255,255,255,.14);
+  display:flex;align-items:center;justify-content:center;text-align:center;font-size:min(3.4vw,15px);line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.cell.c-payday{background:linear-gradient(135deg,#16a34a,#22c55e)}
+.cell.c-deal{background:linear-gradient(135deg,#b8860b,#e3c089);color:#211700}
+.cell.c-market{background:linear-gradient(135deg,#2563eb,#7ca2ff)}
+.cell.c-expense{background:linear-gradient(135deg,#b91c1c,#f5798c)}
+.cell.c-charity{background:linear-gradient(135deg,#7c3aed,#b9a0ff)}
+.cell.c-baby{background:linear-gradient(135deg,#0d9488,#5fd4c2)}
+.cell.c-downsized{background:linear-gradient(135deg,#b45309,#e9b15c)}
+.cell.c-start{background:var(--acc);color:#1a1300;font-weight:800}
+.cell.c-biz{background:linear-gradient(135deg,#15803d,#62d4a0)}
+.cell.c-dream{background:linear-gradient(135deg,#a16207,#ecd368);color:#241f00}
+.cell.c-tax{background:linear-gradient(135deg,#9f1239,#f5798c)}
+.cell.c-div{background:linear-gradient(135deg,#1d4ed8,#7ca2ff)}
+.tok{position:absolute;transform:translate(-50%,-50%);width:23px;height:23px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:800;color:#fff;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 7px rgba(0,0,0,.6);z-index:6;
+  transition:left .18s cubic-bezier(.4,1.3,.5,1),top .18s cubic-bezier(.4,1.3,.5,1)}
+.tok.me{outline:2px solid var(--acc);outline-offset:1px}
+.tok.ready{box-shadow:0 0 0 3px rgba(98,212,160,.75),0 2px 7px rgba(0,0,0,.6);animation:readyPulse 1.4s infinite}
+@keyframes readyPulse{50%{box-shadow:0 0 0 7px rgba(98,212,160,.22),0 2px 7px rgba(0,0,0,.6)}}
+.tok.outer{outline:2px solid var(--gold);outline-offset:2px}
+.tok.investor::after{content:"$";position:absolute;top:-5px;right:-5px;width:13px;height:13px;border-radius:50%;background:var(--gold);color:#1a1300;font-size:8px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,0,0,.3)}
+.dice-face{width:60px;height:60px;border-radius:14px;background:#fbfbfb;color:#12121a;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;box-shadow:var(--shadow);border:1px solid #ddd}
+.dice-face.roll{animation:diceShake .5s ease}
+@keyframes diceShake{0%,100%{transform:rotate(0)}25%{transform:rotate(-16deg) scale(1.08)}75%{transform:rotate(16deg) scale(1.08)}}
+.legend{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+.legend span{font-size:10.5px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:2px 7px}
+/* компактные карточки биржи */
+.exq{padding:11px;margin-bottom:0}
+.exq .price{font-size:17px}
+.exq .spark{height:26px}
+@media(max-width:520px){.tok{width:18px;height:18px;font-size:8px}.cell{width:12.5%;height:12.5%;font-size:12px}}
+/* ===== Бланк игрока (финансовый отчёт) ===== */
+.stmt .sec{display:flex;align-items:center;gap:8px;margin:14px 0 6px}
+.stmt .sn{min-width:22px;height:22px;padding:0 5px;border-radius:6px;background:var(--acc);color:#1a1300;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:12px}
+.stmt .st{font-weight:800;font-size:13.5px;text-transform:uppercase;letter-spacing:.04em}
+.stmt .lr{display:flex;justify-content:space-between;gap:10px;padding:5px 2px;border-bottom:1px dashed var(--line);font-size:13px}
+.stmt .lr b,.stmt .tot b{font-family:var(--mono);font-weight:600}
+.stmt .tot{display:flex;justify-content:space-between;gap:10px;padding:7px 2px;font-weight:800;border-top:2px solid var(--line);margin-top:3px;font-size:14px}
+.cfbox{border:1px solid var(--acc-line);border-radius:12px;padding:12px;background:var(--acc-soft)}
+.cfbox .cf{font-family:var(--mono);font-size:26px;font-weight:800;letter-spacing:-.02em}
+.goal .prog{height:8px}
+</style>
 <script type="module">
 /* =====================================================================
-   Digital Central Bank & Global Exchange — Firebase realtime portal
-   Роли: admin / banker / player. Firestore + Anonymous Auth.
+   Cash-Flow 2.0 — финансовый игровой портал (Firebase realtime)
+   Роли: admin / banker / auditor / player. Firestore + Anonymous Auth.
    ===================================================================== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -348,7 +402,65 @@ const PLAYER_TAGS=["есть недвижимость","есть бизнес","
 const CATEGORIES=["Глобальная экономика","Недвижимость","Акции и инвестиции","Бизнес и предпринимательство","Личные события","Банки, кредиты и долги","Налоги и государство","Технологии и инновации","Потребительский рынок","Чёрные лебеди и кризисы","Возможности","Социальные тренды","Командные события","Денежные события","Переговоры и сделки","Биржевые события","Инвестиционные пулы","Венчурный рынок","Межстоловые события","Регуляторные события ЦБ"];
 const TYPE_META={positive:{badge:"b-green",edge:"var(--green)",label:"Позитивное"},negative:{badge:"b-red",edge:"var(--red)",label:"Негативное"},mixed:{badge:"b-orange",edge:"var(--orange)",label:"Смешанное"},crisis:{badge:"b-purple",edge:"var(--purple)",label:"Кризис"},opportunity:{badge:"b-blue",edge:"var(--blue)",label:"Возможность"},decision:{badge:"b-teal",edge:"var(--teal)",label:"Решение"},marketShock:{badge:"b-gold",edge:"var(--gold)",label:"Биржевой шок"},regulation:{badge:"b-yellow",edge:"var(--yellow)",label:"Регуляция ЦБ"},team:{badge:"b-teal",edge:"var(--teal)",label:"Командное"},pool:{badge:"b-blue",edge:"var(--blue)",label:"Пулы"},venture:{badge:"b-gold",edge:"var(--gold)",label:"Венчур"}};
 const RARITY_META={common:{w:45,label:"Обычное",badge:"b-gray"},uncommon:{w:25,label:"Необычное",badge:"b-green"},rare:{w:15,label:"Редкое",badge:"b-blue"},epic:{w:10,label:"Эпическое",badge:"b-purple"},legendary:{w:5,label:"Легендарное",badge:"b-gold"}};
-const ASSET_TEMPLATES=[{symbol:"$TECH",name:"Технологический сектор",sector:"Технологии",price:100,vol:8},{symbol:"$ENERGY",name:"Энергетика",sector:"Энергетика",price:80,vol:7},{symbol:"$REALTY",name:"Недвижимость",sector:"Недвижимость",price:120,vol:5},{symbol:"$HEALTH",name:"Медицина",sector:"Здравоохранение",price:90,vol:6},{symbol:"$BANK",name:"Банковский сектор",sector:"Финансы",price:70,vol:6},{symbol:"$ELEC",name:"Electronics",sector:"Электроника",price:20,vol:9},{symbol:"$GRO4US",name:"Gro4us",sector:"Ритейл / рост",price:10,vol:12},{symbol:"$DRUG",name:"Drugs",sector:"Фарма",price:30,vol:10},{symbol:"$FUN",name:"Intertaiment",sector:"Развлечения",price:15,vol:11}];
+// Категории активов биржи (порядок = порядок разделов в UI)
+const ASSET_CATEGORIES=["Акции","Паевые фонды","Stable-активы","Недвижимость","Драгоценные металлы","Предметы искусства","Бизнес-активы","Облигации","Коллекционные активы"];
+const RISK_META={"низкий":"b-green","средний":"b-orange","высокий":"b-red"};
+// Легаси-акции, скрытые по умолчанию (см. isHiddenAsset — работают и для старых комнат без флага)
+const LEGACY_HIDDEN=["$TECH","$ENERGY","$REALTY","$HEALTH","$BANK"];
+// Шаблоны активов. Поля: symbol, name, sector, cat(категория), price, vol(волатильность 1..14),
+// y(пассивный доход, % от цены за раунд), risk, per(период начисления), desc, hidden(скрыт по умолч.)
+const ASSET_TEMPLATES=[
+  // ——— Акции: 5 легаси скрыты по умолчанию (hidden), 4 остаются в игре ———
+  {symbol:"$TECH",name:"Технологический сектор",sector:"Технологии",cat:"Акции",price:100,vol:8,y:1,risk:"высокий",per:"раунд",desc:"Технологический индекс.",hidden:true},
+  {symbol:"$ENERGY",name:"Энергетика",sector:"Энергетика",cat:"Акции",price:80,vol:7,y:1,risk:"средний",per:"раунд",desc:"Энергетический сектор.",hidden:true},
+  {symbol:"$REALTY",name:"Недвижимость",sector:"Недвижимость",cat:"Акции",price:120,vol:5,y:2,risk:"средний",per:"раунд",desc:"Строительный сектор.",hidden:true},
+  {symbol:"$HEALTH",name:"Медицина",sector:"Здравоохранение",cat:"Акции",price:90,vol:6,y:1,risk:"средний",per:"раунд",desc:"Медицинский сектор.",hidden:true},
+  {symbol:"$BANK",name:"Банковский сектор",sector:"Финансы",cat:"Акции",price:70,vol:6,y:1,risk:"средний",per:"раунд",desc:"Банки и финансы.",hidden:true},
+  {symbol:"$ELEC",name:"Electronics",sector:"Электроника",cat:"Акции",price:20,vol:9,y:1,risk:"высокий",per:"раунд",desc:"Производитель электроники."},
+  {symbol:"$GRO4US",name:"Gro4us",sector:"Ритейл / рост",cat:"Акции",price:10,vol:12,y:0,risk:"высокий",per:"раунд",desc:"Быстрорастущий ритейл, дивидендов нет."},
+  {symbol:"$DRUG",name:"Drugs",sector:"Фарма",cat:"Акции",price:30,vol:10,y:1,risk:"высокий",per:"раунд",desc:"Фармкомпания."},
+  {symbol:"$FUN",name:"Intertaiment",sector:"Развлечения",cat:"Акции",price:15,vol:11,y:0,risk:"высокий",per:"раунд",desc:"Индустрия развлечений."},
+  // ——— Паевые фонды (регулярный пассивный доход) ———
+  {symbol:"$INDX",name:"Индексный фонд",sector:"Паевые фонды",cat:"Паевые фонды",price:50,vol:3,y:1.5,risk:"средний",per:"раунд",desc:"Широкий рынок: умеренный рост и выплаты."},
+  {symbol:"$BALF",name:"Сбалансированный фонд",sector:"Паевые фонды",cat:"Паевые фонды",price:40,vol:2,y:2,risk:"низкий",per:"раунд",desc:"Акции + облигации, регулярные выплаты."},
+  // ——— Stable-активы (низкая волатильность, предсказуемый доход) ———
+  {symbol:"$MMF",name:"Денежный фонд",sector:"Stable",cat:"Stable-активы",price:100,vol:1,y:0.8,risk:"низкий",per:"раунд",desc:"Почти не колеблется, стабильный процент."},
+  {symbol:"$DEP",name:"Депозит",sector:"Stable",cat:"Stable-активы",price:100,vol:1,y:1,risk:"низкий",per:"раунд",desc:"Фиксированный процент, минимум риска."},
+  // ——— Недвижимость (аренда как пассивный доход) ———
+  {symbol:"$FLAT",name:"Квартира в аренду",sector:"Недвижимость",cat:"Недвижимость",price:200,vol:3,y:3,risk:"средний",per:"раунд",desc:"Арендный доход каждый раунд."},
+  {symbol:"$REIT",name:"Складской REIT",sector:"Недвижимость",cat:"Недвижимость",price:60,vol:4,y:2.5,risk:"средний",per:"раунд",desc:"Фонд недвижимости, рентный доход."},
+  // ——— Драгоценные металлы (защитный рост, без выплат) ———
+  {symbol:"$GOLD",name:"Золото",sector:"Металлы",cat:"Драгоценные металлы",price:150,vol:5,y:0,risk:"средний",per:"раунд",desc:"Защитный актив, тянется вверх в кризис."},
+  {symbol:"$SILV",name:"Серебро",sector:"Металлы",cat:"Драгоценные металлы",price:30,vol:7,y:0,risk:"высокий",per:"раунд",desc:"Волатильнее золота."},
+  // ——— Предметы искусства (рост стоимости, неликвидно) ———
+  {symbol:"$ARTF",name:"Арт-фонд",sector:"Искусство",cat:"Предметы искусства",price:80,vol:9,y:0,risk:"высокий",per:"раунд",desc:"Ставка на рост стоимости коллекции."},
+  {symbol:"$ART",name:"Картина мастера",sector:"Искусство",cat:"Предметы искусства",price:300,vol:12,y:0,risk:"высокий",per:"раунд",desc:"Неликвидно, высокий потенциал."},
+  // ——— Бизнес-активы (высокий денежный поток) ———
+  {symbol:"$CAFE",name:"Кофейня",sector:"Бизнес",cat:"Бизнес-активы",price:120,vol:8,y:5,risk:"высокий",per:"раунд",desc:"Высокий денежный поток, но риск."},
+  {symbol:"$FRAN",name:"Франшиза",sector:"Бизнес",cat:"Бизнес-активы",price:250,vol:6,y:4,risk:"средний",per:"раунд",desc:"Готовый бизнес, роялти каждый раунд."},
+  // ——— Облигации (надёжный купон) ———
+  {symbol:"$GBOND",name:"Гособлигации",sector:"Облигации",cat:"Облигации",price:100,vol:2,y:3,risk:"низкий",per:"раунд",desc:"Надёжный купон, низкий риск."},
+  {symbol:"$CBOND",name:"Корп. облигации",sector:"Облигации",cat:"Облигации",price:100,vol:3,y:4,risk:"средний",per:"раунд",desc:"Купон выше, риск выше."},
+  // ——— Коллекционные активы (рост со временем, без выплат) ———
+  {symbol:"$CAR",name:"Винтажное авто",sector:"Коллекционное",cat:"Коллекционные активы",price:400,vol:12,y:0,risk:"высокий",per:"раунд",desc:"Раритет, дорожает со временем."},
+  {symbol:"$COIN",name:"Редкие монеты",sector:"Коллекционное",cat:"Коллекционные активы",price:50,vol:10,y:0,risk:"средний",per:"раунд",desc:"Коллекционная ценность."},
+  {symbol:"$WINE",name:"Инвест-вино",sector:"Коллекционное",cat:"Коллекционные активы",price:40,vol:9,y:0,risk:"средний",per:"раунд",desc:"Выдержка повышает цену."}
+];
+// Метаданные шаблона по символу + утилиты пассивного дохода/категорий/скрытия
+function tpl(sym){return ASSET_TEMPLATES.find(t=>t.symbol===sym)||{};}
+function assetYield(a){return a.yieldPct!=null?a.yieldPct:(a.y!=null?a.y:(tpl(a.symbol).y||0));}   // % от цены за период
+function assetCat(a){return a.category||a.cat||tpl(a.symbol).cat||"Акции";}
+function assetRisk(a){return a.risk||tpl(a.symbol).risk||"средний";}
+function assetVol(a){return a.vol!=null?a.vol:(tpl(a.symbol).vol||6);}
+function assetPer(a){return a.per||tpl(a.symbol).per||"раунд";}
+function assetDesc(a){return a.desc||tpl(a.symbol).desc||"";}
+// скрыт, если явно помечен; для старых комнат без флага — по списку LEGACY_HIDDEN
+function isHiddenAsset(a){return a.isHidden===true?true:(a.isHidden===false?false:LEGACY_HIDDEN.includes(a.symbol));}
+// собрать полноценный объект актива из шаблона (со всеми полями схемы)
+function seedAsset(t){return{symbol:t.symbol,name:t.name,sector:t.sector,category:t.cat,price:t.price,previousPrice:t.price,vol:t.vol,yieldPct:t.y||0,risk:t.risk||"средний",per:t.per||"раунд",desc:t.desc||"",isHalted:false,isHidden:!!t.hidden,tradable:t.tradable!==false,history:[t.price],updatedAt:Date.now()};}
+// стартовый набор биржи для новых комнат: акции + по 1–2 из каждой категории (легаси-акции НЕ включены)
+const DEFAULT_SEED_SYMBOLS=["$ELEC","$DRUG","$FUN","$INDX","$BALF","$MMF","$GBOND","$CBOND","$FLAT","$REIT","$GOLD","$CAFE","$FRAN","$ARTF","$CAR"];
+function defaultSeedAssets(n){const syms=DEFAULT_SEED_SYMBOLS.slice(0,n||DEFAULT_SEED_SYMBOLS.length);return syms.map(s=>seedAsset(tpl(s)));}
 
 // Шаблоны профессий (CashFlow-стиль): значения подставляются в бланк
 const PROFESSIONS=[
@@ -496,6 +608,16 @@ let CODE=null;
 let M={room:null,users:[],transactions:[],loans:[],pools:[],startups:[],offers:[],approvals:[],news:[],history:[]};
 let session=loadSess();
 let unsubs=[];
+/* --- Производительность: батчинг перерисовок и защита от двойного клика --- */
+let _actBusy=false;       // глобальная блокировка на время выполнения действия (анти-дабл-клик)
+let _renderRAF=0;         // id запланированного requestAnimationFrame
+let _renderPending=false; // есть отложенная перерисовка (пользователь печатает в поле)
+let _ticking=false;       // идёт обновление котировок (анти-перекрытие тиков)
+let DEV=false;            // демо-режим (?dev=1): работа без Firebase, данные в памяти
+let _lastRoll=0;          // последнее выпавшее значение кубика (для отображения)
+let _rolling=false;       // идёт анимация перемещения фигурки (блокировка кубика)
+let exFilter="all";       // выбранная категория на бирже (сохраняется между обновлениями цен)
+let authScreen=/[?&]admin=1/.test(location.search)?"admin":"player"; // экран входа: игрок / администратор
 let lastEvent=null, categoryFilter="all", txFilter="all";
 
 function loadSess(){try{return JSON.parse(localStorage.getItem("dcb_sess"))||mkSess();}catch(e){return mkSess();}}
@@ -577,6 +699,10 @@ function tables(){return room().tables||[];}
 function teams(){return room().teams||[];}
 function assets(){return room().assets||[];}
 function asset(sym){return assets().find(a=>a.symbol===sym);}
+function visibleAssets(){return assets().filter(a=>!isHiddenAsset(a));}                          // не скрытые
+function tradableAssets(){return assets().filter(a=>!isHiddenAsset(a)&&a.tradable!==false);}      // доступны к покупке
+function assetsByCategory(){const m={};visibleAssets().forEach(a=>{const c=assetCat(a);(m[c]=m[c]||[]).push(a);});return m;} // группировка по категориям
+function heldHiddenAssets(u){const pf=(u&&u.portfolio)||{};return assets().filter(a=>isHiddenAsset(a)&&pf[a.symbol]&&pf[a.symbol].qty>0);} // скрытые, но есть в портфеле (архив)
 function tableName(id){const t=tables().find(x=>x.id===id);return t?t.name:"—";}
 function teamName(id){const t=teams().find(x=>x.id===id);return t?t.name:"Без команды";}
 function teamColor(id){const t=teams().find(x=>x.id===id);return t?t.color:"#64748b";}
@@ -586,7 +712,46 @@ function trendObj(){return TRENDS.find(t=>t.id===room().trendId)||TRENDS[0];}
 function modeObj(){return MODES.find(m=>m.id===room().mode)||MODES[0];}
 function phaseObj(){return PHASES.find(p=>p.id===room().phase)||PHASES[0];}
 function totalCapital(){return players().reduce((s,u)=>s+(u.balance||0),0);}
-function portfolioValue(u){let v=0;const pf=u.portfolio||{};for(const s in pf){const a=asset(s);if(a)v+=a.price*pf[s].qty;}return v;}
+/* ---------- ЕДИНЫЙ МОДУЛЬ ФИНАНСОВЫХ РАСЧЁТОВ (без дублирования) ----------
+   Все расчёты стоимости, P/L, пассивного дохода и доходности идут отсюда.
+   Устойчивы к null/undefined/строкам/пустому вводу. */
+function num(v){v=typeof v==="string"?parseFloat(v.replace(/\s/g,"").replace(",",".")):v;return isFinite(v)?v:0;}
+function positionValue(a,pos){return a&&pos?Math.round(num(a.price)*num(pos.qty)):0;}
+function positionPL(a,pos){return a&&pos?Math.round((num(a.price)-num(pos.avg))*num(pos.qty)):0;}
+function positionPassive(a,pos){return a&&pos?Math.round(num(a.price)*num(pos.qty)*assetYield(a)/100):0;} // пассивный доход позиции за период
+function assetPassivePerUnit(a){return a?Math.round(num(a.price)*assetYield(a)/100):0;}
+function portfolioValue(u){let v=0;const pf=(u&&u.portfolio)||{};for(const s in pf){const a=asset(s);if(a)v+=positionValue(a,pf[s]);}return v;}
+function portfolioPassive(u){let v=0;const pf=(u&&u.portfolio)||{};for(const s in pf){const a=asset(s);if(a)v+=positionPassive(a,pf[s]);}return v;} // суммарный пассивный доход портфеля/период
+function portfolioCost(u){let v=0;const pf=(u&&u.portfolio)||{};for(const s in pf){if(asset(s))v+=num(pf[s].avg)*num(pf[s].qty);}return v;}
+function portfolioPL(u){let v=0;const pf=(u&&u.portfolio)||{};for(const s in pf){const a=asset(s);if(a)v+=positionPL(a,pf[s]);}return v;}
+function portfolioYield(u){const val=portfolioValue(u);return val>0?portfolioPassive(u)/val*100:0;} // доходность портфеля, %
+function positionsCount(u){const pf=(u&&u.portfolio)||{};return Object.keys(pf).filter(s=>asset(s)&&pf[s].qty>0).length;}
+function donation10(bal){return Math.max(0,Math.floor(num(bal)*0.10));} // пожертвование = 10% от КОШЕЛЬКА игрока (баланса), не от всего капитала
+// множитель пассивного дохода от репутации (благотворительность); базово 1.0, бонус задаётся в Фазе 3
+function reputationMult(u){const b=u&&u.charityBonus;if(b&&b.until&&(room().round||1)<=b.until)return 1+(b.mult||0);return 1;}
+function passiveWithBonus(u){return Math.round(portfolioPassive(u)*reputationMult(u));} // итоговый пассивный доход с учётом бонуса репутации
+/* Итоговые показатели игрока (единый источник для поля, бланка и правила выхода на внешний круг) */
+function sheetOf(u){return (u&&u.sheet)||defaultSheet();}
+function playerExpensesTotal(u){return computeSheet(sheetOf(u)).totalExpenses;}          // общие расходы (из бланка)
+function playerSheetPassive(u){return computeSheet(sheetOf(u)).passive;}                   // пассив из бланка
+function playerPassiveTotal(u){return passiveWithBonus(u)+playerSheetPassive(u);}          // пассив: портфель (с бонусом) + бланк
+function playerDebtsTotal(u){return loansOf(u.id).reduce((s,l)=>s+(l.outstanding||0),0);}   // долги = активные кредиты ЦБ, взятые в игре
+function playerCashflow(u){return computeSheet(sheetOf(u)).cashflow+portfolioPassive(u);}   // денежный поток игрока (для доли инвестора)
+// ПРАВИЛО ВЫХОДА на внешний круг: все долги закрыты И пассивный доход > общих расходов
+function canMoveToOuter(u){return playerDebtsTotal(u)<=0 && playerPassiveTotal(u)>playerExpensesTotal(u);}
+function outerStatus(u){
+  if((u.track||"ratrace")==="fasttrack")return{cls:"b-gold",label:"Скоростная дорожка",outer:true,ready:true};
+  const debts=playerDebtsTotal(u),pas=playerPassiveTotal(u),exp=playerExpensesTotal(u);
+  if(debts>0)return{cls:"b-red",label:"До выхода: закройте долги ("+fmt(debts)+")"};
+  if(pas<=exp)return{cls:"b-orange",label:"До выхода: пассив должен быть выше расходов (+"+fmt(exp-pas+1)+")"};
+  return{cls:"b-green",label:"Готов к выходу на внешний круг",ready:true};
+}
+// единая математика сделки (используется и в атомарной транзакции, и в DEMO — без дублирования формул)
+function computeTrade(before,portfolioIn,a,qty,isBuy){
+  const fee=Math.round(a.price*qty*0.01),pf=Object.assign({},portfolioIn||{});
+  if(isBuy){const cost=a.price*qty+fee;if(before<cost)return{error:"Недостаточно средств"};const cur=Object.assign({qty:0,avg:0},pf[a.symbol]);cur.avg=Math.round((cur.avg*cur.qty+a.price*qty)/(cur.qty+qty));cur.qty+=qty;pf[a.symbol]=cur;return{balance:before-cost,portfolio:pf,amount:-cost,fee,reason:"Покупка "+qty+" "+a.symbol};}
+  const cur=pf[a.symbol];if(!cur||cur.qty<qty)return{error:"Недостаточно активов"};const proceeds=a.price*qty-fee;cur.qty-=qty;if(cur.qty<=0)delete pf[a.symbol];return{balance:before+proceeds,portfolio:pf,amount:proceeds,fee,reason:"Продажа "+qty+" "+a.symbol};
+}
 function loansOf(id){return M.loans.filter(l=>l.userId===id&&l.status==="active");}
 
 function toast(msg,kind){const w=document.getElementById("toasts");const el=document.createElement("div");el.className="toast"+(kind==="warn"?" warn":kind==="ach"?" ach":"");el.innerHTML=iconize(msg);w.appendChild(el);setTimeout(()=>{el.style.transition="opacity .4s";el.style.opacity="0";setTimeout(()=>el.remove(),400);},2800);}
@@ -628,20 +793,21 @@ async function firebaseSelfTest(){
 /* ---------- FIRESTORE REFS ---------- */
 const rdoc=()=>doc(db,"rooms",CODE);
 const sub=(n)=>collection(db,"rooms",CODE,n);
-function updateRoom(obj){return updateDoc(rdoc(),obj);}
-function addHistory(type,title,desc){return addDoc(sub("history"),{type,title,desc:desc||"",round:room().round||1,createdAt:serverTimestamp()});}
-function addNews(title,body,type,priority){return addDoc(sub("news"),{title,body:body||"",type:type||"info",priority:priority||"normal",createdAt:serverTimestamp()});}
+function nowStamp(){return DEV?{toDate:()=>new Date()}:serverTimestamp();} // метка времени: реальная в проде, демо-объект в DEMO
+function updateRoom(obj){if(DEV){onRoomData(Object.assign({},M.room,obj));return Promise.resolve();}return updateDoc(rdoc(),obj);}
+function addHistory(type,title,desc){if(DEV){M.history.unshift({id:"h"+Date.now()+Math.random(),type,title,desc:desc||"",round:room().round||1});return Promise.resolve();}return addDoc(sub("history"),{type,title,desc:desc||"",round:room().round||1,createdAt:serverTimestamp()});}
+function addNews(title,body,type,priority){if(DEV){M.news.unshift({id:"n"+Date.now()+Math.random(),title,body:body||"",type:type||"info",priority:priority||"normal"});return Promise.resolve();}return addDoc(sub("news"),{title,body:body||"",type:type||"info",priority:priority||"normal",createdAt:serverTimestamp()});}
 async function bumpCounter(k){const c=Object.assign({},room().counters||{});c[k]=(c[k]||0)+1;await updateRoom({counters:c});}
 
 /* ---------- SUBSCRIPTIONS ---------- */
 function unsubAll(){unsubs.forEach(u=>{try{u();}catch(e){}});unsubs=[];}
 function subscribeRoom(code){
   unsubAll();CODE=code;
-  unsubs.push(onSnapshot(rdoc(),s=>{M.room=s.exists()?{id:s.id,...s.data()}:null;render();},err=>showError(err)));
+  unsubs.push(onSnapshot(rdoc(),s=>onRoomData(s.exists()?{id:s.id,...s.data()}:null),err=>showError(err)));
   [["users","users",false],["transactions","transactions",true],["loans","loans",false],["pools","pools",false],["startups","startups",false],["offers","offers",false],["approvals","approvals",false],["news","news",true],["history","history",true]].forEach(([key,name,ordered])=>{
     let q2=collection(db,"rooms",code,name);
     if(ordered)q2=query(q2,orderBy("createdAt","desc"),limit(150));
-    unsubs.push(onSnapshot(q2,s=>{M[key]=s.docs.map(d=>({id:d.id,...d.data()}));render();},err=>{}));
+    unsubs.push(onSnapshot(q2,s=>{M[key]=s.docs.map(d=>({id:d.id,...d.data()}));scheduleRender();},err=>{console.warn("snapshot "+name,err&&err.code);}));
   });
 }
 
@@ -653,7 +819,7 @@ async function createRoom(o){
   const tbls=[];const n=Math.max(1,Math.min(4,o.tables||2));
   for(let i=1;i<=n;i++)tbls.push({id:"TBL"+i,name:"Стол "+i,number:i});
   if(o.venture)tbls.push({id:"TBL"+(n+1),name:"Венчурный стол",number:n+1});
-  const ass=ASSET_TEMPLATES.slice(0,o.assets||3).map(t=>({symbol:t.symbol,name:t.name,sector:t.sector,price:t.price,previousPrice:t.price,vol:t.vol,isHalted:false,history:[t.price]}));
+  const ass=defaultSeedAssets(o.assets);  // новые категории активов; легаси-акции ($TECH и т.п.) по умолчанию не сеются
   await setDoc(doc(db,"rooms",code),{
     name:o.name||"Большая игра",phase:"start",round:1,mode:"basic",trendId:"growth",riskIndex:35,centralBankRate:10,
     economy:{inflation:35,rate:30,realEstate:55,stocks:55,unemployment:40,business:55,sentiment:55,liquidity:55,creditAccess:55},
@@ -700,6 +866,7 @@ async function assignTeam(teamId,memberIds){for(const u of players()){const inTe
 
 /* ---------- MONEY (atomic) ---------- */
 async function changeBalance(id,delta,type,reason,extra){
+  if(DEV){const u=uid(id);if(!u)return;const before=u.balance||0,after=Math.round(before+delta);u.balance=after;M.transactions.unshift(Object.assign({id:"t"+Date.now()+Math.random(),type,targetName:u.name,playerId:id,amount:Math.round(delta),reason:reason||"",balanceBefore:before,balanceAfter:after,round:room().round||1},extra||{}));scheduleRender();return;}
   const uref=doc(db,"rooms",CODE,"users",id);const txRef=doc(collection(db,"rooms",CODE,"transactions"));
   await runTransaction(db,async t=>{
     const s=await t.get(uref);if(!s.exists())throw new Error("no user");
@@ -753,28 +920,79 @@ async function repayLoan(loanId,amount){
   const left=l.outstanding-amount;await updateDoc(doc(db,"rooms",CODE,"loans",loanId),{outstanding:left,status:left<=0?"closed":"active"});
   addHistory("loan","Погашение: "+u.name,fmt(amount));toast("✅ Погашено");
 }
-function paydayPreview(id){const interest=loansOf(id).reduce((s,l)=>s+Math.round(l.outstanding*l.rate/100),0);let pool=0;M.pools.filter(p=>p.status==="active").forEach(p=>{const pt=(p.participants||[]).find(x=>x.userId===id);if(pt)pool+=Math.round(p.expectedMonthlyIncome*pt.contribution/p.collectedAmount);});return{interest,pool,net:pool-interest};}
-async function doPayday(id){const u=uid(id),pv=paydayPreview(id);if(pv.interest>0)await changeBalance(id,-pv.interest,"loanInterest","Проценты по кредитам (День получки)");if(pv.pool>0)await changeBalance(id,+pv.pool,"poolPayout","Доход от пулов (День получки)");addHistory("payday","День получки: "+u.name,"Проценты -"+fmt(pv.interest)+", пулы +"+fmt(pv.pool));toast("💵 День получки: итог "+(pv.net>=0?"+":"")+fmt(pv.net));}
+function paydayPreview(id){const u=uid(id);const interest=loansOf(id).reduce((s,l)=>s+Math.round(l.outstanding*l.rate/100),0);let pool=0;M.pools.filter(p=>p.status==="active").forEach(p=>{const pt=(p.participants||[]).find(x=>x.userId===id);if(pt)pool+=Math.round(p.expectedMonthlyIncome*pt.contribution/p.collectedAmount);});const passive=passiveWithBonus(u);const invPay=activeInvestmentsFor(id).reduce((s,ag)=>s+investorReturnFor(ag),0);return{interest,pool,passive,invPay,net:pool+passive-interest-invPay};}
+async function doPayday(id){const u=uid(id),pv=paydayPreview(id);
+  if(pv.interest>0)await changeBalance(id,-pv.interest,"loanInterest","Проценты по кредитам (День получки)");
+  if(pv.pool>0)await changeBalance(id,+pv.pool,"poolPayout","Доход от пулов (День получки)");
+  if(pv.passive>0)await changeBalance(id,+pv.passive,"passiveIncome","Пассивный доход с активов (День получки)");
+  for(const ag of activeInvestmentsFor(id)){const ret=investorReturnFor(ag);if(ret>0){const inv=uid(ag.investorId);await changeBalance(id,-ret,"investorPayout","Выплата инвестору "+(inv?inv.name:""));await changeBalance(ag.investorId,+ret,"investorPayout","Доход от инвестиции в "+u.name);}}
+  addHistory("payday","День получки: "+u.name,"пассив +"+fmt(pv.passive)+", проценты -"+fmt(pv.interest)+", инвесторам -"+fmt(pv.invPay));
+  toast("💵 День получки: итог "+(pv.net>=0?"+":"")+fmt(pv.net));}
+
+/* ---------- БЛАГОТВОРИТЕЛЬНОСТЬ И РЕПУТАЦИЯ ---------- */
+const CHARITY_MULT=0.25, CHARITY_ROUNDS=3, CHARITY_DICE=2; // бонус: +25% к пассивному доходу на 3 раунда + право доп. кубика
+function repTier(rep){rep=rep||0;if(rep>=20)return{icon:"🏛️",label:"Филантроп",cls:"b-gold"};if(rep>=10)return{icon:"🤝",label:"Меценат",cls:"b-purple"};if(rep>=3)return{icon:"🌱",label:"Благотворитель",cls:"b-green"};return{icon:"•",label:"Новичок",cls:"b-gray"};}
+function charityBonusActive(u){const b=u&&u.charityBonus;return !!(b&&b.until&&(room().round||1)<=b.until);}
+// Пожертвование: списывает 10% КОШЕЛЬКА игрока (баланса), начисляет репутацию и временный бонус. Атомарно (баланс) + безопасно.
+async function donateCharity(id){
+  const u=uid(id);if(!u)return;
+  const amount=donation10(u.balance);                         // 10% от баланса кошелька
+  if(amount<=0){toast("⚠️ Недостаточно средств для пожертвования","warn");return;}
+  await changeBalance(id,-amount,"charity","Благотворительность (10% кошелька)"); // атомарное списание
+  const gain=Math.max(1,Math.round(amount/500));              // очки репутации за пожертвование
+  const bonus={until:(room().round||1)+CHARITY_ROUNDS,mult:CHARITY_MULT,dice:CHARITY_DICE,grantedRound:room().round||1};
+  await commitUser(id,{reputation:(u.reputation||0)+gain,charityBonus:bonus,donatedTotal:(u.donatedTotal||0)+amount});
+  addHistory("charity","Пожертвование: "+u.name,fmt(amount)+" · репутация +"+gain);
+  addNews("Благотворительность",esc(u.name)+" пожертвовал "+fmt(amount)+" и получил бонус репутации","event","normal");
+  toast("❤️ Спасибо! Репутация +"+gain+", пассивный доход +"+Math.round(CHARITY_MULT*100)+"% на "+CHARITY_ROUNDS+" раунда","ach");
+  checkAch();
+}
+function charityCard(u){
+  const amount=donation10(u.balance),rep=u.reputation||0,t=repTier(rep),b=u.charityBonus,active=charityBonusActive(u);
+  return '<div class="card"><div class="row spread"><h2>❤️ Благотворительность</h2><span class="badge '+t.cls+'">'+t.icon+' '+t.label+' · '+rep+'</span></div>'+
+    '<div class="grid g3 keep" style="margin-top:6px">'+stat("Репутация",rep)+stat("Пожертвовано",fmt(u.donatedTotal||0))+stat("10% кошелька",fmt(amount))+'</div>'+
+    (active?'<div class="ok-box small" style="margin-top:8px">🎁 Бонус активен: пассивный доход +'+Math.round((b.mult||0)*100)+'% до раунда '+b.until+(b.dice?' · можно бросать до '+b.dice+' кубиков':'')+'</div>':'')+
+    '<button class="btn purple block" style="margin-top:10px" data-act="donate"'+(amount<=0?' disabled':'')+'>Пожертвовать на благотворительность · 10% ('+fmt(amount)+')</button>'+
+    '<div class="small muted" style="margin-top:6px">Списывается 10% из кошелька. Взамен растёт репутация и на '+CHARITY_ROUNDS+' раунда включается бонус к пассивному доходу.</div></div>';
+}
 
 /* ---------- EXCHANGE ---------- */
-async function priceTick(){let r=[-8,8];if(room().phase==="crisis"||room().mode==="crisis")r=[-25,10];else if(room().riskIndex>70)r=[-18,8];else if(room().riskIndex<30)r=[-5,15];const ass=assets().map(a=>{if(a.isHalted)return a;const pct=r[0]+Math.random()*(r[1]-r[0]);const np=Math.max(1,Math.round(a.price*(1+pct/100)));return Object.assign({},a,{previousPrice:a.price,price:np,history:(a.history||[]).concat(np).slice(-40)});});await updateRoom({assets:ass});addHistory("exchange","Котировки обновлены","Движение рынка");}
+async function priceTick(){
+  if(_ticking)return;_ticking=true;                       // анти-перекрытие тиков (гонки состояний)
+  try{
+    let r=[-8,8];if(room().phase==="crisis"||room().mode==="crisis")r=[-25,10];else if(room().riskIndex>70)r=[-18,8];else if(room().riskIndex<30)r=[-5,15];
+    const base=(r[0]+r[1])/2,half=(r[1]-r[0])/2; // рыночный центр и полуширина движения
+    const ass=assets().map(a=>{if(a.isHalted)return a;const k=assetVol(a)/8;/* масштаб волатильности: stable<1, акции≈1, арт>1 */const pct=(base+(Math.random()*2-1)*half)*k;const np=Math.max(1,Math.round(a.price*(1+pct/100)));return Object.assign({},a,{previousPrice:a.price,price:np,history:(a.history||[]).concat(np).slice(-40),updatedAt:Date.now()});});
+    // одна запись в документ комнаты; addHistory на каждом тике убран (снижает шторм записей и перерисовок)
+    await updateRoom({assets:ass,lastPriceUpdate:nowStamp()});
+  }catch(e){showError(e);}finally{_ticking=false;}
+}
 function applyStock(ass,eff){if(!eff)return ass;return ass.map(a=>{let p=null;if(eff.all!=null)p=eff.all;if(eff[a.symbol]!=null)p=eff[a.symbol];if(p==null)return a;const np=Math.max(1,Math.round(a.price*(1+p/100)));return Object.assign({},a,{previousPrice:a.price,price:np,history:(a.history||[]).concat(np).slice(-40)});});}
 async function shock(sym,pct){await updateRoom({assets:applyStock(assets(),sym==="all"?{all:pct}:{[sym]:pct})});addNews("Биржевой шок",sym+" "+(pct>0?"+":"")+pct+"%","market","high");addHistory("marketShock","Биржевой шок: "+sym,(pct>0?"+":"")+pct+"%");}
-async function setPrice(sym,price){const v=Math.max(1,Math.round(price));await updateRoom({assets:assets().map(a=>a.symbol===sym?Object.assign({},a,{previousPrice:a.price,price:v,history:(a.history||[]).concat(v).slice(-40)}):a)});}
+async function setPrice(sym,price){const v=Math.max(1,Math.round(price));await updateRoom({assets:assets().map(a=>a.symbol===sym?Object.assign({},a,{previousPrice:a.price,price:v,history:(a.history||[]).concat(v).slice(-40),updatedAt:Date.now()}):a)});}
 async function toggleHalt(sym){await updateRoom({assets:assets().map(a=>a.symbol===sym?Object.assign({},a,{isHalted:!a.isHalted}):a)});}
-async function addAsset(sym){const t=ASSET_TEMPLATES.find(x=>x.symbol===sym);if(!t){toast("⚠️ Нет шаблона","warn");return;}if(asset(sym)){toast("⚠️ Уже на бирже","warn");return;}const a={symbol:t.symbol,name:t.name,sector:t.sector,price:t.price,previousPrice:t.price,vol:t.vol,isHalted:false,history:[t.price]};await updateRoom({assets:assets().concat([a])});addHistory("exchange","Добавлена акция: "+t.symbol,t.name);addNews("Новая акция на бирже",t.symbol+" · "+t.name,"market","normal");toast("✅ "+t.symbol+" добавлен");}
-async function delAsset(sym){await updateRoom({assets:assets().filter(a=>a.symbol!==sym)});addHistory("exchange","Акция снята с торгов: "+sym);toast("🗑 "+sym+" убран");}
+async function toggleHide(sym){const a=asset(sym);if(!a)return;const now=!isHiddenAsset(a);await updateRoom({assets:assets().map(x=>x.symbol===sym?Object.assign({},x,{isHidden:now}):x)});toast(now?"🙈 "+sym+" скрыт из покупки":"👁 "+sym+" виден игрокам");}
+async function addAsset(sym){const t=tpl(sym);if(!t.symbol){toast("⚠️ Нет шаблона","warn");return;}if(asset(sym)){toast("⚠️ Уже на бирже","warn");return;}await updateRoom({assets:assets().concat([seedAsset(t)])});addHistory("exchange","Добавлен актив: "+t.symbol,t.name);if(!t.hidden)addNews("Новый актив на бирже",t.symbol+" · "+t.name,"market","normal");toast("✅ "+t.symbol+" добавлен");}
+async function delAsset(sym){await updateRoom({assets:assets().filter(a=>a.symbol!==sym)});addHistory("exchange","Актив снят с торгов: "+sym);toast("🗑 "+sym+" убран");}
 let autoTickTimer=null;
-function toggleAuto(){if(autoTickTimer){clearInterval(autoTickTimer);autoTickTimer=null;toast("⏱ Авто-обновление выключено");}else{autoTickTimer=setInterval(()=>{if(CODE&&session.role==="admin")priceTick();},45000);toast("⏱ Авто-обновление: каждые 45 сек");}render();}
+function toggleAuto(){if(autoTickTimer){clearInterval(autoTickTimer);autoTickTimer=null;toast("⏱ Авто-обновление выключено");}else{autoTickTimer=setInterval(()=>{if(CODE&&session.role==="admin"&&!document.hidden&&!_ticking)priceTick();},45000+Math.floor(Math.random()*15000));toast("⏱ Авто-обновление: ~45–60 сек");}render();}
 async function trade(id,sym,qty,isBuy){
   const u=uid(id),a=asset(sym);if(!u||!a)return;if(a.isHalted){toast("⚠️ Торговля остановлена","warn");return;}
+  if(!isBuy&&isHiddenAsset(a)){/* скрытые активы можно только продавать — это разрешено */}
   qty=Math.floor(Math.abs(qty));if(!qty){toast("⚠️ Укажите количество","warn");return;}
-  const fee=Math.round(a.price*qty*0.01);const uref=doc(db,"rooms",CODE,"users",id);const txRef=doc(collection(db,"rooms",CODE,"transactions"));
+  if(DEV){ // DEMO: та же математика через computeTrade, состояние в памяти
+    const r=computeTrade(u.balance||0,u.portfolio,a,qty,isBuy);if(r.error){toast("⚠️ "+r.error,"warn");return;}
+    u.balance=r.balance;u.portfolio=r.portfolio;M.transactions.unshift({id:"t"+Date.now()+Math.random(),type:"trade",targetName:u.name,playerId:id,amount:r.amount,reason:r.reason,round:room().round||1});toast("✅ Сделка выполнена");scheduleRender();return;
+  }
+  const uref=doc(db,"rooms",CODE,"users",id);const txRef=doc(collection(db,"rooms",CODE,"transactions"));
   try{
     await runTransaction(db,async t=>{
-      const s=await t.get(uref);const d=s.data();const pf=Object.assign({},d.portfolio||{});const before=d.balance||0;
-      if(isBuy){const cost=a.price*qty+fee;if(before<cost)throw new Error("Недостаточно средств");const cur=Object.assign({qty:0,avg:0},pf[sym]);cur.avg=Math.round((cur.avg*cur.qty+a.price*qty)/(cur.qty+qty));cur.qty+=qty;pf[sym]=cur;const after=before-cost;let tg=(d.tags||[]).slice();["есть акции","активный трейдер"].forEach(x=>{if(!tg.includes(x))tg.push(x);});t.update(uref,{balance:after,portfolio:pf,tags:tg});t.set(txRef,{type:"trade",targetName:d.name,playerId:id,amount:-cost,reason:"Покупка "+qty+" "+sym,balanceBefore:before,balanceAfter:after,round:room().round,createdBy:session.role,createdAt:serverTimestamp()});}
-      else{const cur=pf[sym];if(!cur||cur.qty<qty)throw new Error("Недостаточно акций");const proceeds=a.price*qty-fee;cur.qty-=qty;if(cur.qty<=0)delete pf[sym];const after=before+proceeds;t.update(uref,{balance:after,portfolio:pf});t.set(txRef,{type:"trade",targetName:d.name,playerId:id,amount:proceeds,reason:"Продажа "+qty+" "+sym,balanceBefore:before,balanceAfter:after,round:room().round,createdBy:session.role,createdAt:serverTimestamp()});}
+      const s=await t.get(uref);const d=s.data();const before=d.balance||0;
+      const r=computeTrade(before,d.portfolio,a,qty,isBuy);if(r.error)throw new Error(r.error);
+      const patch={balance:r.balance,portfolio:r.portfolio};
+      if(isBuy){let tg=(d.tags||[]).slice();["есть акции","активный трейдер"].forEach(x=>{if(!tg.includes(x))tg.push(x);});patch.tags=tg;}
+      t.update(uref,patch);
+      t.set(txRef,{type:"trade",targetName:d.name,playerId:id,amount:r.amount,reason:r.reason,balanceBefore:before,balanceAfter:r.balance,round:room().round,createdBy:session.role,createdAt:serverTimestamp()});
     });
     bumpCounter("trades");addHistory("trade",(isBuy?"Покупка":"Продажа")+" "+sym,u.name+": "+qty+" @ "+fmt(a.price));toast("✅ Сделка выполнена");checkAch();
   }catch(e){toast("⚠️ "+(e.message||"Ошибка сделки"),"warn");}
@@ -886,12 +1104,66 @@ async function resetRoom(){
 async function saveSettings(f){const s=Object.assign({},settings(),f.settings);await updateRoom({settings:s,centralBankRate:f.cbr});toast("✅ Настройки сохранены");}
 /* ---------- RENDER ---------- */
 let shownEvent=null;
-const ADMIN_TABS=[["dash","🎛️ Dashboard"],["players","🧮 Игроки"],["roster","👥 Участники"],["sheets","🧾 Бланки"],["teams","🤝 Команды"],["tables","🪑 Столы"],["events","🎴 События"],["exchange","📊 Биржа"],["loans","🏦 Кредиты"],["pools","🧩 Пулы"],["venture","🚀 Венчур"],["tx","💳 Транзакции"],["history","📜 История"],["settings","⚙️ Настройки"],["rules","📖 Правила"]];
+const ADMIN_TABS=[["dash","🎛️ Dashboard"],["players","🧮 Игроки"],["roster","👥 Участники"],["sheets","🧾 Бланки"],["teams","🤝 Команды"],["tables","🪑 Столы"],["events","🎴 События"],["exchange","📊 Биржа"],["board","🗺️ Поле"],["loans","🏦 Кредиты"],["pools","🧩 Пулы"],["venture","🚀 Венчур"],["tx","💳 Транзакции"],["history","📜 История"],["settings","⚙️ Настройки"],["rules","📖 Правила"]];
 const BANKER_TABS=[["players","👥 Игроки стола"],["ops","⚡ Операции"],["roster","👥 Участники"],["sheets","🧾 Бланки"],["approvals","✅ Подтверждения"],["pools","🧩 Пулы"],["payday","💵 День получки"],["history","📜 История"]];
 const AUDITOR_TABS=[["sheets","🧾 Бланки на проверку"],["roster","👥 Участники"],["players","👥 Игроки"],["mysheet","📝 Мой бланк"],["mywallet","💼 Мой кошелёк"],["history","📜 История"]];
-const PLAYER_NAV=[["wallet","💼","Кошелёк"],["sheet","📝","Бланк"],["exchange","📊","Биржа"],["pools","🧩","Пулы"],["venture","🚀","Венчур"],["roster","👥","Состав"],["news","📰","Лента"]];
+const PLAYER_NAV=[["wallet","💼","Кошелёк"],["board","🗺️","Поле"],["sheet","📝","Бланк"],["exchange","📊","Биржа"],["pools","🧩","Пулы"],["venture","🚀","Венчур"],["roster","👥","Состав"],["news","📰","Лента"]];
 function setTab(t){session.tab[session.role]=t;saveSess();render();window.scrollTo(0,0);}
 function leaveRoom(){unsubAll();session=mkSess();saveSess();CODE=null;M={room:null,users:[],transactions:[],loans:[],pools:[],startups:[],offers:[],approvals:[],news:[],history:[]};render();}
+
+/* ---------- RENDER SCHEDULER (анти-фриз) ----------
+   Коалесцирует множество Firestore-snapshot событий в ОДНУ перерисовку за кадр
+   и откладывает её, пока пользователь печатает в поле внутри #view. */
+function scheduleRender(){
+  if(_rolling)return; // не перерисовывать во время анимации хода фигурки (иначе фигурка «прыгнет»)
+  const ae=document.activeElement,view=document.getElementById("view");
+  if(ae&&view&&view.contains(ae)&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)){_renderPending=true;return;}
+  if(_renderRAF)return;
+  _renderRAF=requestAnimationFrame(()=>{_renderRAF=0;_renderPending=false;try{render();}catch(e){console.error("render error",e);}});
+}
+// применить отложенную перерисовку, когда поле теряет фокус
+document.addEventListener("focusout",()=>{if(_renderPending)setTimeout(()=>{if(_renderPending)scheduleRender();},60);},true);
+// не оставлять «зависшую» блокировку кнопок, если вкладку свернули во время операции
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&_renderPending)scheduleRender();});
+
+/* Единый обработчик данных комнаты (для live-snapshot и для DEMO-записей):
+   если изменились ТОЛЬКО котировки и открыта биржа — точечный патч цен вместо полной перерисовки. */
+function onRoomData(data){
+  const prev=M.room;M.room=data;
+  if(onlyPricesChanged(prev,M.room)&&isExchangeVisible()){patchExchangePrices();return;}
+  scheduleRender();
+}
+/* true, если между снимками изменились ТОЛЬКО котировки (цены/история активов) */
+function onlyPricesChanged(a,b){
+  if(!a||!b)return false;
+  const ka=Object.assign({},a),kb=Object.assign({},b);
+  delete ka.assets;delete kb.assets;delete ka.lastPriceUpdate;delete kb.lastPriceUpdate;
+  if(JSON.stringify(ka)!==JSON.stringify(kb))return false;
+  const aa=a.assets||[],bb=b.assets||[];if(aa.length!==bb.length)return false;
+  for(let i=0;i<aa.length;i++){if(aa[i].symbol!==bb[i].symbol||!!aa[i].isHalted!==!!bb[i].isHalted)return false;}
+  return true;
+}
+function isExchangeVisible(){
+  if(!session.code||!M.room)return false;
+  if(session.role==="admin")return session.tab.admin==="exchange";
+  if(session.role==="player")return session.tab.player==="exchange";
+  return false;
+}
+/* Точечное обновление цен на бирже — меняем только цифры, не пересобирая DOM
+   (сохраняет введённое количество, фокус, скролл и выбранные фильтры). */
+function patchExchangePrices(){
+  const me=session.role==="player"?uid(session.uid):null;
+  assets().forEach(a=>{
+    const card=document.querySelector('[data-ex="'+a.symbol+'"]');if(!card)return;
+    const chg=a.previousPrice?((a.price-a.previousPrice)/a.previousPrice*100):0,up=chg>=0;
+    const pe=card.querySelector("[data-exprice]");if(pe)pe.textContent=fmt(a.price);
+    const ce=card.querySelector("[data-exchg]");if(ce){ce.className=(up?"chg-up":"chg-down");ce.setAttribute("data-exchg","");ce.textContent=(up?"▲":"▼")+Math.abs(chg).toFixed(1)+"%";}
+    if(me){const pf=(me.portfolio||{})[a.symbol],ple=card.querySelector("[data-expl]");if(ple&&pf)ple.textContent=heldLine(a,pf);}
+  });
+  updatePriceStamp();
+}
+function priceStampText(){let t=null;try{const ts=M.room&&M.room.lastPriceUpdate;t=ts&&ts.toDate?ts.toDate():null;}catch(e){}return "обновлено "+(t?t.toLocaleTimeString("ru-RU"):"—");}
+function updatePriceStamp(){const el=document.getElementById("priceStamp");if(el)el.textContent=priceStampText();}
 
 function render(){
   const view=document.getElementById("view"),top=document.getElementById("topbar"),nav=document.getElementById("bottomNav");
@@ -931,25 +1203,36 @@ function renderTabsBar(t){const el=document.getElementById("tabs");if(el)el.inne
 function renderNav(){const n=document.getElementById("bottomNav");n.className="bottomnav";n.innerHTML=iconize(PLAYER_NAV.map(x=>'<div class="bn'+(session.tab.player===x[0]?' on':'')+'" data-tab="'+x[0]+'">'+x[1]+'<span style="display:block">'+x[2]+'</span></div>').join(""));}
 
 /* ----- AUTH ----- */
+function brandHeader(sub){return '<div class="card center"><div class="logo" style="font-size:32px">🏛️</div><h2 style="font-family:var(--serif);font-weight:400;font-size:31px;letter-spacing:.3px">Cash-Flow 2.0</h2><p class="small muted">'+sub+'</p></div>';}
 function authView(){
-  return '<div class="auth"><div class="card center"><div class="logo" style="font-size:40px">🏛️</div><h2>Digital Central Bank</h2><p class="small muted">Цифровой Центробанк, Биржа и бланки игроков · realtime-портал</p></div>'+
-  '<div class="card"><h2>Вход / Регистрация участника</h2>'+
-    '<div class="field"><label class="fl">Код комнаты</label><input id="jCode" placeholder="CASH-2026" autocapitalize="characters" value="'+esc((new URLSearchParams(location.search).get("room")||session.code||"").toUpperCase())+'"></div>'+
+  const roomParam=esc((new URLSearchParams(location.search).get("room")||session.code||"").toUpperCase());
+  // Отдельная страница входа администратора (ведущего)
+  if(authScreen==="admin"){
+    return '<div class="auth">'+brandHeader("Панель ведущего · вход администратора")+
+    '<div class="card"><h2>Вход ведущего</h2>'+
+      '<div class="grid g2"><div class="field"><label class="fl">Код комнаты</label><input id="aCode" placeholder="CASH-2026" autocapitalize="characters" value="'+roomParam+'"></div><div class="field"><label class="fl">PIN администратора</label><input id="aPin" type="password" placeholder="••••"></div></div>'+
+      '<button class="btn primary block" data-act="enterAdmin">Войти как администратор</button>'+
+    '</div>'+
+    '<div class="card"><h2>Создать новую комнату</h2>'+
+      '<div class="grid g2"><div class="field"><label class="fl">Название</label><input id="cName" value="Большая игра"></div><div class="field"><label class="fl">Код</label><input id="cCode" value="CASH-2026"></div></div>'+
+      '<div class="grid g2"><div class="field"><label class="fl">Стартовый баланс</label><input id="cBal" type="number" value="5000"></div><div class="field"><label class="fl">Столов</label><select id="cTables"><option>1</option><option selected>2</option><option>3</option></select></div></div>'+
+      '<div class="grid g2"><div class="field"><label class="fl">Активов на бирже</label><select id="cAssets"><option value="8">8</option><option value="12" selected>12</option><option value="15">15 (все категории)</option></select></div><div class="field"><label class="fl">Венчурный стол</label><select id="cVenture"><option value="yes" selected>Да</option><option value="no">Нет</option></select></div></div>'+
+      '<div class="grid g2"><div class="field"><label class="fl">PIN админа</label><input id="cAdmin" value="0000"></div><div class="field"><label class="fl">PIN банкира</label><input id="cBanker" value="1111"></div></div>'+
+      '<button class="btn green block" data-act="createRoom">Создать комнату</button>'+
+    '</div>'+
+    '<div class="card center"><button class="btn ghost block" data-act="goPlayerAuth">← Я игрок — вернуться ко входу</button></div>'+
+    '</div>';
+  }
+  // Основной экран — вход игрока по коду и имени
+  return '<div class="auth">'+brandHeader("Финансовая игра · биржа, активы, поле и бланки · realtime")+
+  '<div class="card"><h2>Вход в игру</h2>'+
+    '<div class="field"><label class="fl">Код комнаты</label><input id="jCode" placeholder="CASH-2026" autocapitalize="characters" value="'+roomParam+'"></div>'+
     '<div class="field"><label class="fl">Ваше имя</label><input id="jName" placeholder="Имя" autocomplete="off"></div>'+
     '<button class="btn primary block" data-act="enterParticipant">Войти в игру</button>'+
     '<p class="small muted" style="margin-top:8px">Просто введите имя — при первом входе вам автоматически выдаётся профессия и заполняется бланк. Банкир и аудитор входят так же: их роль назначает администратор.</p>'+
   '</div>'+
-  '<div class="card"><h2>Вход администратора</h2>'+
-    '<div class="grid g2"><div class="field"><label class="fl">Код комнаты</label><input id="aCode" placeholder="CASH-2026"></div><div class="field"><label class="fl">PIN админа</label><input id="aPin" type="password" placeholder="••••"></div></div>'+
-    '<button class="btn block" data-act="enterAdmin">Войти как админ</button>'+
-  '</div>'+
-  '<div class="card"><h2>Создать комнату (админ)</h2>'+
-    '<div class="grid g2"><div class="field"><label class="fl">Название</label><input id="cName" value="Большая игра"></div><div class="field"><label class="fl">Код</label><input id="cCode" value="CASH-2026"></div></div>'+
-    '<div class="grid g2"><div class="field"><label class="fl">Стартовый баланс</label><input id="cBal" type="number" value="5000"></div><div class="field"><label class="fl">Столов</label><select id="cTables"><option>1</option><option selected>2</option><option>3</option></select></div></div>'+
-    '<div class="grid g2"><div class="field"><label class="fl">Акций на бирже</label><select id="cAssets"><option value="3">3</option><option value="5" selected>5</option><option value="7">7</option><option value="9">9 (все)</option></select></div><div class="field"><label class="fl">Венчурный стол</label><select id="cVenture"><option value="yes" selected>Да</option><option value="no">Нет</option></select></div></div>'+
-    '<div class="grid g2"><div class="field"><label class="fl">PIN админа</label><input id="cAdmin" value="0000"></div><div class="field"><label class="fl">PIN банкира</label><input id="cBanker" value="1111"></div></div>'+
-    '<button class="btn green block" data-act="createRoom">Создать комнату</button>'+
-  '</div></div>';
+  '<div class="card center"><p class="small muted" style="margin:0 0 8px">Вы ведущий партии?</p><button class="btn block" data-act="goAdminAuth">Вход для администратора →</button></div>'+
+  '</div>';
 }
 function joinPlayerView(){
   const tableOpts=tables().map(t=>'<option value="'+t.id+'">'+esc(t.name)+'</option>').join("");
@@ -995,7 +1278,7 @@ function eventCardHTML(ev){
 /* ----- ADMIN ----- */
 function adminView(){const t=session.tab.admin;
   if(t==="dash")return aDash();if(t==="players")return calcView(false,null);if(t==="roster")return rosterView();if(t==="sheets")return sheetsReview(null);if(t==="teams")return teamsView();if(t==="tables")return tablesView();
-  if(t==="events")return eventsView();if(t==="exchange")return exchangeAdmin();if(t==="loans")return loansView();if(t==="pools")return poolsView(false);
+  if(t==="events")return eventsView();if(t==="exchange")return exchangeAdmin();if(t==="board")return boardView(null);if(t==="loans")return loansView();if(t==="pools")return poolsView(false);
   if(t==="venture")return ventureView(false);if(t==="tx")return txView();if(t==="history")return historyView();if(t==="ach")return achView();if(t==="settings")return settingsView();if(t==="rules")return rulesView();return "";}
 function aDash(){
   const negs=players().filter(u=>u.balance<0),pend=M.approvals.filter(a=>a.status==="pending").length;
@@ -1030,7 +1313,7 @@ function playerCard(u){
     '<div class="grid g4 keep" style="margin-top:10px;gap:6px">'+qb(100,'plus')+qb(500,'plus')+qb(1000,'plus')+qb(5000,'plus')+qb(-100,'minus')+qb(-500,'minus')+qb(-1000,'minus')+qb(-5000,'minus')+'</div>'+
     '<div class="row" style="margin-top:8px;gap:6px"><input type="number" placeholder="Сумма" data-cust="'+u.id+'" style="max-width:100px"><select data-custop="'+u.id+'" style="max-width:110px"><option value="income">Начислить</option><option value="expense">Списать</option></select><input placeholder="Комментарий" data-custr="'+u.id+'" style="flex:1;min-width:110px"><button class="btn sm primary" data-act="custom" data-id="'+u.id+'">ОК</button></div>'+
     '<div style="margin-top:8px">'+tagsLine(u)+'</div><div style="margin-top:6px">'+recent+'</div>'+
-    '<div class="row" style="margin-top:8px"><button class="btn sm" data-act="openSheet" data-id="'+u.id+'">🧾 Бланк '+sheetStatus(u)+'</button><button class="btn sm" data-act="creditCashflow" data-id="'+u.id+'">💱 Поток</button><button class="btn sm" data-act="editPlayer" data-id="'+u.id+'">✏️</button><button class="btn sm" data-act="tagsPlayer" data-id="'+u.id+'">🏷️</button><button class="btn sm" data-act="paydayP" data-id="'+u.id+'">💵</button>'+(session.role==="admin"?'<button class="btn sm" data-act="roleModal" data-id="'+u.id+'">👤 Роль</button><button class="btn sm red" data-act="delPlayer" data-id="'+u.id+'">🗑️</button>':'')+'</div></div>';
+    '<div class="row" style="margin-top:8px"><button class="btn sm" data-act="openSheet" data-id="'+u.id+'">🧾 Бланк '+sheetStatus(u)+'</button><button class="btn sm" data-act="creditCashflow" data-id="'+u.id+'">💱 Поток</button><button class="btn sm" data-act="editPlayer" data-id="'+u.id+'">✏️</button><button class="btn sm" data-act="tagsPlayer" data-id="'+u.id+'">🏷️</button><button class="btn sm" data-act="paydayP" data-id="'+u.id+'">💵</button><button class="btn sm" data-act="toOuter" data-id="'+u.id+'" title="Перевести на внешний круг">🏁</button>'+(session.role==="admin"?'<button class="btn sm" data-act="roleModal" data-id="'+u.id+'">👤 Роль</button><button class="btn sm red" data-act="delPlayer" data-id="'+u.id+'">🗑️</button>':'')+'</div></div>';
 }
 function massView(){
   const teamOpts=teams().map(t=>'<option value="'+t.id+'">'+esc(t.name)+'</option>').join(""),tableOpts=tables().map(t=>'<option value="'+t.id+'">'+esc(t.name)+'</option>').join(""),tagOpts=PLAYER_TAGS.map(t=>'<option value="'+esc(t)+'">'+esc(t)+'</option>').join("");
@@ -1053,10 +1336,18 @@ function eventsView(){
 }
 function exchangeAdmin(){
   const avail=ASSET_TEMPLATES.filter(t=>!asset(t.symbol));
-  let h='<div class="card"><h2>Управление биржей</h2><div class="row" style="margin-bottom:10px"><button class="btn gold" data-act="tick">🔀 Движение</button><button class="btn'+(autoTickTimer?' green':'')+'" data-act="autoTick">⏱ Авто '+(autoTickTimer?'вкл':'выкл')+'</button><button class="btn red" data-act="shockDown">📉 -30%</button><button class="btn green" data-act="shockUp">📈 +20%</button><button class="btn" data-act="dice">🎲 Кубик</button></div>'+
-    (avail.length?'<div class="row" style="margin-bottom:6px"><select id="addAssetSel" style="max-width:240px">'+avail.map(t=>'<option value="'+t.symbol+'">'+t.symbol+' · '+esc(t.name)+'</option>').join("")+'</select><button class="btn sm primary" data-act="addAsset">＋ Добавить акцию</button></div>':'')+
-    '<div class="grid g3">'+assets().map(a=>{const chg=a.previousPrice?((a.price-a.previousPrice)/a.previousPrice*100):0,up=chg>=0;return '<div class="asset"><div class="row spread"><b>'+a.symbol+'</b>'+(a.isHalted?'<span class="badge b-red">стоп</span>':'')+'</div><div class="small muted">'+esc(a.name)+'</div>'+sparkline(a.history,up)+'<div class="row spread"><span class="price">'+fmt(a.price)+'</span><span class="'+(up?'chg-up':'chg-down')+'">'+(up?'▲':'▼')+Math.abs(chg).toFixed(1)+'%</span></div><div class="row" style="margin-top:6px"><input type="number" placeholder="Цена" data-setp="'+a.symbol+'" style="max-width:90px"><button class="btn sm" data-act="setPrice" data-sym="'+a.symbol+'">Задать</button><button class="btn sm" data-act="halt" data-sym="'+a.symbol+'">'+(a.isHalted?'▶':'⏸')+'</button><button class="btn sm red" data-act="delAsset" data-sym="'+a.symbol+'">🗑</button></div></div>';}).join("")+'</div>'+
-    '<p class="small muted" style="margin-top:8px">«Движение» — разовое случайное изменение цен. «Авто» — цены сами обновляются каждые 45 сек. «Задать» — ручная цена.</p></div>';
+  const shown=visibleAssets().length,hid=assets().length-shown;
+  let h='<div class="card"><h2>Управление биржей</h2><div class="row" style="margin-bottom:10px"><button class="btn gold" data-act="tick">🔀 Движение</button><button class="btn'+(autoTickTimer?' green':'')+'" data-act="autoTick">⏱ Авто '+(autoTickTimer?'вкл':'выкл')+'</button><button class="btn red" data-act="shockDown">📉 -30%</button><button class="btn green" data-act="shockUp">📈 +20%</button><button class="btn" data-act="dice">🎲 Кубик</button></div><div class="small muted" id="priceStamp" style="margin-bottom:8px">'+priceStampText()+' · активов: '+shown+(hid?' (+'+hid+' скрыто)':'')+'</div>'+
+    (avail.length?'<div class="row" style="margin-bottom:6px"><select id="addAssetSel" style="max-width:260px">'+avail.map(t=>'<option value="'+t.symbol+'">'+t.symbol+' · '+esc(t.name)+' ['+esc(t.cat)+']'+(t.hidden?' · скрытый':'')+'</option>').join("")+'</select><button class="btn sm primary" data-act="addAsset">＋ Добавить актив</button></div>':'')+'</div>';
+  // группировка по категориям
+  ASSET_CATEGORIES.forEach(cat=>{
+    const list=assets().filter(a=>assetCat(a)===cat);if(!list.length)return;
+    h+='<div class="section-title" style="margin-top:8px">'+esc(cat)+' · '+list.length+'</div><div class="grid g3">'+list.map(a=>{
+      const chg=a.previousPrice?((a.price-a.previousPrice)/a.previousPrice*100):0,up=chg>=0,hidden=isHiddenAsset(a),y=assetYield(a);
+      return '<div class="asset" data-ex="'+a.symbol+'"'+(hidden?' style="opacity:.5"':'')+'><div class="row spread"><b>'+a.symbol+'</b><span>'+(hidden?'<span class="badge b-gray">скрыт</span>':'')+(a.isHalted?'<span class="badge b-red">стоп</span>':'')+'</span></div><div class="small muted">'+esc(a.name)+'</div><div class="row" style="gap:5px;margin:3px 0"><span class="badge '+(RISK_META[assetRisk(a)]||"b-gray")+'">'+esc(assetRisk(a))+'</span>'+(y>0?'<span class="badge b-teal">'+y+'%/'+assetPer(a)+'</span>':'')+'</div>'+sparkline(a.history,up)+'<div class="row spread"><span class="price" data-exprice>'+fmt(a.price)+'</span><span class="'+(up?'chg-up':'chg-down')+'" data-exchg>'+(up?'▲':'▼')+Math.abs(chg).toFixed(1)+'%</span></div><div class="row" style="margin-top:6px"><input type="number" placeholder="Цена" data-setp="'+a.symbol+'" style="max-width:78px"><button class="btn sm" data-act="setPrice" data-sym="'+a.symbol+'">Задать</button><button class="btn sm" data-act="hide" data-sym="'+a.symbol+'">'+(hidden?'👁':'🙈')+'</button><button class="btn sm" data-act="halt" data-sym="'+a.symbol+'">'+(a.isHalted?'▶':'⏸')+'</button><button class="btn sm red" data-act="delAsset" data-sym="'+a.symbol+'">🗑</button></div></div>';
+    }).join("")+'</div>';
+  });
+  h+='<p class="small muted" style="margin-top:8px">«Движение» — разовое случайное изменение цен (масштаб зависит от волатильности актива). «🙈/👁» — скрыть/показать актив для игроков. Скрытые не видны в покупке, но остаются в портфелях.</p>';
   return h;
 }
 function loansView(){
@@ -1113,7 +1404,7 @@ function rosterView(){
 function achView(){const open=room().achievements||[];return '<div class="card"><h2>Достижения ('+open.length+'/'+ACHIEVEMENTS.length+')</h2><div class="grid g2">'+ACHIEVEMENTS.map(a=>{const o=open.includes(a.id);return '<div class="item" style="opacity:'+(o?1:.5)+';'+(o?'border-color:var(--gold)':'')+'"><div class="row"><div style="font-size:22px">'+a.icon+'</div><div><b>'+esc(a.title)+'</b></div></div></div>';}).join("")+'</div></div>';}
 function settingsView(){const s=settings();return '<div class="card"><h2>Настройки комнаты</h2><div class="grid g2"><div class="field"><label class="fl">Стартовый баланс</label><input id="seStart" type="number" value="'+(s.startBalance||0)+'"></div><div class="field"><label class="fl">Лимит перевода</label><input id="seTr" type="number" value="'+(s.transferLimit||0)+'"></div><div class="field"><label class="fl">Лимит кредита</label><input id="seLoan" type="number" value="'+(s.loanLimit||0)+'"></div><div class="field"><label class="fl">Ставка кредита %</label><input id="seRate" type="number" value="'+(s.loanRate||0)+'"></div><div class="field"><label class="fl">Ставка ЦБ %</label><input id="seCBR" type="number" value="'+(room().centralBankRate||0)+'"></div></div><button class="btn green" data-act="saveSettings">Сохранить</button></div>'+
   '<div class="card"><h2>Данные комнаты</h2><div class="info-box small">Код комнаты: <b>'+esc(CODE)+'</b>. Покажите его игрокам.</div><div class="row" style="margin-top:8px"><button class="btn red" data-act="resetRoom">🗑️ Сбросить комнату</button></div></div>';}
-function rulesView(){const r=[["Подключение","Игроки заходят с телефонов по коду комнаты и имени. Банкир/админ — по PIN."],["Кошелёк","Баланс, P2P-переводы. Крупные переводы уходят на подтверждение банкиру."],["Кредит","Заём в ЦБ; проценты списываются на «Дне получки»."],["День получки","Проценты по кредитам − доход от пулов, с предпросмотром."],["Биржа","Покупка/продажа $TECH/$ENERGY/$REALTY. Комиссия 1%. Цены меняют админ, кубик, события."],["Пулы","Складчина в крупную сделку, доход делится пропорционально на «Дне получки»."],["Венчур","Поздние игроки финансируют ранних через заявки и предложения."],["События","Денежные эффекты применяются после предпросмотра «до→после»."],["Роли","Игрок видит своё; банкир — свой стол; админ — всё. Realtime между устройствами."]];return '<div class="card"><h2>Правила</h2>'+r.map((x,i)=>'<div style="margin-bottom:9px"><b>'+(i+1)+'. '+esc(x[0])+'</b><div class="small muted">'+esc(x[1])+'</div></div>').join("")+'<hr class="sep"><p class="small muted">Неофициальный фанатский цифровой модуль. События оригинальны и не воспроизводят материалы CashFlow.</p></div>';}
+function rulesView(){const r=[["Подключение","Игроки заходят с телефонов по коду комнаты и имени. Банкир/админ — по PIN."],["Кошелёк","Баланс, P2P-переводы. Крупные переводы уходят на подтверждение банкиру."],["Кредит","Заём в ЦБ; проценты списываются на «Дне получки»."],["День получки","Проценты по кредитам − доход от пулов, с предпросмотром."],["Биржа","Акции, паевые фонды, stable-активы, недвижимость, металлы, искусство, бизнес, облигации и коллекционные активы. Комиссия 1%. Активы с доходностью приносят пассивный доход на «Дне получки». Цены меняются по волатильности актива, кубиком и событиями."],["Пулы","Складчина в крупную сделку, доход делится пропорционально на «Дне получки»."],["Венчур","Поздние игроки финансируют ранних через заявки и предложения."],["События","Денежные эффекты применяются после предпросмотра «до→после»."],["Роли","Игрок видит своё; банкир — свой стол; админ — всё. Realtime между устройствами."]];return '<div class="card"><h2>Правила</h2>'+r.map((x,i)=>'<div style="margin-bottom:9px"><b>'+(i+1)+'. '+esc(x[0])+'</b><div class="small muted">'+esc(x[1])+'</div></div>').join("")+'<hr class="sep"><p class="small muted">Неофициальный фанатский цифровой модуль. События оригинальны и не воспроизводят материалы CashFlow.</p></div>';}
 
 /* ----- BANKER ----- */
 function bankerView(){const t=session.tab.banker,tid=session.tableId||(tables()[0]&&tables()[0].id);
@@ -1124,29 +1415,175 @@ function bankerView(){const t=session.tab.banker,tid=session.tableId||(tables()[
   if(t==="sheets")return sel+sheetsReview(tid);
   if(t==="approvals"){const list=M.approvals.filter(a=>a.status==="pending");return sel+'<div class="card"><h2>Подтверждения ('+list.length+')</h2>'+(list.length?list.map(a=>'<div class="item"><div class="row spread"><b>'+esc(a.type==="transfer"?"Перевод":a.type==="pool"?"Пул":a.type)+'</b><span class="badge b-yellow">'+fmt(a.amount)+'</span></div><div class="small muted">от '+esc(a.requestedBy)+' · '+esc(a.reason)+'</div><div class="row" style="margin-top:8px"><button class="btn sm green" data-act="approveOk" data-id="'+a.id+'">Подтвердить</button><button class="btn sm red" data-act="approveNo" data-id="'+a.id+'">Отклонить</button></div></div>').join(""):'<p class="muted">Нет ожиданий.</p>')+'</div>';}
   if(t==="pools")return sel+poolsView(false);
-  if(t==="payday")return sel+'<div class="card"><h2>День получки · '+esc(tableName(tid))+'</h2>'+(tableMembers(tid).length?tableMembers(tid).map(u=>{const pv=paydayPreview(u.id);return '<div class="item"><div class="row spread"><div><b>'+esc(u.name)+'</b><div class="small muted">проценты -'+fmt(pv.interest)+' · пулы +'+fmt(pv.pool)+' · итог '+(pv.net>=0?'+':'')+fmt(pv.net)+'</div></div><button class="btn sm primary" data-act="paydayP" data-id="'+u.id+'">💵</button></div></div>';}).join(""):'<p class="muted">Нет игроков.</p>')+'</div>';
+  if(t==="payday")return sel+'<div class="card"><h2>День получки · '+esc(tableName(tid))+'</h2>'+(tableMembers(tid).length?tableMembers(tid).map(u=>{const pv=paydayPreview(u.id);return '<div class="item"><div class="row spread"><div><b>'+esc(u.name)+'</b><div class="small muted">проценты -'+fmt(pv.interest)+' · пулы +'+fmt(pv.pool)+' · пассив +'+fmt(pv.passive)+' · итог '+(pv.net>=0?'+':'')+fmt(pv.net)+'</div></div><button class="btn sm primary" data-act="paydayP" data-id="'+u.id+'">💵</button></div></div>';}).join(""):'<p class="muted">Нет игроков.</p>')+'</div>';
   if(t==="history")return sel+historyView();
   return sel;
 }
 
+/* ---------- ВИРТУАЛЬНОЕ ПОЛЕ + КУБИК ---------- */
+// Внутренний круг «Крысиные бега» (16 клеток) и внешний трек «Скоростная дорожка» (24 клетки).
+const RAT_CELLS=["start","deal","expense","market","deal","payday","deal","charity","expense","deal","market","payday","baby","deal","expense","downsized"];
+const FAST_CELLS=["biz","dream","div","tax","biz","dream","charity","div","biz","dream","tax","div","biz","dream","div","charity","biz","dream","tax","div","biz","dream","div","tax"];
+const CELL_META={
+  start:{icon:"▶",label:"Старт",cls:"c-start"},payday:{icon:"💵",label:"Получка",cls:"c-payday"},
+  deal:{icon:"💎",label:"Сделка",cls:"c-deal"},market:{icon:"📊",label:"Рынок",cls:"c-market"},
+  expense:{icon:"🛒",label:"Расходы",cls:"c-expense"},charity:{icon:"❤️",label:"Благотвор.",cls:"c-charity"},
+  baby:{icon:"👶",label:"Ребёнок",cls:"c-baby"},downsized:{icon:"⚠️",label:"Увольнение",cls:"c-downsized"},
+  biz:{icon:"🏢",label:"Бизнес",cls:"c-biz"},dream:{icon:"⭐",label:"Мечта",cls:"c-dream"},
+  tax:{icon:"🧾",label:"Налог",cls:"c-tax"},div:{icon:"📈",label:"Дивиденды",cls:"c-div"}
+};
+function boardCells(track){return track==="fasttrack"?FAST_CELLS:RAT_CELLS;}
+function cellCenter(track,i){const n=boardCells(track).length,R=track==="fasttrack"?43:26;const ang=(i/n)*2*Math.PI-Math.PI/2;return{x:50+R*Math.cos(ang),y:50+R*Math.sin(ang)};}
+function initials(name){return String(name||"?").trim().slice(0,2).toUpperCase();}
+function tokenColor(p){if(p.teamId){const c=teamColor(p.teamId);if(c)return c;}const pal=["#7ca2ff","#62d4a0","#e9b15c","#f5798c","#b9a0ff","#5fd4c2","#ecd368"];let h=0;const s=String(p.id||p.name||"x");for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return pal[h%pal.length];}
+function ringCellsHTML(track){return boardCells(track).map((t,i)=>{const c=cellCenter(track,i),m=CELL_META[t]||CELL_META.deal;return '<div class="cell '+m.cls+'" id="cell-'+track+'-'+i+'" title="'+esc(m.label)+'" style="left:'+c.x.toFixed(2)+'%;top:'+c.y.toFixed(2)+'%">'+m.icon+'</div>';}).join("");}
+function tokenLayerHTML(ps){
+  const groups={};ps.forEach(p=>{const key=(p.track||"ratrace")+":"+(p.pos||0);(groups[key]=groups[key]||[]).push(p);});
+  let html="";
+  Object.keys(groups).forEach(key=>{const parts=key.split(":"),track=parts[0],pos=+parts[1],arr=groups[key],c=cellCenter(track,pos);
+    arr.forEach((p,k)=>{let dx=0,dy=0;if(arr.length>1){const a=(k/arr.length)*2*Math.PI;dx=3.2*Math.cos(a);dy=3.2*Math.sin(a);}
+      const st=outerStatus(p),extra=(p.id===session.uid?" me":"")+(st.outer?" outer":(st.ready?" ready":""))+((p.investorStatus&&p.investorStatus!=="none")?" investor":"");
+      html+='<span class="tok'+extra+'" data-token="'+p.id+'" style="left:'+(c.x+dx).toFixed(2)+'%;top:'+(c.y+dy).toFixed(2)+'%;background:'+tokenColor(p)+'" title="'+esc(p.name)+'">'+esc(initials(p.name))+'</span>';});
+  });
+  return html;
+}
+function boardLegend(){return '<div class="legend">'+["payday","deal","market","expense","charity","baby","downsized","biz","dream","div","tax"].map(k=>{const m=CELL_META[k];return '<span>'+m.icon+' '+m.label+'</span>';}).join("")+'</div>';}
+function boardView(canRollId){
+  const ps=players(),me=canRollId?uid(canRollId):null;
+  const board='<div class="board">'+ringCellsHTML("fasttrack")+ringCellsHTML("ratrace")+
+    '<div class="center"><div class="bt">Cash-Flow</div><div class="bs">виртуальное поле</div><div class="bring">внутри — крысиные бега · снаружи — скоростная дорожка</div></div>'+
+    tokenLayerHTML(ps)+'</div>';
+  const face='<div class="dice-face" id="diceFace">'+(_lastRoll||"🎲")+'</div>';
+  let controls='';
+  if(session.role==="admin"&&ps.length){
+    controls='<div class="row" style="gap:8px;justify-content:center;align-items:center;flex-wrap:wrap">'+face+
+      '<select id="boardRollWho" style="max-width:150px">'+ps.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join("")+'</select>'+
+      '<button class="btn gold" data-act="moveDice">🎲 Бросить</button>'+
+      '<button class="btn" data-act="adminOuter">🏁 На внешний круг</button></div>';
+  } else if(me){
+    const st=outerStatus(me);
+    controls='<div class="row" style="gap:10px;justify-content:center;align-items:center;flex-wrap:wrap">'+face+
+      '<button class="btn gold" data-act="moveDice" data-id="'+me.id+'">🎲 Бросить кубик</button>'+
+      (st.outer?'<button class="btn teal" data-act="invest">🤝 Инвестировать в игрока</button>':(st.ready?'<button class="btn green" data-act="outerExit">🏁 Выйти на внешний круг</button>':''))+'</div>'+
+      '<div class="row" style="justify-content:center;margin-top:4px"><span class="badge '+st.cls+'">'+st.label+'</span></div>'+
+      '<div class="small muted" style="text-align:center">'+esc(me.name)+' · клетка '+((me.pos||0)+1)+' из '+boardCells(me.track||"ratrace").length+(me.investorStatus&&me.investorStatus!=="none"?' · инвестор':'')+'</div>';
+  }
+  return '<div class="card"><div class="row spread"><h2>🗺️ Виртуальное поле</h2><span class="small muted">'+ps.length+' игроков</span></div>'+
+    '<div class="board-wrap">'+board+controls+boardLegend()+'</div>'+
+    (ps.length?'':'<p class="muted" style="margin-top:8px">Фигурки появятся, когда игроки войдут в комнату.</p>')+'</div>'+
+    investmentsPanel();
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+// Бросок кубика (1–6) и пошаговое перемещение фигурки с закольцовкой. Кнопка блокируется на время анимации.
+async function rollMoveDice(id){
+  if(_rolling)return;_rolling=true;
+  try{
+    const u=uid(id);if(!u)return;
+    const track=u.track||"ratrace",n=boardCells(track).length;
+    const roll=1+Math.floor(Math.random()*6);_lastRoll=roll;
+    const face=document.getElementById("diceFace");if(face){face.textContent=roll;face.classList.remove("roll");void face.offsetWidth;face.classList.add("roll");}
+    let cur=u.pos||0;const tokenEl=document.querySelector('[data-token="'+id+'"]');
+    for(let s=0;s<roll;s++){cur=(cur+1)%n;/* закольцовка: с последней клетки на первую */if(tokenEl){const c=cellCenter(track,cur);tokenEl.style.left=c.x.toFixed(2)+"%";tokenEl.style.top=c.y.toFixed(2)+"%";}await sleep(200);}
+    _rolling=false;                                   // разблокируем ДО commit, чтобы перерисовка прошла
+    await commitUser(id,{pos:cur,track});             // сохраняем позицию
+    const m=CELL_META[boardCells(track)[cur]];
+    addHistory("board","🎲 "+u.name+": "+roll,"клетка «"+m.label+"»");
+    toast("🎲 "+roll+" → "+m.icon+" "+m.label);
+  }catch(e){showError(e);}finally{_rolling=false;scheduleRender();}
+}
+// Перевод игрока на внешний круг (скоростная дорожка). byAdmin=true — ручной перевод (возможен override).
+async function moveToOuter(id,byAdmin){
+  const u=uid(id);if(!u)return;
+  if((u.track||"ratrace")==="fasttrack"){toast("Игрок уже на внешнем круге","warn");return;}
+  const ok=canMoveToOuter(u);
+  if(!byAdmin&&!ok){toast("⚠️ Условия выхода ещё не выполнены","warn");return;}
+  await commitUser(id,{track:"fasttrack",pos:0,status:"fasttrack",investorStatus:u.investorStatus||"investor"});
+  addHistory("board",(byAdmin?"Админ перевёл на внешний круг: ":"Выход на внешний круг: ")+u.name,ok?"условия выполнены":"ручной перевод (условия не выполнены)");
+  addNews("Скоростная дорожка!",esc(u.name)+" вышел из крысиных бегов на внешний круг","event","high");
+  toast("🏁 "+u.name+" на скоростной дорожке!","ach");
+}
+function outerTransferModal(id){
+  const u=uid(id);if(!u)return;const debts=playerDebtsTotal(u),pas=playerPassiveTotal(u),exp=playerExpensesTotal(u),ok=canMoveToOuter(u);
+  const body='<div class="info-box small">Долги: <b>'+fmt(debts)+'</b><br>Пассивный доход: <b>'+fmt(pas)+'</b><br>Общие расходы: <b>'+fmt(exp)+'</b><br>Условие выхода: <b>'+(ok?'выполнено ✅':'не выполнено ⚠️')+'</b></div>'+
+    (ok?'<div class="small ok-box" style="margin-top:8px">Игрок выполнил условия: долги закрыты, пассивный доход выше расходов.</div>':'<div class="small warn-box" style="margin-top:8px">Игрок ещё не выполнил условия. Администратор может выполнить ручной перевод, если это разрешено правилами.</div>');
+  modal("Перевести игрока на внешний круг?",body,[{label:"Отмена",cls:"ghost"},{label:"Перевести",cls:"gold",onClick:c=>{c();moveToOuter(id,true);}}]);
+}
+
+/* ---------- ВЕНЧУРНЫЕ ИНВЕСТИЦИИ (внешний круг) ----------
+   Игроки на внешнем круге инвестируют в других. По умолчанию инвестор получает
+   10% положительного денежного потока получателя на его «Дне получки». */
+function investments(){return room().investments||[];}
+function activeInvestmentsFor(recipientId){return investments().filter(x=>x.recipientId===recipientId&&x.status==="active");}
+function investmentsByInvestor(investorId){return investments().filter(x=>x.investorId===investorId&&x.status==="active");}
+function investorReturnFor(ag){const r=uid(ag.recipientId);if(!r)return 0;if(ag.model==="fixed")return Math.max(0,Math.round(ag.fixed||0));return Math.round(Math.max(playerCashflow(r),0)*(ag.pct||10)/100);} // 10% положительного кэшфлоу
+async function createInvestment(investorId,recipientId,amount,pct){
+  const inv=uid(investorId),rec=uid(recipientId);
+  if(!inv||!rec||investorId===recipientId){toast("⚠️ Выберите разных игроков","warn");return;}
+  amount=Math.max(0,Math.round(amount||0));pct=Math.max(0,Math.min(100,Math.round(pct||10)));
+  if(amount>0&&(inv.balance||0)<amount){toast("⚠️ У инвестора недостаточно средств","warn");return;}
+  if(amount>0){await changeBalance(investorId,-amount,"investment","Инвестиция в "+rec.name,{toPlayer:rec.name});await changeBalance(recipientId,+amount,"investment","Инвестиция от "+inv.name,{fromPlayer:inv.name});}
+  const ag={id:"iv"+Date.now().toString(36)+Math.floor(Math.random()*1e4),investorId,recipientId,amount,model:"cashflow",pct,createdRound:room().round||1,status:"active"};
+  await updateRoom({investments:investments().concat([ag])});
+  await commitUser(investorId,{investorStatus:inv.investorStatus||"venture_investor"});
+  addHistory("venture","Инвестиция: "+inv.name+" → "+rec.name,fmt(amount)+" · "+pct+"% кэшфлоу");
+  addNews("Венчурная инвестиция",esc(inv.name)+" инвестировал в "+esc(rec.name)+" ("+pct+"% кэшфлоу)","venture","normal");
+  toast("✅ Инвестиция оформлена");
+}
+async function cancelInvestment(agId){await updateRoom({investments:investments().map(x=>x.id===agId?Object.assign({},x,{status:"cancelled"}):x)});addHistory("venture","Инвестиция закрыта");toast("Соглашение закрыто");}
+function investModal(investorId){
+  const opts=players().filter(p=>p.id!==investorId).map(p=>'<option value="'+p.id+'">'+esc(p.name)+' · кэшфлоу '+fmt(playerCashflow(p))+'</option>').join("");
+  if(!opts){toast("Нет других игроков","warn");return;}
+  modal("Инвестировать в игрока",'<div class="field"><label class="fl">Игрок-получатель</label><select id="ivWho">'+opts+'</select></div><div class="grid g2"><div class="field"><label class="fl">Сумма инвестиции</label><input id="ivAmt" type="number" value="1000"></div><div class="field"><label class="fl">Доля, % кэшфлоу</label><input id="ivPct" type="number" value="10"></div></div><div class="small muted">По умолчанию инвестор получает 10% положительного денежного потока игрока на его «Дне получки». Отрицательный кэшфлоу — выплата 0.</div>',
+    [{label:"Отмена",cls:"ghost"},{label:"Инвестировать",cls:"gold",onClick:(c,ov)=>{createInvestment(investorId,ov.querySelector("#ivWho").value,parseFloat(ov.querySelector("#ivAmt").value)||0,parseFloat(ov.querySelector("#ivPct").value)||10);c();}}]);
+}
+function investmentsPanel(){
+  const list=investments().filter(x=>x.status==="active");
+  return '<div class="card"><div class="row spread"><h2>🤝 Венчурные инвестиции</h2><span class="small muted">'+list.length+'</span></div>'+
+    (list.length?list.map(ag=>{const inv=uid(ag.investorId),rec=uid(ag.recipientId);const ret=investorReturnFor(ag);return '<div class="item"><div class="row spread"><div><b>'+esc(inv?inv.name:"—")+'</b> → '+esc(rec?rec.name:"—")+'<div class="small muted">вложено '+fmt(ag.amount)+' · '+ag.pct+'% кэшфлоу · выплата/получку ~'+fmt(ret)+'</div></div>'+((session.role==="admin"||session.uid===ag.investorId)?'<button class="btn sm red" data-act="cancelInvest" data-id="'+ag.id+'">Закрыть</button>':'')+'</div></div>';}).join(""):'<p class="muted">Активных соглашений нет. Игроки на внешнем круге могут инвестировать в других.</p>')+'</div>';
+}
+
 /* ----- PLAYER ----- */
 function playerView(){const u=uid(session.uid);if(!u)return joinPlayerView();const t=session.tab.player;
-  if(t==="wallet")return walletView(u);if(t==="sheet")return mySheetView(u);if(t==="exchange")return exchangePlayer(u);if(t==="pools")return poolsView(true);if(t==="venture")return ventureView(true);if(t==="roster")return rosterView();if(t==="news")return newsView();if(t==="profile")return profileView(u);return "";}
+  if(t==="wallet")return walletView(u);if(t==="board")return boardView(session.uid);if(t==="sheet")return mySheetView(u);if(t==="exchange")return exchangePlayer(u);if(t==="pools")return poolsView(true);if(t==="venture")return ventureView(true);if(t==="roster")return rosterView();if(t==="news")return newsView();if(t==="profile")return profileView(u);return "";}
 function walletView(u){
   const neg=u.balance<0,pv=paydayPreview(u.id),loans=loansOf(u.id),myTx=M.transactions.filter(t=>t.playerId===u.id).slice(0,8);
   const pOpts=players().filter(p=>p.id!==u.id).map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join("");
   const loanSum=loans.reduce((s,l)=>s+l.outstanding,0);
-  return '<div class="hero"><div class="hlbl">'+esc(u.name)+' · '+esc(tableName(u.tableId))+'</div><div class="hbal" style="color:'+(neg?'var(--red)':'var(--txt)')+'">'+fmt(u.balance)+'</div><div class="hmeta">портфель '+fmt(portfolioValue(u))+(loanSum?' · долг '+fmt(loanSum):'')+'</div>'+(neg?'<div class="warn-box small" style="margin-top:10px">⚠️ Отрицательный баланс</div>':'')+'</div>'+
+  return '<div class="hero"><div class="hlbl">'+esc(u.name)+' · '+esc(tableName(u.tableId))+'</div><div class="hbal" style="color:'+(neg?'var(--red)':'var(--txt)')+'">'+fmt(u.balance)+'</div><div class="hmeta">портфель '+fmt(portfolioValue(u))+' · пассив '+fmt(portfolioPassive(u))+'/раунд'+(loanSum?' · долг '+fmt(loanSum):'')+'</div>'+(neg?'<div class="warn-box small" style="margin-top:10px">⚠️ Отрицательный баланс</div>':'')+'</div>'+
     '<div class="card"><div class="grid g4 keep"><button class="btn primary block" data-act="plPayday">💵 Получка</button><button class="btn blue block" data-act="plLoan">🏦 Заём</button><button class="btn teal block" data-act="plCreatePool">🧩 Пул</button><button class="btn block" data-act="goExch">📊 Биржа</button></div></div>'+
     (pOpts?'<div class="card"><h2>Перевод</h2><div class="field"><label class="fl">Получатель</label><select id="plTo">'+pOpts+'</select></div><div class="grid g2"><div class="field"><label class="fl">Сумма</label><input id="plAmt" type="number"></div><div class="field"><label class="fl">Комментарий</label><input id="plCom"></div></div><button class="btn blue block" data-act="plTransfer">↔️ Перевести</button><div class="small muted" style="margin-top:6px">Лимит без подтверждения: '+fmt(settings().transferLimit)+'</div></div>':'')+
     (loans.length?'<div class="card"><h2>Мои кредиты</h2>'+loans.map(l=>'<div class="row spread" style="padding:5px 0;border-bottom:1px solid var(--line)"><span class="small">ставка '+l.rate+'% · проценты/получку '+fmt(Math.round(l.outstanding*l.rate/100))+'</span><span><b style="color:var(--orange)">'+fmt(l.outstanding)+'</b> <button class="btn sm green" data-act="repay" data-id="'+l.id+'">Погасить</button></span></div>').join("")+'</div>':'')+
+    charityCard(u)+
     '<div class="card"><h2>Операции</h2>'+(myTx.length?myTx.map(t=>'<div class="hitem" style="border-left-color:'+(t.amount>=0?'var(--green)':'var(--red)')+'"><div class="row spread"><span class="small">'+esc(t.reason||t.type)+'</span><b style="color:'+(t.amount>=0?'var(--green)':'var(--red)')+'">'+(t.amount>=0?'+':'')+fmt(t.amount)+'</b></div></div>').join(""):'<p class="muted">Операций нет.</p>')+'</div>';
 }
+function heldLine(a,pf){const perUnit=assetPassivePerUnit(a);return "У вас "+pf.qty+" шт · "+fmt(a.price*pf.qty)+" · P/L "+(positionPL(a,pf)>=0?"+":"")+fmt(positionPL(a,pf))+(perUnit>0?" · пассив +"+fmt(perUnit*pf.qty)+"/"+assetPer(a):"");}
+function assetCardPlayer(a,u,archive){
+  const chg=a.previousPrice?((a.price-a.previousPrice)/a.previousPrice*100):0,up=chg>=0;
+  const pf=(u.portfolio||{})[a.symbol],y=assetYield(a);
+  const meta='<div class="row" style="gap:4px;margin:3px 0;flex-wrap:wrap"><span class="badge '+(RISK_META[assetRisk(a)]||"b-gray")+'">'+esc(assetRisk(a))+'</span>'+(y>0?'<span class="badge b-teal">'+y+'%/'+assetPer(a)+'</span>':'<span class="badge b-blue">рост</span>')+'</div>';
+  const held=pf?('<div class="small ok-box" data-expl style="margin:5px 0">'+heldLine(a,pf)+'</div>'):'';
+  const trade=archive
+    ? '<div class="row" style="margin-top:5px"><input type="number" placeholder="Кол-во" data-qty="'+a.symbol+'" style="max-width:78px"><button class="btn sm red" data-act="sell" data-sym="'+a.symbol+'">Продать</button></div>'
+    : (a.isHalted?'<div class="warn-box small">Остановлено</div>':'<div class="row" style="margin-top:5px"><input type="number" placeholder="Кол-во" data-qty="'+a.symbol+'" style="max-width:78px"><button class="btn sm green" data-act="buy" data-sym="'+a.symbol+'">Купить</button>'+(pf?'<button class="btn sm red" data-act="sell" data-sym="'+a.symbol+'">Продать</button>':'')+'</div>');
+  return '<div class="card exq" data-ex="'+a.symbol+'" title="'+esc(assetDesc(a))+'"><div class="row spread"><div><b>'+a.symbol+'</b> <span class="small muted">'+esc(a.name)+'</span></div><div style="text-align:right"><span class="price" data-exprice>'+fmt(a.price)+'</span> <span class="'+(up?'chg-up':'chg-down')+'" data-exchg>'+(up?'▲':'▼')+Math.abs(chg).toFixed(1)+'%</span></div></div>'+meta+sparkline(a.history,up)+held+trade+'</div>';
+}
 function exchangePlayer(u){
-  return '<div class="card"><h2>📊 Биржа</h2><div class="small muted">Баланс: '+fmt(u.balance)+' · Комиссия 1%</div></div>'+assets().map(a=>{const chg=a.previousPrice?((a.price-a.previousPrice)/a.previousPrice*100):0,up=chg>=0,pf=(u.portfolio||{})[a.symbol];return '<div class="card"><div class="row spread"><div><b>'+a.symbol+'</b> <span class="small muted">'+esc(a.name)+'</span></div><div style="text-align:right"><span class="price">'+fmt(a.price)+'</span> <span class="'+(up?'chg-up':'chg-down')+'">'+(up?'▲':'▼')+Math.abs(chg).toFixed(1)+'%</span></div></div>'+sparkline(a.history,up)+(pf?'<div class="small ok-box" style="margin:6px 0">У вас '+pf.qty+' шт · '+fmt(a.price*pf.qty)+' · P/L '+((a.price-pf.avg)*pf.qty>=0?'+':'')+fmt((a.price-pf.avg)*pf.qty)+'</div>':'')+(a.isHalted?'<div class="warn-box small">Торговля остановлена</div>':'<div class="row" style="margin-top:6px"><input type="number" placeholder="Кол-во" data-qty="'+a.symbol+'" style="max-width:90px"><button class="btn sm green" data-act="buy" data-sym="'+a.symbol+'">Купить</button><button class="btn sm red" data-act="sell" data-sym="'+a.symbol+'">Продать</button></div>')+'</div>';}).join("");
+  const cats=assetsByCategory(),pVal=portfolioValue(u),pPassive=portfolioPassive(u),pYield=portfolioYield(u);
+  const availCats=ASSET_CATEGORIES.filter(c=>cats[c]&&cats[c].length);
+  if(exFilter!=="all"&&availCats.indexOf(exFilter)<0)exFilter="all";
+  const chips='<div class="tabs" style="padding:8px 0 2px">'+["all"].concat(availCats).map(c=>'<button class="tab'+(exFilter===c?' on':'')+'" data-act="exFilter" data-cat="'+esc(c)+'">'+(c==="all"?"Все":esc(c))+'</button>').join("")+'</div>';
+  let h='<div class="card"><div class="row spread"><h2>📊 Биржа</h2><span class="small muted" id="priceStamp">'+priceStampText()+'</span></div>'+
+    '<div class="grid g3 keep" style="margin-top:6px">'+stat("Баланс",fmt(u.balance))+stat("Портфель",fmt(pVal))+stat("Пассив/раунд",fmt(pPassive),pYield>0?"доходность "+pYield.toFixed(1)+"%":"")+'</div>'+
+    chips+'<div class="small muted">Комиссия 1%. Пассивный доход — на «Дне получки».</div></div>';
+  (exFilter==="all"?availCats:[exFilter]).forEach(cat=>{const list=cats[cat];if(!list||!list.length)return;h+='<div class="section-title" style="margin-top:8px">'+esc(cat)+' · '+list.length+'</div><div class="grid g2">'+list.map(a=>assetCardPlayer(a,u,false)).join("")+'</div>';});
+  const arch=heldHiddenAssets(u);
+  if(arch.length&&exFilter==="all")h+='<div class="section-title" style="margin-top:10px">Архив · снято с торгов (можно только продать)</div><div class="grid g2">'+arch.map(a=>assetCardPlayer(a,u,true)).join("")+'</div>';
+  return h;
 }
 function newsView(){return '<div class="card"><h2>📰 Новости</h2>'+(M.news.length?M.news.slice(0,40).map(n=>{const col={crisis:"var(--purple)",market:"var(--gold)",pool:"var(--blue)",venture:"var(--gold)",event:"var(--acc)"}[n.type]||"var(--gray)";return '<div class="hitem" style="border-left-color:'+col+'"><div class="ht">'+esc(n.title)+'</div>'+(n.body?'<div class="small">'+esc(n.body)+'</div>':'')+'</div>';}).join(""):'<p class="muted">Новостей нет.</p>')+'</div>';}
-function profileView(u){const st={ratrace:"Крысиные бега",fasttrack:"Скоростная дорожка",venture:"Венчурный инвестор"}[u.status]||u.status;return '<div class="card"><h2>👤 '+esc(u.name)+'</h2><div class="grid g2 keep">'+stat("Баланс",fmt(u.balance))+stat("Статус",st)+stat("Стол",esc(tableName(u.tableId)))+stat("Команда",esc(teamName(u.teamId)))+'</div><div style="margin-top:10px"><div class="section-title">Теги</div>'+tagsLine(u)+'</div></div>'+
+function profileView(u){const st={ratrace:"Крысиные бега",fasttrack:"Скоростная дорожка",venture:"Венчурный инвестор"}[u.status]||u.status;return '<div class="card"><h2>👤 '+esc(u.name)+'</h2><div class="grid g2 keep">'+stat("Баланс",fmt(u.balance))+stat("Статус",st)+stat("Стол",esc(tableName(u.tableId)))+stat("Команда",esc(teamName(u.teamId)))+'</div>'+
+  '<div class="grid g3 keep" style="margin-top:10px">'+stat("Портфель",fmt(portfolioValue(u)))+stat("Пассив/раунд",fmt(portfolioPassive(u)),"доходность "+portfolioYield(u).toFixed(1)+"%")+stat("П/У портфеля",(portfolioPL(u)>=0?"+":"")+fmt(portfolioPL(u)))+'</div>'+
+  '<div style="margin-top:10px"><div class="section-title">Теги</div>'+tagsLine(u)+'</div></div>'+
   '<div class="card"><h2>Экономика</h2><div class="row spread"><span class="section-title">Индекс риска</span><b style="color:'+riskColor(room().riskIndex)+'">'+room().riskIndex+'</b></div>'+riskMeter(room().riskIndex)+'<hr class="sep">'+econBar("Инфляция",(room().economy||{}).inflation||0,false)+econBar("Фондовый рынок",(room().economy||{}).stocks||0,true)+econBar("Деловая активность",(room().economy||{}).business||0,true)+econBar("Настроение",(room().economy||{}).sentiment||0,true)+'</div>';}
 /* ---------- BINDINGS ---------- */
 document.getElementById("topbar").addEventListener("click",e=>{const t=e.target.closest("[data-tab]");if(t){setTab(t.dataset.tab);return;}const a=e.target.closest("[data-act]");if(a)handleAct(a.dataset.act,a);});
@@ -1173,9 +1610,14 @@ function bindSel(id,cb){const el=document.getElementById(id);if(el)el.onchange=(
 function tg(id,hide){const el=document.getElementById(id);if(el)el.classList.toggle("hidden",hide);}
 
 async function handleAct(act,el){
+  if(_actBusy)return;                                     // анти-дабл-клик: одно действие за раз
   const id=el.dataset.id,sym=el.dataset.sym;
+  const _btn=(el&&el.tagName==="BUTTON")?el:null;
+  _actBusy=true;if(_btn){_btn.disabled=true;_btn.classList.add("busy");}
   try{switch(act){
     case"leave":leaveRoom();break;
+    case"goAdminAuth":authScreen="admin";render();break;
+    case"goPlayerAuth":authScreen="player";render();break;
     case"shareRoom":shareRoom();break;
     case"copyCode":copyText(CODE);toast("📋 Код скопирован");break;
     case"createRoom":await createRoom({name:val("cName"),code:val("cCode"),startBalance:parseFloat(val("cBal"))||5000,tables:parseInt(val("cTables"),10),assets:parseInt(val("cAssets"),10),venture:val("cVenture")==="yes",adminPin:val("cAdmin"),bankerPin:val("cBanker")});break;
@@ -1217,9 +1659,11 @@ async function handleAct(act,el){
     case"shockUp":await shock("all",20);break;
     case"setPrice":{const p=parseFloat(document.querySelector('[data-setp="'+sym+'"]').value);if(isFinite(p))await setPrice(sym,p);break;}
     case"halt":await toggleHalt(sym);break;
+    case"hide":await toggleHide(sym);break;
     case"addAsset":await addAsset(val("addAssetSel"));break;
     case"delAsset":confirmModal("Убрать акцию?","Снять "+sym+" с торгов? Позиции игроков по ней сгорят.",()=>delAsset(sym),"Убрать","red");break;
     case"autoTick":toggleAuto();break;
+    case"exFilter":exFilter=el.dataset.cat||"all";render();break;
     case"buy":{const q=parseFloat(document.querySelector('[data-qty="'+sym+'"]').value)||0;await trade(session.uid,sym,q,true);break;}
     case"sell":{const q=parseFloat(document.querySelector('[data-qty="'+sym+'"]').value)||0;await trade(session.uid,sym,q,false);break;}
     case"giveLoan":pickPlayerThen(u=>loanModal(u.id));break;
@@ -1233,6 +1677,13 @@ async function handleAct(act,el){
     case"makeOffer":makeOfferModal(id);break;
     case"acceptOffer":confirmModal("Принять предложение?","Деньги переведутся инициатору.",()=>acceptOffer(id),"Принять","green");break;
     case"plPayday":paydayModal(session.uid);break;
+    case"moveDice":{const who=session.role==="admin"?val("boardRollWho"):(id||session.uid);if(who)await rollMoveDice(who);break;}
+    case"outerExit":{const u=uid(session.uid);if(!canMoveToOuter(u)){toast("⚠️ Условия выхода ещё не выполнены","warn");break;}confirmModal("Выйти на внешний круг?","Долги закрыты и пассивный доход выше расходов. Перейти на скоростную дорожку?",()=>moveToOuter(session.uid,false),"Выйти","gold");break;}
+    case"adminOuter":{const who=val("boardRollWho")||id;if(who)outerTransferModal(who);break;}
+    case"toOuter":outerTransferModal(id);break;
+    case"invest":investModal(session.role==="admin"?(val("boardRollWho")||session.uid):session.uid);break;
+    case"cancelInvest":confirmModal("Закрыть соглашение?","Инвестиционное соглашение будет остановлено.",()=>cancelInvestment(id),"Закрыть","red");break;
+    case"donate":{const u=uid(session.uid);const amount=donation10(u.balance);if(amount<=0){toast("⚠️ Недостаточно средств для пожертвования","warn");break;}confirmModal("Пожертвовать на благотворительность?","Списать "+fmt(amount)+" (10% кошелька)? Взамен: репутация и +"+Math.round(CHARITY_MULT*100)+"% к пассивному доходу на "+CHARITY_ROUNDS+" раунда.",()=>donateCharity(session.uid),"Пожертвовать","purple");break;}
     case"goExch":setTab("exchange");break;
     case"plTransfer":await transfer(session.uid,val("plTo"),parseFloat(val("plAmt"))||0,val("plCom"));break;
     case"approveOk":await resolveApproval(id,true);break;
@@ -1240,7 +1691,9 @@ async function handleAct(act,el){
     case"copyTx":copyText(M.transactions.map(t=>t.targetName+": "+(t.amount>=0?"+":"")+fmt(t.amount)+" — "+t.reason).join("\n"));toast("📋 Скопировано");break;
     case"saveSettings":await saveSettings({settings:{startBalance:parseFloat(val("seStart"))||0,transferLimit:parseFloat(val("seTr"))||0,loanLimit:parseFloat(val("seLoan"))||0,loanRate:parseFloat(val("seRate"))||0},cbr:parseFloat(val("seCBR"))||0});break;
     case"resetRoom":resetRoom();break;
-  }}catch(e){toast("⚠️ "+(e.message||e),"warn");}
+  }}
+  catch(e){toast("⚠️ "+(e.message||e),"warn");}
+  finally{_actBusy=false;if(_btn){_btn.disabled=false;_btn.classList.remove("busy");}}
 }
 async function doDraw(forced){const ev=await drawEvent(forced);shownEvent=ev;render();if(ev.type==="crisis"||ev.impactLevel==="critical")fsEvent(ev);}
 function applyEventBtn(ev,mode){
@@ -1286,7 +1739,7 @@ function pickTableThen(cb){if(!tables().length){toast("⚠️ Нет столо�
 function editPlayerModal(id){const u=uid(id);const tmO='<option value="">Без команды</option>'+teams().map(t=>'<option value="'+t.id+'"'+(t.id===u.teamId?' selected':'')+'>'+esc(t.name)+'</option>').join("");const tbO='<option value="">Без стола</option>'+tables().map(t=>'<option value="'+t.id+'"'+(t.id===u.tableId?' selected':'')+'>'+esc(t.name)+'</option>').join("");
   modal("Изменить: "+u.name,'<div class="field"><label class="fl">Имя</label><input id="eN" value="'+esc(u.name)+'"></div><div class="field"><label class="fl">Баланс</label><input id="eB" type="number" value="'+u.balance+'"></div><div class="grid g2"><div class="field"><label class="fl">Стол</label><select id="eTbl">'+tbO+'</select></div><div class="field"><label class="fl">Команда</label><select id="eTm">'+tmO+'</select></div></div><div class="field"><label class="fl">Статус</label><select id="eSt"><option value="ratrace"'+(u.status==="ratrace"?' selected':'')+'>Крысиные бега</option><option value="fasttrack"'+(u.status==="fasttrack"?' selected':'')+'>Скоростная дорожка</option><option value="venture"'+(u.status==="venture"?' selected':'')+'>Венчурный инвестор</option></select></div>',[{label:"Отмена",cls:"ghost"},{label:"Сохранить",cls:"green",onClick:(c,ov)=>{updatePlayer(id,{name:ov.querySelector("#eN").value,balance:parseFloat(ov.querySelector("#eB").value),tableId:ov.querySelector("#eTbl").value||null,teamId:ov.querySelector("#eTm").value||null,status:ov.querySelector("#eSt").value});c();toast("✅ Сохранено");}}]);}
 function tagsModal(id){const u=uid(id);const ov=modal("Теги: "+u.name,'<div class="row" style="gap:6px">'+PLAYER_TAGS.map(t=>'<span class="tag-chip'+((u.tags||[]).includes(t)?' on':'')+'" data-tt="'+esc(t)+'">'+esc(t)+'</span>').join("")+'</div>',[{label:"Готово",cls:"primary"}]);ov.querySelectorAll("[data-tt]").forEach(ch=>{ch.onclick=()=>{toggleTag(id,ch.dataset.tt);ch.classList.toggle("on");};});}
-function paydayModal(id){const u=uid(id),pv=paydayPreview(id);modal("💵 День получки: "+u.name,'<div class="info-box small">Проценты: <b>-'+fmt(pv.interest)+'</b><br>Пулы: <b>+'+fmt(pv.pool)+'</b><br>Итог: <b>'+(pv.net>=0?'+':'')+fmt(pv.net)+'</b></div>',[{label:"Отмена",cls:"ghost"},{label:"Подтвердить",cls:"primary",onClick:c=>{doPayday(id);c();}}]);}
+function paydayModal(id){const u=uid(id),pv=paydayPreview(id);modal("💵 День получки: "+u.name,'<div class="info-box small">Проценты по кредитам: <b>-'+fmt(pv.interest)+'</b><br>Доход от пулов: <b>+'+fmt(pv.pool)+'</b><br>Пассивный доход с активов: <b>+'+fmt(pv.passive)+'</b>'+(pv.invPay?'<br>Выплаты инвесторам: <b>-'+fmt(pv.invPay)+'</b>':'')+'<br>Итог: <b>'+(pv.net>=0?'+':'')+fmt(pv.net)+'</b></div>',[{label:"Отмена",cls:"ghost"},{label:"Подтвердить",cls:"primary",onClick:c=>{doPayday(id);c();}}]);}
 function loanModal(id){const u=uid(id);modal("🏦 Заём: "+u.name,'<p class="small muted">Ставка '+(settings().loanRate||10)+'% · лимит '+fmt(settings().loanLimit)+'</p><div class="field"><label class="fl">Сумма</label><input id="loanAmt" type="number" value="5000"></div><div class="info-box small">Проценты списываются на «Дне получки».</div>',[{label:"Отмена",cls:"ghost"},{label:"Взять",cls:"primary",onClick:(c,ov)=>{takeLoan(id,parseFloat(ov.querySelector("#loanAmt").value)||0);c();}}]);}
 function repayModal(l){const u=uid(l.userId);modal("Погашение",'<p class="small muted">Долг: '+fmt(l.outstanding)+' · баланс '+fmt(u.balance)+'</p><div class="field"><label class="fl">Сумма</label><input id="rep" type="number" value="'+Math.min(l.outstanding,Math.max(0,u.balance))+'"></div>',[{label:"Отмена",cls:"ghost"},{label:"Погасить",cls:"green",onClick:(c,ov)=>{repayLoan(l.id,parseFloat(ov.querySelector("#rep").value)||0);c();}}]);}
 function teamMoneyModal(id,isAdd){const t=teams().find(x=>x.id===id),m=teamMembers(id);if(!m.length){toast("⚠️ В команде нет игроков","warn");return;}modal((isAdd?"Начислить команде: ":"Списать у команды: ")+t.name,'<div class="field"><label class="fl">Тип</label><select id="tmt"><option value="amount">Сумма каждому</option><option value="percent">% наличных</option></select></div><div class="field"><label class="fl">Значение</label><input id="tmv" type="number"></div><div class="field"><label class="fl">Причина</label><input id="tmr"></div>',[{label:"Отмена",cls:"ghost"},{label:isAdd?"Начислить":"Списать",cls:isAdd?"green":"red",onClick:async(c,ov)=>{const type=ov.querySelector("#tmt").value,v=parseFloat(ov.querySelector("#tmv").value)||0,r=ov.querySelector("#tmr").value||"Командная операция";const eff=type==="amount"?{moneyEffectType:isAdd?"add":"subtract",moneyAmount:v}:{moneyEffectType:isAdd?"percentAdd":"percentSubtract",moneyPercent:v};await applyEffectToList(m,eff,"Команда «"+t.name+"»: "+r,isAdd?"income":"expense");addHistory("money",(isAdd?"Начисление команде: ":"Списание у команды: ")+t.name,r);c();toast("✅ Готово");}}]);}
@@ -1323,21 +1776,39 @@ function applyProfession(s,p){
 }
 function sheetFromProfession(p){return applyProfession(defaultSheet(),p);}
 function randomProfession(){return PROFESSIONS[Math.floor(Math.random()*PROFESSIONS.length)];}
-function computeSheet(s){s=s||defaultSheet();const i=s.income||{},e=s.expenses||{};
-  const passive=(i.interest||0)+(i.dividends||0)+(i.realEstate||0)+(i.business||0);
-  const totalIncome=(i.salary||0)+passive;
-  const childCost=(s.children||0)*(s.perChild||0);
-  const totalExpenses=(e.taxes||0)+(e.homeMortgage||0)+(e.carLoan||0)+(e.creditCards||0)+(e.retail||0)+(e.bankLoan||0)+(e.other||0)+childCost;
+function computeSheet(s){s=s||defaultSheet();const i=s.income||{},e=s.expenses||{},A=s.assets||{};
+  const passive=num(i.interest)+num(i.dividends)+num(i.realEstate)+num(i.business);   // пассивный доход из бланка
+  const totalIncome=num(i.salary)+passive;
+  const childCost=num(s.children)*num(s.perChild);
+  const totalExpenses=num(e.taxes)+num(e.homeMortgage)+num(e.carLoan)+num(e.creditCards)+num(e.retail)+num(e.bankLoan)+num(e.other)+childCost;
   const cashflow=totalIncome-totalExpenses;
-  const L=s.liabilities||{};const totalLiab=Object.values(L).reduce((a,b)=>a+(b||0),0);
-  return{passive,totalIncome,childCost,totalExpenses,cashflow,totalLiab};}
+  const L=s.liabilities||{};const totalLiab=Object.values(L).reduce((a,b)=>a+num(b),0);
+  const stocksV=(A.stocks||[]).reduce((v,x)=>v+num(x.qty)*num(x.price),0);
+  const reV=(A.realEstate||[]).reduce((v,x)=>v+num(x.price),0);
+  const bizV=(A.business||[]).reduce((v,x)=>v+num(x.price),0);
+  const sheetAssets=num(A.savings)+stocksV+reV+bizV;
+  const netWorthSheet=sheetAssets-totalLiab;
+  return{passive,totalIncome,childCost,totalExpenses,cashflow,totalLiab,stocksV,reV,bizV,sheetAssets,netWorthSheet};}
+// Полная финкартина игрока: бланк (ручной) + живое состояние игры (портфель, кошелёк, кредиты, репутация)
+function fullFinance(u){
+  const s=u.sheet||defaultSheet(),c=computeSheet(s);
+  const wallet=num(u.balance),pv=portfolioValue(u),pPassive=portfolioPassive(u),pYield=portfolioYield(u),pPL=portfolioPL(u);
+  const loans=loansOf(u.id).reduce((t,l)=>t+num(l.outstanding),0);
+  const totalPassive=c.passive+pPassive;              // пассив: бланк + портфель
+  const totalIncome=c.totalIncome+pPassive;
+  const totalAssets=c.sheetAssets+pv+wallet;          // активы: бланк + портфель + кошелёк
+  const totalLiab=c.totalLiab+loans;                  // обязательства: бланк + активные кредиты ЦБ
+  const netWorth=totalAssets-totalLiab;               // итоговый капитал
+  const freeCashflow=c.cashflow+pPassive;             // свободный денежный поток
+  return{c,wallet,pv,pPassive,pYield,pPL,loans,totalPassive,totalIncome,totalAssets,totalLiab,netWorth,freeCashflow,reputation:u.reputation||0,donatedTotal:u.donatedTotal||0,charityActive:charityBonusActive(u)};
+}
 function setPath(o,path,v){const ks=path.split(".");let cur=o;for(let i=0;i<ks.length-1;i++){cur[ks[i]]=cur[ks[i]]||{};cur=cur[ks[i]];}cur[ks[ks.length-1]]=v;}
 const AUDIT_BADGE={draft:["b-gray","черновик"],submitted:["b-yellow","на проверке"],verified:["b-green","подтверждён"],rejected:["b-red","отклонён"]};
 function sheetStatus(u){const st=((u.sheet||{}).audit||{}).status||"draft";const b=AUDIT_BADGE[st];return '<span class="badge '+b[0]+'">'+b[1]+'</span>';}
 
-async function saveSheet(userId,sheet){await updateDoc(doc(db,"rooms",CODE,"users",userId),{sheet});addHistory("sheet","Бланк обновлён: "+(uid(userId)||{}).name);toast("✅ Бланк сохранён");}
-async function submitSheet(userId,sheet){sheet.audit.status="submitted";sheet.audit.submittedAt=Date.now();await updateDoc(doc(db,"rooms",CODE,"users",userId),{sheet});const u=uid(userId);addHistory("sheet","Бланк отправлен на проверку: "+u.name);addNews("Бланк на проверке",u.name+" отправил финансовый бланк аудитору","info","normal");toast("📤 Бланк отправлен аудитору");}
-async function verifySheet(userId,sheet,ok,notes){const me=session.uid?uid(session.uid):null;sheet.audit.status=ok?"verified":"rejected";sheet.audit.notes=notes||"";sheet.audit.auditorId=session.uid||session.role;sheet.audit.auditorName=me?me.name:"Админ";sheet.audit.verifiedAt=Date.now();await updateDoc(doc(db,"rooms",CODE,"users",userId),{sheet});const u=uid(userId);addHistory("sheet",(ok?"Бланк подтверждён: ":"Бланк отклонён: ")+u.name,notes||"");addNews(ok?"Бланк подтверждён":"Бланк отклонён аудитором",u.name+(notes?" — "+notes:""),ok?"event":"crisis","normal");toast(ok?"✅ Бланк подтверждён":"❌ Бланк отклонён");}
+async function saveSheet(userId,sheet){await commitUser(userId,{sheet});addHistory("sheet","Бланк обновлён: "+(uid(userId)||{}).name);toast("✅ Бланк сохранён");}
+async function submitSheet(userId,sheet){sheet.audit.status="submitted";sheet.audit.submittedAt=Date.now();await commitUser(userId,{sheet});const u=uid(userId);addHistory("sheet","Бланк отправлен на проверку: "+u.name);addNews("Бланк на проверке",u.name+" отправил финансовый бланк аудитору","info","normal");toast("📤 Бланк отправлен аудитору");}
+async function verifySheet(userId,sheet,ok,notes){const me=session.uid?uid(session.uid):null;sheet.audit.status=ok?"verified":"rejected";sheet.audit.notes=notes||"";sheet.audit.auditorId=session.uid||session.role;sheet.audit.auditorName=me?me.name:"Админ";sheet.audit.verifiedAt=Date.now();await commitUser(userId,{sheet});const u=uid(userId);addHistory("sheet",(ok?"Бланк подтверждён: ":"Бланк отклонён: ")+u.name,notes||"");addNews(ok?"Бланк подтверждён":"Бланк отклонён аудитором",u.name+(notes?" — "+notes:""),ok?"event":"crisis","normal");toast(ok?"✅ Бланк подтверждён":"❌ Бланк отклонён");}
 
 /* роли и назначения */
 async function setUserRole(userId,role){await updateDoc(doc(db,"rooms",CODE,"users",userId),{role});const u=uid(userId);addHistory("role","Роль изменена: "+u.name,"→ "+role);addNews("Назначение роли",u.name+" теперь "+({player:"игрок",banker:"банкир",auditor:"аудитор"}[role]),"info","normal");toast("✅ Роль: "+role);}
@@ -1357,9 +1828,9 @@ function openSheetEditor(userId){
   const canEdit=isOwner||["banker","auditor","admin"].includes(role);
   const canAudit=["banker","auditor","admin"].includes(role)||(uid(session.uid||"")||{}).id===u.auditorId;
   const root=document.getElementById("modalRoot");const ov=document.createElement("div");ov.className="overlay";ov.innerHTML='<div class="modal" id="shM"></div>';ov.addEventListener("click",e=>{if(e.target===ov)ov.remove();});root.appendChild(ov);
-  function readScalars(){
-    document.querySelectorAll('#shM [data-p]').forEach(inp=>{setPath(editing,inp.dataset.p,inp.type==="number"?(parseFloat(inp.value)||0):inp.value);});
-    document.querySelectorAll('#shM [data-arr]').forEach(inp=>{const arr=editing.assets[inp.dataset.arr];const it=arr&&arr[+inp.dataset.i];if(it)it[inp.dataset.k]=inp.dataset.k==="name"?inp.value:(parseFloat(inp.value)||0);});
+  function readScalars(){ // безопасное чтение: числа неотрицательны и устойчивы к некорректному вводу
+    document.querySelectorAll('#shM [data-p]').forEach(inp=>{setPath(editing,inp.dataset.p,inp.type==="number"?Math.max(0,num(inp.value)):inp.value);});
+    document.querySelectorAll('#shM [data-arr]').forEach(inp=>{const arr=editing.assets[inp.dataset.arr];const it=arr&&arr[+inp.dataset.i];if(it)it[inp.dataset.k]=inp.dataset.k==="name"?inp.value:Math.max(0,num(inp.value));});
   }
   function recalc(){const c=computeSheet(editing);const el=document.getElementById("shCalc");if(el)el.innerHTML=calcHTML(c);}
   function draw(){document.getElementById("shM").innerHTML=sheetFormHTML(u,editing,canEdit,canAudit,isOwner);
@@ -1382,10 +1853,34 @@ function openSheetEditor(userId){
   }
   draw();
 }
-function calcHTML(c){return '<div class="grid g2 keep" style="gap:6px">'+stat("Общий доход",fmt(c.totalIncome))+stat("Общий расход",fmt(c.totalExpenses))+stat("Пассивный доход",fmt(c.passive))+'<div class="stat" style="border-color:'+(c.cashflow>=0?"var(--green)":"var(--red)")+'"><div class="k">Денежный поток (получка)</div><div class="v" style="color:'+(c.cashflow>=0?"var(--green)":"var(--red)")+'">'+fmt(c.cashflow)+'</div></div></div>';}
+function calcHTML(c){return '<div class="grid g3 keep" style="gap:6px">'+stat("Общий доход",fmt(c.totalIncome))+stat("Общий расход",fmt(c.totalExpenses))+'<div class="stat" style="border-color:'+(c.cashflow>=0?"var(--green)":"var(--red)")+'"><div class="k">Денежный поток</div><div class="v" style="color:'+(c.cashflow>=0?"var(--green)":"var(--red)")+'">'+fmt(c.cashflow)+'</div></div>'+stat("Пассивный доход",fmt(c.passive))+stat("Активы (бланк)",fmt(c.sheetAssets))+stat("Капитал (бланк)",fmt(c.netWorthSheet))+'</div>';}
+// Полный «бланк игрока» в стиле финансового отчёта: доходы/расходы → денежный поток, активы/обязательства → капитал
+function sheetStatementHTML(u){
+  const f=fullFinance(u),c=f.c,s=u.sheet||defaultSheet(),i=s.income||{},e=s.expenses||{},L=s.liabilities||{},A=s.assets||{};
+  const prof=s.profession||u.profession||"—";
+  const lr=(l,v,col)=>'<div class="lr"><span>'+esc(l)+'</span><b'+(col?' style="color:'+col+'"':'')+'>'+fmt(v)+'</b></div>';
+  const tot=(l,v,col)=>'<div class="tot"><span>'+esc(l)+'</span><b'+(col?' style="color:'+col+'"':'')+'>'+fmt(v)+'</b></div>';
+  const sec=(n,t)=>'<div class="sec"><span class="sn">'+n+'</span><span class="st">'+esc(t)+'</span></div>';
+  const goalOk=f.totalPassive>=c.totalExpenses,goalPct=c.totalExpenses>0?Math.min(100,Math.round(f.totalPassive/c.totalExpenses*100)):(f.totalPassive>0?100:0);
+  return '<div class="stmt">'+
+    '<div class="info-box small">🎯 Цель: <b>пассивный доход</b> должен превысить <b>общие расходы</b>. Профессия: <b>'+esc(prof)+'</b></div>'+
+    '<div class="goal '+(goalOk?"ok-box":"warn-box")+'" style="margin-top:8px">'+(goalOk?"🏆 Цель достигнута! Пассив "+fmt(f.totalPassive)+" ≥ расходы "+fmt(c.totalExpenses):"Пассив "+fmt(f.totalPassive)+" из "+fmt(c.totalExpenses)+" · "+goalPct+"%")+'<div class="prog" style="margin-top:6px"><span style="width:'+goalPct+'%"></span></div></div>'+
+    sec("1","Доходы")+lr("Зарплата",i.salary||0)+lr("Пассивный доход (бланк)",c.passive)+lr("Пассивный доход (портфель)",f.pPassive,"var(--green)")+tot("Итого доход",f.totalIncome)+
+    sec("2","Расходы")+lr("Налоги",e.taxes||0)+lr("Ипотека / жильё",e.homeMortgage||0)+lr("Кредит на авто",e.carLoan||0)+lr("Кредитные карты",e.creditCards||0)+lr("Розничные",e.retail||0)+lr("Кредит банка",e.bankLoan||0)+lr("Прочие",e.other||0)+lr("Дети ("+(s.children||0)+")",c.childCost)+tot("Итого расходы",c.totalExpenses)+
+    '<div class="cfbox" style="margin-top:10px"><div class="row spread"><span class="section-title" style="margin:0">Месячный денежный поток</span><span class="cf" style="color:'+(f.freeCashflow>=0?"var(--green)":"var(--red)")+'">'+fmt(f.freeCashflow)+'</span></div><div class="small muted">доход − расходы, с учётом пассивного дохода портфеля</div></div>'+
+    sec("3","Активы")+lr("Кошелёк (наличные)",f.wallet)+lr("Сбережения",A.savings||0)+lr("Портфель (биржа)",f.pv)+lr("Акции (бланк)",c.stocksV)+lr("Недвижимость (бланк)",c.reV)+lr("Бизнес (бланк)",c.bizV)+tot("Итого активы",f.totalAssets)+
+    sec("4","Обязательства")+lr("Ипотека",L.mortgage||0)+lr("Кредит на авто",L.carLoan||0)+lr("Кредитные карты",L.creditCards||0)+lr("Образовательный кредит",L.eduLoan||0)+lr("Банковский кредит",L.bankLoan||0)+lr("Кредиты на недвижимость",L.realEstateLoans||0)+lr("Кредит бизнеса",L.businessLoan||0)+lr("Активные кредиты ЦБ",f.loans)+tot("Итого обязательства",f.totalLiab)+
+    '<div class="grid g3 keep" style="margin-top:12px;gap:6px">'+
+      '<div class="stat" style="border-color:var(--acc-line)"><div class="k">Итоговый капитал</div><div class="v">'+fmt(f.netWorth)+'</div></div>'+
+      stat("Свободный поток",fmt(f.freeCashflow))+stat("Пассив / раунд",fmt(f.totalPassive))+
+      stat("Стоимость портфеля",fmt(f.pv))+stat("Доходность портфеля",f.pYield.toFixed(1)+"%")+stat("П/У портфеля",(f.pPL>=0?"+":"")+fmt(f.pPL))+'</div>'+
+    sec("5","Благотворительность и репутация")+
+    '<div class="grid g3 keep" style="gap:6px">'+stat("Репутация",f.reputation)+stat("Пожертвовано",fmt(f.donatedTotal))+stat("Бонус",f.charityActive?"активен":"—")+'</div>'+
+    '</div>';
+}
 function sheetFormHTML(u,s,canEdit,canAudit,isOwner){
   const d=canEdit?"":"disabled";
-  const nf=(p,l)=>'<div class="field"><label class="fl">'+l+'</label><input type="number" data-p="'+p+'" value="'+(p.split(".").reduce((o,k)=>o&&o[k],s)||0)+'" '+d+'></div>';
+  const nf=(p,l)=>'<div class="field"><label class="fl">'+l+'</label><input type="number" min="0" step="any" inputmode="decimal" data-p="'+p+'" value="'+(p.split(".").reduce((o,k)=>o&&o[k],s)||0)+'" '+d+'></div>';
   const tf=(p,l)=>'<div class="field"><label class="fl">'+l+'</label><input data-p="'+p+'" value="'+esc(p.split(".").reduce((o,k)=>o&&o[k],s)||"")+'" '+d+'></div>';
   const rows=(arr,keys)=>s.assets[arr].map((it,i)=>'<div class="row" style="gap:5px;margin-bottom:5px"><input data-arr="'+arr+'" data-i="'+i+'" data-k="name" placeholder="Название" value="'+esc(it.name||"")+'" style="flex:2" '+d+'>'+keys.map(k=>'<input type="number" data-arr="'+arr+'" data-i="'+i+'" data-k="'+k+'" placeholder="'+k+'" value="'+(it[k]||0)+'" style="flex:1" '+d+'>').join("")+(canEdit?'<button class="btn sm red" data-sx="del:'+arr+':'+i+'">✕</button>':'')+'</div>').join("");
   const st=(s.audit||{});
@@ -1428,27 +1923,70 @@ function auditorView(){const t=session.tab.auditor||"sheets";session.tab.auditor
   if(t==="history")return historyView();
   return "";
 }
-function mySheetView(u){if(!u)return '<div class="card">Профиль не найден.</div>';const sh=u.sheet||defaultSheet();const c=computeSheet(sh);const st=(sh.audit||{});const prof=sh.profession||u.profession||"";
+function mySheetView(u){if(!u)return '<div class="card">Профиль не найден.</div>';const sh=u.sheet||defaultSheet();const st=(sh.audit||{});
   return '<div class="card"><div class="row spread"><h2>📝 Мой финансовый бланк</h2>'+sheetStatus(u)+'</div>'+
-    (prof?'<div class="small muted" style="margin:2px 0 10px">Профессия: <b style="color:var(--txt)">'+esc(prof)+'</b></div>':'')+calcHTML(c)+
+    sheetStatementHTML(u)+
     (st.status==="rejected"&&st.notes?'<div class="warn-box small" style="margin-top:8px">Аудитор отклонил: '+esc(st.notes)+'</div>':'')+
     (st.status==="verified"?'<div class="ok-box small" style="margin-top:8px">✅ Подтверждён аудитором '+esc(st.auditorName||"")+'</div>':'')+
     '<div class="row" style="margin-top:10px"><button class="btn primary" data-act="myEditSheet">✏️ Заполнить / редактировать</button></div>'+
-    '<p class="small muted" style="margin-top:8px">Заполните доходы, расходы, активы и пассивы — денежный поток и пассивный доход считаются автоматически. Затем отправьте бланк аудитору на проверку.</p></div>';
+    '<p class="small muted" style="margin-top:8px">Все суммы считаются автоматически. Портфель, кошелёк, кредиты и репутация подтягиваются из игры в реальном времени.</p></div>';
 }
 
+/* ---------- DEMO / DEV MODE (?dev=1) ----------
+   Автономный режим без Firebase: наполняет состояние демо-данными, чтобы
+   можно было показать и проверить ВСЕ экраны офлайн. Данные не сохраняются.
+   Включается только явным параметром URL — в обычной работе не влияет. */
+function devSeed(){
+  const now=Date.now();
+  // демо-биржа: активы из разных категорий + один скрытый легаси ($TECH) для показа «архива»
+  const demoSyms=["$ELEC","$INDX","$MMF","$FLAT","$GOLD","$CAFE","$GBOND","$ARTF","$TECH"];
+  const ass=demoSyms.map(s=>{const a=seedAsset(tpl(s));a.previousPrice=Math.round(a.price*0.97);a.history=[a.price*0.9,a.price*0.95,a.price*0.93,a.price].map(Math.round);return a;});
+  const P=PROFESSIONS,prof=i=>P[i%P.length];
+  const mk=(id,name,bal,i,pf,extra)=>Object.assign({id,name,role:"player",profession:prof(i).name,tableId:"TBL1",teamId:null,status:"ratrace",balance:bal,tags:[],portfolio:pf||{},sheet:sheetFromProfession(prof(i)),online:true},extra||{});
+  const users=[
+    mk("u1","Алия",8200,0,{"$ELEC":{qty:40,avg:18},"$INDX":{qty:12,avg:47},"$TECH":{qty:10,avg:120}},{pos:5,track:"ratrace",reputation:2}),
+    mk("u2","Бекзат",3100,3,{"$FLAT":{qty:2,avg:190},"$GBOND":{qty:5,avg:98}},{pos:5,track:"ratrace"}),
+    mk("u3","Дана",15400,6,{"$CAFE":{qty:3,avg:110}},{pos:7,track:"fasttrack",status:"fasttrack"}),
+    mk("u4","Ерлан",-500,9,{"$GOLD":{qty:5,avg:140}},{pos:11,track:"ratrace"})
+  ];
+  const room={id:"DEMO",name:"Cash-Flow 2.0 · Демо",code:"DEMO",
+    settings:{startBalance:5000,transferLimit:5000,loanLimit:50000,loanRate:10,adminPin:"0000",bankerPin:"1111"},
+    tables:[{id:"TBL1",name:"Стол 1"}],teams:[],assets:ass,
+    economy:{inflation:42,stocks:58,business:61,sentiment:55},riskIndex:48,centralBankRate:8,
+    round:3,phase:"active",mode:"basic",trendId:"growth",counters:{},achievements:["first_player"],
+    lastPriceUpdate:{toDate:()=>new Date(now)}};
+  return {room,users};
+}
+function setupDevMode(){
+  const p=new URLSearchParams(location.search);const role=p.get("role")||"admin",tab=p.get("tab");
+  const {room,users}=devSeed();
+  CODE="DEMO";M.room=room;M.users=users;M.transactions=[];M.loans=[];M.pools=[];M.startups=[];M.offers=[];M.approvals=[];M.news=[];M.history=[];
+  session={code:"DEMO",role,uid:role==="player"?(p.get("who")||"u1"):null,tableId:"TBL1",tab:{admin:tab||"exchange",banker:tab||"players",auditor:tab||"sheets",player:tab||"exchange"}};
+  // отладочный хук (только в DEMO): драйвим внутренние функции из devtools/preview
+  window.__cf={get M(){return M},get session(){return session},render,scheduleRender,patchExchangePrices,priceTick,onRoomData,assets,uid,computeSheet:(typeof computeSheet!=="undefined"?computeSheet:null)};
+}
+/* Единая точка записи: в DEMO меняем состояние в памяти, иначе пишем в Firestore.
+   Используется новыми механиками (поле/кубик, благотворительность). */
+async function commitRoom(patch){return updateRoom(patch);}
+async function commitUser(id,patch){if(DEV){const u=uid(id);if(u)Object.assign(u,patch);scheduleRender();return;}return updateDoc(doc(db,"rooms",CODE,"users",id),patch);}
+
 /* ---------- INIT ---------- */
-if(CONFIG_OK){
+DEV=/[?&]dev=1/.test(location.search);
+if(DEV){
+  setupDevMode();
+  const b=document.getElementById("fbBanner");if(b){b.style.background="#6d5cff";b.style.color="#fff";b.textContent="🧪 ДЕМО-режим — работа без Firebase, изменения не сохраняются. Роль: "+session.role+" · ?role=admin|player|banker|auditor";}
+  render();
+} else if(CONFIG_OK){
   setFbStatus("connecting");
   try{
     app=initializeApp(firebaseConfig);auth=getAuth(app);db=getFirestore(app);
     onAuthStateChanged(auth,async u=>{if(u){uidAuth=u.uid;await firebaseSelfTest();if(session.code)subscribeRoom(session.code);else render();}});
     signInAnonymously(auth).catch(e=>{setFbStatus("autherror",e&&(e.code||e.message));render();});
   }catch(e){setFbStatus("err",e&&e.message);render();}
+  render();
+  // фоллбэк: если за 4с вход не завершился — проверить связь с базой и показать причину
+  setTimeout(()=>{const b=document.getElementById("fbBanner");if(b&&db&&/Подключение/.test(b.innerText))firebaseSelfTest();},4000);
 } else { setFbStatus("noconfig"); render(); }
-render();
-// фоллбэк: если за 4с вход не завершился — проверить связь с базой и показать причину
-if(CONFIG_OK)setTimeout(()=>{const b=document.getElementById("fbBanner");if(b&&db&&/Подключение/.test(b.innerText))firebaseSelfTest();},4000);
 
 </script>
 </body>
